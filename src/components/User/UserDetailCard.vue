@@ -44,7 +44,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
 import { Formatter } from '@/utils'
 const props = defineProps({ user: Object })
 const formatDate = (date: string) => Formatter.formatDate(date)

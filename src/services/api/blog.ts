@@ -152,6 +152,55 @@ export class BlogService {
   async deleteSection(id: number): Promise<BaseOutSuccess> {
     return apiService.delete(`/blog/sections/${id}`)
   }
+
+  // === TAGS ===
+  async getAllTags(): Promise<string[]> {
+    try {
+      const res = await apiService.get('/blog/posts')
+      const posts = res.data || []
+      
+      // Extraire tous les tags de tous les posts
+      const allTags = new Set<string>()
+      
+      posts.forEach((post: any) => {
+        if (post.tags && Array.isArray(post.tags)) {
+          post.tags.forEach((tagItem: any) => {
+            if (typeof tagItem === 'string') {
+              // Essayer de parser si c'est du JSON
+              try {
+                if (tagItem.trim().startsWith('[')) {
+                  const parsed = JSON.parse(tagItem.replace(/'/g, '"'))
+                  if (Array.isArray(parsed)) {
+                    parsed.forEach(tag => {
+                      if (tag && tag.trim()) {
+                        allTags.add(tag.trim())
+                      }
+                    })
+                  }
+                } else {
+                  // Tag simple
+                  if (tagItem.trim()) {
+                    allTags.add(tagItem.trim())
+                  }
+                }
+              } catch {
+                // Si parsing échoue, ajouter comme tag simple
+                const cleanTag = tagItem.replace(/[\[\]"']/g, '').trim()
+                if (cleanTag) {
+                  allTags.add(cleanTag)
+                }
+              }
+            }
+          })
+        }
+      })
+      
+      return Array.from(allTags).sort()
+    } catch (error) {
+      console.error('Erreur lors de la récupération des tags:', error)
+      return []
+    }
+  }
 }
 
 export const blogService = new BlogService()

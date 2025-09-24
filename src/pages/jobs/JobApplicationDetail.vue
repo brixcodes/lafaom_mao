@@ -1,0 +1,1048 @@
+<template>
+  <VContainer class="application-detail-container">
+    <!-- En-tête avec bouton retour -->
+    <div class="d-flex align-center mb-4">
+      <VBtn icon variant="text" class="mr-3" @click="goBack">
+        <VIcon icon="ri-arrow-left-line" color="primary" />
+      </VBtn>
+      <div>
+        <h1 class="font-weight-bold mb-1">Détails de la candidature</h1>
+        <p class="text-body-2 text-secondary mb-0">
+          Consultez les informations de la candidature et gérez son statut.
+        </p>
+      </div>
+    </div>
+
+    <VFadeTransition>
+      <VRow v-if="application">
+        <VCol cols="12">
+          <!-- En-tête avec informations principales -->
+          <VSlideYTransition>
+            <VCard class="mb-6 application-header-card overflow-hidden" elevation="3">
+              <div class="application-header-overlay">
+                <div class="application-header-content">
+                  <div class="d-flex align-center mb-4">
+                    <VAvatar :color="getAvatarColor(application.first_name)" size="64" class="me-4 border-white">
+                      <span class="text-white font-weight-bold text-h5">
+                        {{ getInitials(application.first_name, application.last_name) }}
+                      </span>
+                    </VAvatar>
+                    <div>
+                      <h1 class="text-h4 font-weight-bold text-white mb-2 animate-title">
+                        {{ application.first_name }} {{ application.last_name }}
+                      </h1>
+                      <div class="text-caption text-white mb-2">
+                        Candidature {{ application.application_number }}
+                      </div>
+                      <div class="text-caption text-white">
+                        Soumise le {{ formatDate(application.created_at) }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <VSlideXTransition group>
+                    <VChip key="status-chip" :color="getStatusColor(application.status)"
+                      :prepend-icon="getStatusIcon(application.status)" variant="elevated" size="large"
+                      class="mr-2 mb-2 animate-tag">
+                      {{ getStatusLabel(application.status) }}
+                    </VChip>
+
+                    <VChip v-if="application.job_offer?.title" key="job-offer-chip" color="white" variant="outlined"
+                      size="small" class="mr-2 mb-2 animate-tag" prepend-icon="ri-briefcase-line">
+                      {{ application.job_offer.title }}
+                    </VChip>
+                  </VSlideXTransition>
+                </div>
+              </div>
+            </VCard>
+          </VSlideYTransition>
+
+          <!-- Contenu principal -->
+          <VRow>
+            <VCol cols="12" md="5">
+              <!-- Informations personnelles -->
+              <VSlideYTransition>
+                <VCard class="mb-6 animate-card" elevation="1">
+                  <VCardTitle class="d-flex align-center">
+                    <VIcon color="primary" class="mr-2">ri-user-line</VIcon>
+                    <span class="text-h6">Informations personnelles</span>
+                  </VCardTitle>
+                  <VDivider />
+                  <VCardText class="py-4">
+                    <VRow>
+                      <VCol cols="12" md="7">
+                        <div class="info-item mb-3">
+                          <div>Nom complet</div>
+                          <div class="info-value">{{ application.first_name }} {{ application.last_name }}</div>
+                        </div>
+
+                        <div class="info-item mb-3">
+                          <div>Adresse Email</div>
+                          <div class="info-value">
+                            <a :href="`mailto:${application.email}`" class="text-decoration-none info-value">
+                              {{ application.email }}
+                            </a>
+                          </div>
+                        </div>
+
+                        <div class="info-item mb-3">
+                          <div>Téléphone</div>
+                          <div class="info-value">
+                            <a :href="`tel:${application.phone_number}`" class="text-decoration-none info-value">
+                              {{ formatPhoneNumber(application.phone_number, application.country_code) }}
+                            </a>
+                          </div>
+                        </div>
+                      </VCol>
+
+                      <VCol cols="12" md="5">
+                        <div v-if="application.date_of_birth" class="info-item mb-3">
+                          <div>Date de naissance</div>
+                          <div class="info-value">{{ formatDate(application.date_of_birth) }}</div>
+                        </div>
+
+                        <div v-if="application.city" class="info-item mb-3">
+                          <div class="info-label">Ville</div>
+                          <div class="info-value">{{ application.city }}</div>
+                        </div>
+
+                        <div v-if="application.address" class="info-item mb-3">
+                          <div class="info-label">Adresse</div>
+                          <div class="info-value">{{ application.address }}</div>
+                        </div>
+                      </VCol>
+                    </VRow>
+                  </VCardText>
+                </VCard>
+              </VSlideYTransition>
+
+              <!-- Documents joints -->
+              <VSlideYTransition>
+                <VCard v-if="application.attachments && application.attachments.length > 0" class="mb-6 animate-card"
+                  elevation="1">
+                  <VCardTitle class="d-flex align-center">
+                    <VIcon color="primary" class="mr-2">ri-attachment-line</VIcon>
+                    <span class="text-h6">Documents joints ({{ application.attachments.length }})</span>
+                  </VCardTitle>
+                  <VDivider />
+                  <VCardText class="py-4">
+                    <VRow>
+                      <VCol v-for="attachment in application.attachments" :key="attachment.id" cols="12" sm="6">
+                        <VCard variant="outlined" class="document-card hover-lift">
+                          <VCardText class="pa-4">
+                            <div class="d-flex align-center mb-4">
+                              <VAvatar :color="getFileColor(attachment.name)" size="48" class="me-3" variant="tonal">
+                                <VIcon :icon="getFileIcon(attachment.name)" size="24" />
+                              </VAvatar>
+                              <div class="flex-grow-1">
+                                <div class="text-subtitle-1 font-weight-medium mb-1">{{
+                                  getDocumentLabel(attachment.document_type) }}</div>
+                                <div class="text-caption text-medium-emphasis">{{ attachment.name }}</div>
+                                <div class="text-caption text-medium-emphasis mt-1">
+                                  <VIcon icon="ri-calendar-line" size="12" class="me-1" />
+                                  {{ formatDate(attachment.upload_date || application.created_at) }}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                              <VBtn color="primary" variant="outlined" size="small" prepend-icon="ri-eye-line"
+                                @click="previewDocument(attachment)" block>
+                                Prévisualiser
+                              </VBtn>
+                              <VBtn color="success" variant="elevated" size="small" prepend-icon="ri-download-line"
+                                @click="downloadDocument(attachment)" :loading="downloadingFiles[attachment.id]" block>
+                                Télécharger
+                              </VBtn>
+                            </div>
+
+                            <!-- Informations supplémentaires du fichier -->
+                            <div v-if="attachment.file_size" class="mt-3 pt-3 border-t">
+                              <div class="d-flex justify-space-between text-caption">
+                                <span class="text-medium-emphasis">Taille :</span>
+                                <span>{{ formatFileSize(attachment.file_size) }}</span>
+                              </div>
+                            </div>
+                          </VCardText>
+                        </VCard>
+                      </VCol>
+                    </VRow>
+                  </VCardText>
+                </VCard>
+              </VSlideYTransition>
+
+              <!-- Notes -->
+              <VSlideYTransition>
+                <VCard v-if="application.notes" class="mb-6 animate-card" elevation="1">
+                  <VCardTitle class="d-flex align-center">
+                    <VIcon color="primary" class="mr-2">ri-sticky-note-line</VIcon>
+                    <span class="text-h6">Notes</span>
+                  </VCardTitle>
+                  <VDivider />
+                  <VCardText class="py-4">
+                    <div class="notes-content">{{ application.notes }}</div>
+                  </VCardText>
+                </VCard>
+              </VSlideYTransition>
+
+              <!-- Raison de rejet -->
+              <VSlideYTransition>
+                <VCard v-if="application.refusal_reason" class="animate-card" elevation="1">
+                  <VCardTitle class="d-flex align-center">
+                    <VIcon color="error" class="mr-2">ri-close-circle-line</VIcon>
+                    <span class="text-h6">Raison du rejet</span>
+                  </VCardTitle>
+                  <VDivider />
+                  <VCardText class="py-4">
+                    <VAlert type="error" variant="tonal" class="mb-0">
+                      {{ application.refusal_reason }}
+                    </VAlert>
+                  </VCardText>
+                </VCard>
+              </VSlideYTransition>
+            </VCol>
+
+            <!-- Sidebar avec informations et actions -->
+            <VCol cols="12" md="7">
+              <VSlideXReverseTransition>
+                <VCard class="mb-6 animate-card" elevation="1">
+                  <VCardTitle class="d-flex align-center">
+                    <VIcon color="primary" class="mr-2">ri-information-line</VIcon>
+                    <span class="text-h6">Informations candidature</span>
+                  </VCardTitle>
+                  <VDivider />
+                  <VRow>
+                    <!-- Colonne gauche -->
+                    <VCol cols="12" md="6">
+                      <VList lines="two" density="comfortable">
+                        <VListItem>
+                          <template #prepend>
+                            <VIcon color="primary">ri-hashtag</VIcon>
+                          </template>
+                          <VListItemTitle>Numéro candidature</VListItemTitle>
+                          <VListItemSubtitle>{{ application.application_number }}</VListItemSubtitle>
+                        </VListItem>
+
+                        <VListItem>
+                          <template #prepend>
+                            <VIcon color="primary">ri-shield-user-line</VIcon>
+                          </template>
+                          <VListItemTitle>Statut</VListItemTitle>
+                          <VListItemSubtitle>{{ getStatusLabel(application.status) }}</VListItemSubtitle>
+                        </VListItem>
+                      </VList>
+                    </VCol>
+
+                    <!-- Colonne droite -->
+                    <VCol cols="12" md="6">
+                      <VList lines="two" density="comfortable">
+                        <VListItem v-if="application.updated_at !== application.created_at">
+                          <template #prepend>
+                            <VIcon color="primary">ri-calendar-event-line</VIcon>
+                          </template>
+                          <VListItemTitle>Dernière modification</VListItemTitle>
+                          <VListItemSubtitle>{{ formatDateTime(application.updated_at) }}</VListItemSubtitle>
+                        </VListItem>
+
+
+                        <VListItem>
+                          <template #prepend>
+                            <VIcon color="primary">ri-calendar-line</VIcon>
+                          </template>
+                          <VListItemTitle>Date de soumission</VListItemTitle>
+                          <VListItemSubtitle>{{ formatDate(application.created_at) }}</VListItemSubtitle>
+                        </VListItem>
+                      </VList>
+                    </VCol>
+                  </VRow>
+
+
+
+                  <VDivider />
+
+                  <!-- Actions principales : seulement Accepter et Rejeter -->
+                  <VCardActions class="pa-4 d-flex flex-wrap gap-2" v-if="!isStatusFinal">
+                    <!-- Statut -->
+                    <VBtn color="success" variant="outlined" @click="updateStatus('ACCEPTED')"
+                      prepend-icon="ri-check-line" :loading="updatingStatus"
+                      :disabled="application.status === 'ACCEPTED'">
+                      Accepter
+                    </VBtn>
+
+                    <VBtn color="error" variant="outlined" @click="updateStatus('REJECTED')"
+                      prepend-icon="ri-close-line" :loading="updatingStatus"
+                      :disabled="application.status === 'REJECTED'">
+                      Rejeter
+                    </VBtn>
+
+                    <!-- Contact -->
+                    <VBtn variant="outlined" prepend-icon="ri-mail-send-line" @click="sendEmail">
+                      Contacter
+                    </VBtn>
+
+                    <!-- Offre d'emploi -->
+                    <VBtn v-if="application.job_offer_id" variant="outlined" prepend-icon="ri-eye-line"
+                      @click="viewJobOffer">
+                      voir l'offre
+                    </VBtn>
+
+                    <!-- Télécharger tous les documents -->
+                    <VBtn v-if="application.attachments && application.attachments.length > 0" variant="outlined"
+                      prepend-icon="ri-download-line" @click="downloadAllDocuments" :loading="downloadingAll">
+                      Télécharger
+                    </VBtn>
+                  </VCardActions>
+
+
+
+                  <!-- Message pour les candidatures finalisées -->
+                  <VCardText v-else class="pa-4">
+                    <VAlert :type="application.status === 'accepted' ? 'success' : 'info'" variant="tonal"
+                      :icon="application.status === 'accepted' ? 'ri-check-circle-line' : 'ri-information-line'">
+                      Cette candidature a été {{ application.status === 'ACCEPTED' ? 'acceptée' : (application.status
+                        === 'REJECTED' ?
+                        'rejetée' : 'finalisée') }} et ne peut plus être modifiée.
+                    </VAlert>
+                  </VCardText>
+
+                </VCard>
+              </VSlideXReverseTransition>
+            </VCol>
+          </VRow>
+        </VCol>
+      </VRow>
+    </VFadeTransition>
+
+    <!-- État de chargement -->
+    <VFadeTransition>
+      <VRow v-if="isLoading && !application">
+        <VCol cols="12" class="text-center py-8">
+          <VProgressCircular indeterminate color="primary" size="64" width="6" />
+          <div class="mt-4 text-body-1 animate-fade-in">Chargement de la candidature...</div>
+        </VCol>
+      </VRow>
+    </VFadeTransition>
+
+    <!-- État d'erreur -->
+    <VFadeTransition>
+      <VRow v-if="!isLoading && !application && error">
+        <VCol cols="12" class="text-center py-8">
+          <VIcon size="x-large" color="error" class="mb-4 animate-bounce">ri-alert-circle-line</VIcon>
+          <div class="text-h5 mb-3 animate-fade-in">Erreur de chargement</div>
+          <div class="text-body-1 mb-6 animate-fade-in">{{ error }}</div>
+          <VBtn color="primary" size="large" @click="loadApplication" prepend-icon="ri-refresh-line"
+            class="animate-fade-in">
+            Réessayer
+          </VBtn>
+        </VCol>
+      </VRow>
+    </VFadeTransition>
+
+    <!-- Dialog confirmation changement de statut -->
+    <VDialog v-model="statusConfirmDialog" max-width="500">
+      <VCard>
+        <VCardTitle class="d-flex align-center">
+          <VIcon :icon="pendingStatusInfo?.icon || 'ri-question-line'" class="me-2"
+            :color="pendingStatusInfo?.color || 'primary'" />
+          Confirmer le changement de statut
+        </VCardTitle>
+        <VCardText>
+          <p class="text-body-1 mb-4">
+            Voulez-vous vraiment changer le statut de cette candidature vers
+            <VChip size="small" :color="pendingStatusInfo?.color" class="mx-1">
+              {{ pendingStatusInfo?.text }}
+            </VChip> ?
+          </p>
+
+          <!-- Champ de commentaire OBLIGATOIRE pour les rejets -->
+          <VTextarea v-if="pendingStatus === 'REJECTED'" v-model="statusChangeReason" label="Raison du rejet *"
+            placeholder="Expliquez la raison du rejet (obligatoire)..." variant="outlined" rows="3" class="mb-4"
+            :error="pendingStatus === 'REJECTED' && !statusChangeReason.trim()"
+            error-messages="La raison du rejet est obligatoire" />
+
+          <VAlert v-if="getStatusChangeWarning(pendingStatus)" type="info" variant="tonal" class="mb-4">
+            {{ getStatusChangeWarning(pendingStatus) }}
+          </VAlert>
+        </VCardText>
+        <VCardActions class="justify-end">
+          <VBtn variant="text" @click="cancelStatusChange">Annuler</VBtn>
+          <VBtn variant="flat" :color="pendingStatusInfo?.color || 'primary'" :loading="updatingStatus"
+            @click="confirmStatusChange" :disabled="pendingStatus === 'REJECTED' && !statusChangeReason.trim()">
+            Confirmer
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+  </VContainer>
+</template>
+
+<script>
+import { useJobApplicationsStore } from '@/stores/jobApplications'
+import { useJobOffersStore } from '@/stores/jobOffers'
+import { useAuthStore } from '@/stores/auth'
+import { APPLICATION_STATUSES } from '@/types/jobApplications'
+
+export default {
+  name: 'JobApplicationDetail',
+  setup() {
+    const jobApplicationsStore = useJobApplicationsStore()
+    const jobOffersStore = useJobOffersStore()
+    const authStore = useAuthStore()
+
+    return {
+      jobApplicationsStore,
+      jobOffersStore,
+      authStore
+    }
+  },
+  data() {
+    return {
+      isLoading: true,
+      error: null,
+      downloadingFiles: {},
+      downloadingAll: false,
+      updatingStatus: false,
+      statusConfirmDialog: false,
+      pendingStatus: null,
+      statusChangeReason: ''
+    }
+  },
+  computed: {
+    applicationId() {
+      return this.$route?.params?.id
+    },
+    application() {
+      return this.jobApplicationsStore.currentJobApplication
+    },
+    currentUser() {
+      return this.authStore.user
+    },
+    jobOfferTitle() {
+      if (!this.application?.job_offer_id) {
+        return 'Offre d\'emploi'
+      }
+
+      const jobOffer = this.jobOffersStore.jobOffers.find(
+        offer => offer.id === this.application.job_offer_id
+      )
+
+      return jobOffer?.title || 'Offre d\'emploi'
+    },
+
+    // Vérifier si le statut est final (accepté ou rejeté)
+    isStatusFinal() {
+      return this.application && ['ACCEPTED', 'REJECTED', 'CANCELLED'].includes(this.application.status)
+    },
+
+    // Informations du statut en attente de changement
+    pendingStatusInfo() {
+      if (!this.pendingStatus) return null
+      return APPLICATION_STATUSES.find(s => s.value === this.pendingStatus)
+    }
+  },
+  async mounted() {
+    await this.loadApplication()
+  },
+  methods: {
+    async loadApplication() {
+      if (!this.applicationId) {
+        this.error = 'ID de candidature manquant'
+        this.isLoading = false
+        return
+      }
+
+      this.isLoading = true
+      this.error = null
+
+      try {
+        const numericId = parseInt(this.applicationId, 10)
+
+        // Charger la candidature
+        await this.jobApplicationsStore.getJobApplicationById(numericId)
+
+        // Charger les pièces jointes
+        if (this.application) {
+          await this.jobApplicationsStore.fetchApplicationAttachments(numericId)
+
+          // Ajouter les pièces jointes à la candidature
+          if (this.jobApplicationsStore.applicationAttachments.length > 0) {
+            this.application.attachments = this.jobApplicationsStore.applicationAttachments
+          }
+        }
+
+        if (!this.application) {
+          this.error = 'Candidature introuvable'
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement:', error)
+        this.error = error.message || 'Erreur lors du chargement de la candidature'
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // Gestion des statuts - seulement accept et reject
+    async updateStatus(newStatus) {
+      if (!this.application || this.application.status === newStatus || this.updatingStatus) return
+
+      // Toujours demander confirmation
+      this.pendingStatus = newStatus
+      this.statusChangeReason = ''
+      this.statusConfirmDialog = true
+    },
+
+    // Effectuer le changement de statut
+    async performStatusChange(newStatus, reason = '') {
+      if (!this.application || this.updatingStatus) return
+
+      this.updatingStatus = true
+
+      try {
+        await this.jobApplicationsStore.updateApplicationStatus({
+          application_id: this.application.id,
+          status: newStatus,
+          reason: reason
+        })
+
+        // Recharger la candidature pour avoir les données à jour
+        await this.loadApplication()
+
+        const statusInfo = APPLICATION_STATUSES.find(s => s.value === newStatus)
+        if (this.$toast) {
+          this.$toast.success(`Statut mis à jour: ${statusInfo?.text || newStatus}`)
+        }
+
+      } catch (error) {
+        console.error('Erreur lors du changement de statut:', error)
+        console.error('Données envoyées:', { application_id: this.application.id, status: newStatus, reason })
+        console.error('Réponse d\'erreur complète:', error.response?.data)
+        console.error('Status code:', error.response?.status)
+
+        let errorMessage = 'Erreur lors du changement de statut'
+        if (error.response?.data?.detail) {
+          if (Array.isArray(error.response.data.detail)) {
+            errorMessage = error.response.data.detail.map(d => d.msg || d).join(', ')
+          } else {
+            errorMessage = error.response.data.detail
+          }
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        } else if (error.response?.data) {
+          errorMessage = JSON.stringify(error.response.data)
+        }
+
+        if (this.$toast) {
+          this.$toast.error(errorMessage)
+        }
+      } finally {
+        this.updatingStatus = false
+      }
+    },
+
+    // Confirmer le changement de statut
+    async confirmStatusChange() {
+      if (!this.pendingStatus) return
+
+      // Vérifier que la raison est fournie pour les rejets
+      if (this.pendingStatus === 'REJECTED' && !this.statusChangeReason.trim()) {
+        return
+      }
+
+      await this.performStatusChange(this.pendingStatus, this.statusChangeReason)
+      this.statusConfirmDialog = false
+      this.pendingStatus = null
+      this.statusChangeReason = ''
+    },
+
+    // Annuler le changement de statut
+    cancelStatusChange() {
+      this.statusConfirmDialog = false
+      this.pendingStatus = null
+      this.statusChangeReason = ''
+    },
+
+    // Obtenir un message d'avertissement pour le changement de statut
+    getStatusChangeWarning(status) {
+      const warnings = {
+        'REJECTED': 'Cette action notifiera le candidat du rejet de sa candidature.',
+        'ACCEPTED': 'Cette action notifiera le candidat de l\'acceptation de sa candidature.',
+      }
+      return warnings[status] || null
+    },
+
+    // Navigation
+    goBack() {
+      this.$router.back()
+    },
+
+    async viewJobOffer() {
+      if (this.application?.job_offer_id && this.$router) {
+        this.$router.push(`/jobs/offers/${this.application.job_offer_id}`)
+      }
+    },
+
+    // Actions de communication
+    sendEmail() {
+      if (this.application?.email) {
+        const subject = `Candidature ${this.application.application_number}`
+        window.open(`mailto:${this.application.email}?subject=${encodeURIComponent(subject)}`, '_blank')
+      }
+    },
+
+    // Méthode de test pour déboguer l'API
+    async testApiDirectly() {
+      if (!this.application) return
+
+      console.log('=== TEST API DIRECT ===')
+      console.log('Application ID:', this.application.id)
+      console.log('Current Status:', this.application.status)
+
+      // Test avec appel direct
+      try {
+        const response = await fetch('https://lafaom.vertex-cam.com/api/v1/job-applications/change-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          },
+          body: JSON.stringify({
+            application_id: this.application.id,
+            status: 'ACCEPTED'
+          })
+        })
+
+        console.log('Response status:', response.status)
+        const data = await response.text()
+        console.log('Response body:', data)
+
+        if (!response.ok) {
+          console.error('Response not OK:', response.statusText)
+        }
+      } catch (error) {
+        console.error('Fetch error:', error)
+      }
+    },
+
+    // Gestion des documents
+    async downloadDocument(attachment) {
+      this.$set(this.downloadingFiles, attachment.id, true)
+
+      try {
+        await this.jobApplicationsStore.downloadAttachment(attachment.id, attachment.name)
+
+        if (this.$toast) {
+          this.$toast.success(`Document ${attachment.name} téléchargé`)
+        }
+      } catch (error) {
+        console.error('Erreur téléchargement:', error)
+        if (this.$toast) {
+          this.$toast.error('Erreur lors du téléchargement')
+        }
+      } finally {
+        this.$set(this.downloadingFiles, attachment.id, false)
+      }
+    },
+
+    async previewDocument(attachment) {
+      try {
+        // Si l'attachement a un file_path, l'ouvrir directement
+        if (attachment.file_path) {
+          window.open(attachment.file_path, '_blank')
+        } else {
+          // Sinon, utiliser l'API de téléchargement et ouvrir le blob
+          const response = await this.jobApplicationsStore.downloadAttachment(attachment.id, attachment.name)
+
+          if (response && response.data) {
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            window.open(url, '_blank')
+            // Nettoyer l'URL après un délai
+            setTimeout(() => window.URL.revokeObjectURL(url), 1000)
+          }
+        }
+      } catch (error) {
+        console.error('Erreur prévisualisation:', error)
+        if (this.$toast) {
+          this.$toast.error('Impossible de prévisualiser ce document')
+        }
+      }
+    },
+
+    async downloadAllDocuments() {
+      if (!this.application?.attachments?.length) return
+
+      this.downloadingAll = true
+
+      try {
+        // Télécharger tous les documents un par un
+        for (const attachment of this.application.attachments) {
+          await this.jobApplicationsStore.downloadAttachment(attachment.id, attachment.name)
+        }
+
+        if (this.$toast) {
+          this.$toast.success('Tous les documents ont été téléchargés')
+        }
+      } catch (error) {
+        console.error('Erreur téléchargement groupé:', error)
+        if (this.$toast) {
+          this.$toast.error('Erreur lors du téléchargement des documents')
+        }
+      } finally {
+        this.downloadingAll = false
+      }
+    },
+
+    // Utilitaires
+    getInitials(firstName, lastName) {
+      return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase()
+    },
+
+    getAvatarColor(name) {
+      const colors = ['primary', 'secondary', 'success', 'info', 'warning', 'error']
+      const hash = name?.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) || 0
+      return colors[hash % colors.length]
+    },
+
+    // Formatage
+    formatDate(dateString) {
+      if (!dateString) return 'N/A'
+      return new Date(dateString).toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    },
+
+    formatDateTime(dateString) {
+      if (!dateString) return 'N/A'
+      return new Date(dateString).toLocaleString('fr-FR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    },
+
+    formatPhoneNumber(phone, countryCode) {
+      if (!phone) return 'N/A'
+      return countryCode ? `${countryCode} ${phone}` : phone
+    },
+
+    // Icônes et couleurs de fichiers
+    getFileIcon(filename) {
+      const extension = filename.split('.').pop()?.toLowerCase()
+      const iconMap = {
+        'pdf': 'ri-file-pdf-line',
+        'doc': 'ri-file-word-line',
+        'docx': 'ri-file-word-line',
+        'jpg': 'ri-image-line',
+        'jpeg': 'ri-image-line',
+        'png': 'ri-image-line',
+        'gif': 'ri-image-line',
+        'txt': 'ri-file-text-line',
+        'zip': 'ri-file-zip-line',
+        'rar': 'ri-file-zip-line'
+      }
+      return iconMap[extension] || 'ri-file-line'
+    },
+
+    getFileColor(filename) {
+      const extension = filename.split('.').pop()?.toLowerCase()
+      const colorMap = {
+        'pdf': 'error',
+        'doc': 'info',
+        'docx': 'info',
+        'jpg': 'success',
+        'jpeg': 'success',
+        'png': 'success',
+        'gif': 'success',
+        'txt': 'warning',
+        'zip': 'purple',
+        'rar': 'purple'
+      }
+      return colorMap[extension] || 'primary'
+    },
+
+    // Statuts - correspondants à l'API backend
+    getStatusColor(status) {
+      const colors = {
+        'RECEIVED': 'warning',
+        'UNDER_REVIEW': 'info',
+        'ACCEPTED': 'success',
+        'REJECTED': 'error',
+        'CANCELLED': 'secondary',
+        // Fallbacks pour anciens statuts
+        'pending': 'warning',
+        'processing': 'info',
+        'accepted': 'success',
+        'rejected': 'error',
+        'cancelled': 'secondary'
+      }
+      return colors[status] || 'primary'
+    },
+
+    getStatusIcon(status) {
+      const icons = {
+        'RECEIVED': 'ri-mail-line',
+        'UNDER_REVIEW': 'ri-loader-line',
+        'ACCEPTED': 'ri-check-line',
+        'REJECTED': 'ri-close-line',
+        'CANCELLED': 'ri-forbid-line',
+        // Fallbacks pour anciens statuts
+        'pending': 'ri-time-line',
+        'processing': 'ri-loader-line',
+        'accepted': 'ri-check-line',
+        'rejected': 'ri-close-line',
+        'cancelled': 'ri-forbid-line'
+      }
+      return icons[status] || 'ri-circle-line'
+    },
+
+    getStatusLabel(status) {
+      const labels = {
+        'RECEIVED': 'En étude de dossier',
+        'UNDER_REVIEW': 'En cours d\'examen',
+        'ACCEPTED': 'Acceptée',
+        'REJECTED': 'Rejetée',
+        'CANCELLED': 'Annulée',
+        // Fallbacks pour anciens statuts
+        'pending': 'En attente',
+        'processing': 'En traitement',
+        'accepted': 'Acceptée',
+        'rejected': 'Rejetée',
+        'cancelled': 'Annulée'
+      }
+      return labels[status] || status
+    },
+
+    getDocumentLabel(documentType) {
+      const labels = {
+        'cv': 'Curriculum Vitae',
+        'cover_letter': 'Lettre de motivation',
+        'diploma': 'Diplôme',
+        'certificate': 'Certificat',
+        'id_card': 'Pièce d\'identité',
+        'other': 'Autre document'
+      }
+      return labels[documentType] || 'Document'
+    },
+
+    // Formater la taille du fichier
+    formatFileSize(bytes) {
+      if (!bytes) return 'Taille inconnue'
+
+      const sizes = ['Bytes', 'KB', 'MB', 'GB']
+      const i = Math.floor(Math.log(bytes) / Math.log(1024))
+
+      if (i === 0) return `${bytes} ${sizes[i]}`
+
+      return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`
+    }
+  }
+}
+</script>
+
+<style scoped>
+.application-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+
+.application-header-card {
+  position: relative;
+  border-radius: 12px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.application-header-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+.application-header-overlay {
+  position: relative;
+  min-height: 300px;
+  background: linear-gradient(135deg, #1a237e 0%, #3f51b5 100%);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-end;
+  transition: background-color 0.3s ease;
+}
+
+.application-header-overlay:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.application-header-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.8));
+  border-radius: 12px;
+  transition: opacity 0.3s ease;
+}
+
+.application-header-content {
+  position: relative;
+  width: 100%;
+  padding: 2rem;
+  z-index: 1;
+}
+
+.border-white {
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+
+.info-item {
+  margin-bottom: 1rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  margin-bottom: 0.25rem;
+}
+
+.info-value {
+  font-weight: 500;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.document-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.document-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(var(--v-theme-on-surface), 0.15);
+  border-color: rgba(var(--v-theme-primary), 0.3);
+}
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.border-t {
+  border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.notes-content {
+  padding: 1rem;
+  background: rgba(var(--v-theme-surface-variant), 0.5);
+  border-radius: 8px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+/* Animations */
+.animate-title {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.animate-tag {
+  transition: all 0.3s ease;
+}
+
+.animate-tag:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+.animate-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.animate-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-bounce {
+  animation: bounce 1s ease infinite;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@media (max-width: 960px) {
+  .application-header-card {
+    height: 250px;
+  }
+
+  .application-header-overlay {
+    padding: 1.5rem;
+  }
+
+  .application-header-content {
+    padding: 1rem;
+  }
+
+  .animate-title {
+    font-size: 1.5rem !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .application-header-overlay {
+    min-height: 200px;
+  }
+
+  .animate-title {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .animate-tag {
+    margin-bottom: 0.5rem;
+  }
+}
+</style>

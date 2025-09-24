@@ -1,103 +1,62 @@
 <template>
   <div class="section-manager">
     <!-- Header avec titre et bouton d'ajout -->
-    <VCard class="mb-6" elevation="1">
+    <VCard class="mb-3" elevation="1">
       <VCardTitle class="d-flex align-center justify-space-between pa-4">
         <div class="d-flex align-center">
           <VIcon color="primary" class="me-3" size="28">ri-file-list-3-line</VIcon>
           <div>
             <h3 class="text-h5 mb-1">Sections de l'article</h3>
             <p class="text-body-2 text-medium-emphasis mb-0">
-              {{ sections.length }} section{{ sections.length > 1 ? 's' : '' }} • 
-              Gérez le contenu et l'ordre de vos sections
+              {{ sections.length }} section{{ sections.length > 1 ? 's' : '' }} •
+              Gérez le contenu et l'ordre de vos sections pour cet article.
             </p>
           </div>
         </div>
-        
-        <VBtn
-          color="primary"
-          prepend-icon="ri-add-line"
-          @click="showCreateForm"
-          :disabled="isLoading"
-        >
-          Ajouter une section
+
+        <VBtn color="primary" prepend-icon="ri-add-line" @click="showCreateForm" :disabled="isLoading">
+          Ajouter
         </VBtn>
       </VCardTitle>
     </VCard>
 
     <!-- Formulaire de création de section -->
     <VExpandTransition>
-      <VCard v-if="isCreateFormVisible" class="mb-6 create-form-card" elevation="3">
+      <VCard v-if="isCreateFormVisible" class="mb-3 create-form-card" elevation="3">
         <VCardTitle class="d-flex align-center pa-4">
-          <VIcon color="success" class="me-2">ri-add-circle-line</VIcon>
+          <VIcon class="me-2">ri-add-circle-line</VIcon>
           <span class="text-h6">Nouvelle section</span>
         </VCardTitle>
-        
+
         <VDivider />
-        
+
         <VCardText class="pa-4">
           <VForm @submit.prevent="handleCreate">
             <VRow>
-              <VCol cols="12" md="8">
-                <VTextField
-                  v-model="createForm.title"
-                  label="Titre de la section"
-                  variant="outlined"
-                  :error-messages="createErrors.title"
-                  class="mb-3"
-                  clearable
-                />
-                
-                <VTextarea
-                  v-model="createForm.content"
-                  label="Contenu"
-                  variant="outlined"
-                  rows="6"
-                  auto-grow
-                  :error-messages="createErrors.content"
-                  class="mb-3"
-                  clearable
-                />
+              <VCol cols="12" md="7">
+                <VTextField v-model="createForm.title" label="Titre de la section" variant="outlined"
+                  :error-messages="createErrors.title" class="mb-3" clearable prepend-inner-icon="ri-text" />
+
+                <VTextarea v-model="createForm.content" label="Contenu" variant="outlined" rows="6" auto-grow
+                  :error-messages="createErrors.content" class="mb-3" clearable prepend-inner-icon="ri-align-left" />
               </VCol>
-              
-              <VCol cols="12" md="4">
-                <VTextField
-                  v-model.number="createForm.position"
-                  label="Position"
-                  type="number"
-                  variant="outlined"
-                  min="1"
-                  :error-messages="createErrors.position"
-                  class="mb-3"
-                />
-                
-                <VFileInput
-                  v-model="createForm.cover_image"
-                  label="Image de couverture (optionnelle)"
-                  accept="image/*"
-                  variant="outlined"
-                  prepend-icon=""
-                  prepend-inner-icon="ri-image-line"
-                  :error-messages="createErrors.cover_image"
-                  show-size
-                />
+
+              <VCol cols="12" md="5">
+                <VTextField v-model.number="createForm.position" label="Position" type="number" variant="outlined"
+                  min="1" :error-messages="createErrors.position" class="mb-3" prepend-inner-icon="ri-sort-number-asc" />
+
+                <VFileInput v-model="createForm.cover_image" label="Image de couverture" accept="image/*"
+                  variant="outlined" prepend-icon="" prepend-inner-icon="ri-image-line"
+                  :error-messages="createErrors.cover_image" show-size />
               </VCol>
             </VRow>
-            
+
             <div class="d-flex gap-3 justify-end mt-4">
-              <VBtn
-                variant="outlined"
-                @click="hideCreateForm"
-                :disabled="isCreating"
-              >
+              <VBtn @click="hideCreateForm" color="error" :disabled="isCreating">
                 Annuler
               </VBtn>
-              <VBtn
-                type="submit"
-                color="primary"
-                :loading="isCreating"
-              >
-                Créer la section
+              <VBtn type="submit" color="primary" :loading="isCreating">
+                Enregistrer
               </VBtn>
             </div>
           </VForm>
@@ -113,17 +72,10 @@
 
     <!-- Liste des sections -->
     <VFadeTransition group>
-      <SectionCard
-        v-for="(section, index) in sortedSections"
-        :key="section.id"
-        :section="section"
-        :is-first="index === 0"
-        :is-last="index === sortedSections.length - 1"
-        @update="(data) => handleSectionUpdate(section.id, data)"
-        @delete="handleSectionDelete(section.id)"
-        @move-up="handleSectionMoveUp(section)"
-        @move-down="handleSectionMoveDown(section)"
-      />
+      <SectionCard v-for="(section, index) in sortedSections" :key="section.id" :section="section"
+        :is-first="index === 0" :is-last="index === sortedSections.length - 1"
+        @update="(data) => handleSectionUpdate(section.id, data)" @delete="handleSectionDelete(section.id)"
+        @move-up="handleSectionMoveUp(section)" @move-down="handleSectionMoveDown(section)" />
     </VFadeTransition>
 
     <!-- État vide -->
@@ -133,12 +85,7 @@
       <p class="text-body-2 text-medium-emphasis mb-4">
         Commencez par ajouter des sections pour structurer votre article
       </p>
-      <VBtn
-        color="primary"
-        variant="outlined"
-        prepend-icon="ri-add-line"
-        @click="showCreateForm"
-      >
+      <VBtn color="primary" variant="outlined" prepend-icon="ri-add-line" @click="showCreateForm">
         Créer la première section
       </VBtn>
     </VCard>
@@ -188,7 +135,7 @@ const fetchSections = async () => {
     console.error('[DEBUG] postId est requis pour charger les sections')
     return
   }
-  
+
   isLoading.value = true
   try {
     const res = await blogService.getPostSections(props.postId)
@@ -206,22 +153,22 @@ const fetchSections = async () => {
 const validateCreateForm = () => {
   clearCreateErrors()
   let isValid = true
-  
+
   if (!createForm.value.title.trim()) {
     createErrors.value.title = 'Le titre est requis'
     isValid = false
   }
-  
+
   if (!createForm.value.content.trim()) {
     createErrors.value.content = 'Le contenu est requis'
     isValid = false
   }
-  
+
   if (createForm.value.position < 1) {
     createErrors.value.position = 'La position doit être un nombre positif'
     isValid = false
   }
-  
+
   return isValid
 }
 
@@ -253,7 +200,7 @@ const resetCreateForm = () => {
 
 const handleCreate = async () => {
   if (!validateCreateForm()) return
-  
+
   isCreating.value = true
   try {
     const createData: PostSectionCreateInput = {
@@ -263,7 +210,7 @@ const handleCreate = async () => {
       post_id: props.postId,
       cover_image: createForm.value.cover_image || undefined,
     }
-    
+
     await blogService.createSection(createData)
     showToast({ message: '✅ Section ajoutée avec succès', type: 'success' })
     await fetchSections()
@@ -303,14 +250,20 @@ const handleSectionUpdate = async (sectionId: number, updateData: any) => {
 // === DELETE SECTION ===
 const handleSectionDelete = async (sectionId: number) => {
   const confirmed = await confirmAction({
-    title: 'Supprimer la section',
-    text: 'Cette action est irréversible. Voulez-vous continuer ?',
-    confirmButtonText: 'Oui, supprimer',
-    confirmButtonColor: 'error',
+    title: 'Êtes vous sûres?',
+    text: "Souhaitez-vous réellement supprimer cette section ? Cette action est irréversible.",
+    cancelButtonText: '<span style="color:white">Annuler</span>',
+    confirmButtonText: '<span style="color:white">Oui, supprimer</span>',
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    customClass: {
+      confirmButton: 'swal2-confirm-white',
+      cancelButton: 'swal2-cancel-white',
+    },
   })
-  
+
   if (!confirmed) return
-  
+
   try {
     await blogService.deleteSection(sectionId)
     showToast({ message: '✅ Section supprimée avec succès', type: 'success' })
@@ -325,9 +278,9 @@ const handleSectionDelete = async (sectionId: number) => {
 const handleSectionMoveUp = async (section: PostSectionOut) => {
   const currentIndex = sortedSections.value.findIndex(s => s.id === section.id)
   if (currentIndex <= 0) return
-  
+
   const previousSection = sortedSections.value[currentIndex - 1]
-  
+
   // Échanger les positions
   await Promise.all([
     handleSectionUpdate(section.id, { ...section, position: previousSection.position }),
@@ -338,9 +291,9 @@ const handleSectionMoveUp = async (section: PostSectionOut) => {
 const handleSectionMoveDown = async (section: PostSectionOut) => {
   const currentIndex = sortedSections.value.findIndex(s => s.id === section.id)
   if (currentIndex >= sortedSections.value.length - 1) return
-  
+
   const nextSection = sortedSections.value[currentIndex + 1]
-  
+
   // Échanger les positions
   await Promise.all([
     handleSectionUpdate(section.id, { ...section, position: nextSection.position }),
@@ -360,12 +313,6 @@ onMounted(() => {
 }
 
 .create-form-card {
-  border-radius: 12px;
-  border: 2px solid rgb(var(--v-theme-success));
-  background-color: rgba(var(--v-theme-success), 0.02);
-}
-
-.create-form-card .v-card-title {
-  background-color: rgba(var(--v-theme-success), 0.08);
+  border-radius: 5px;
 }
 </style>

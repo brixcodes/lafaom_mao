@@ -35,6 +35,9 @@ export function confirmAction(options?: ConfirmActionOptions): Promise<boolean> 
   const method = (options?.method || 'post') as HttpMethod
   const msg = defaultMessages[method]
 
+  // Extraire les propriétés personnalisées qui ne sont pas reconnues par SweetAlert2
+  const { method: _, ...sweetAlertOptions } = options || {}
+
   return Swal.fire({
     title: options?.title || msg.title,
     text: options?.text || msg.text,
@@ -43,6 +46,6 @@ export function confirmAction(options?: ConfirmActionOptions): Promise<boolean> 
     cancelButtonText: options?.cancelButtonText || 'Annuler',
     reverseButtons: true,
     focusCancel: true,
-    ...options,
+    ...sweetAlertOptions,
   }).then(result => !!result.isConfirmed)
 }

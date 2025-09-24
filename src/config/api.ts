@@ -1,7 +1,7 @@
 // Configuration de l'API
 export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://lafaom.vertex-cam.com/api/v1',
-  TIMEOUT: 10000,
+  TIMEOUT: 30000, // Augmenté à 30 secondes
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
 }
@@ -41,8 +41,53 @@ export const API_ENDPOINTS = {
   // Job Offers
   JOB_OFFERS: {
     LIST: '/job-offers',
+    CREATE: '/job-offers',
     DETAIL: (id: string) => `/job-offers/${id}`,
-    APPLICATIONS: '/job-offers/applications'
+    UPDATE: (id: string) => `/job-offers/${id}`,
+    DELETE: (id: string) => `/job-offers/${id}`,
+    STATS: {
+      DASHBOARD: '/job-offers/stats/dashboard',
+      OFFERS: '/job-offers/stats/offers',
+      APPLICATIONS: '/job-offers/stats/applications',
+      CONTRACT_TYPES: '/job-offers/stats/contract-types',
+      LOCATIONS: '/job-offers/stats/locations',
+      SALARY: '/job-offers/stats/salary',
+      MONTHLY: '/job-offers/stats/monthly',
+      TOP_OFFERS: '/job-offers/stats/top-offers',
+      INSIGHTS: '/job-offers/stats/insights',
+      EVOLUTION: '/job-offers/stats/evolution'
+    },
+    APPLICATIONS: {
+      LIST: '/job-applications',
+      CREATE: '/job-applications',
+      DETAIL: (id: number) => `/job-applications/${id}`,
+      UPDATE: (id: number) => `/job-applications/${id}`,
+      DELETE: (id: number) => `/job-applications/${id}`,
+      CHANGE_STATUS: '/job-applications/change-status',
+      REQUEST_OTP: '/job-applications/request-otp',
+      UPDATE_BY_CANDIDATE: '/job-applications/update-by-candidate',
+      ATTACHMENTS: (applicationId: number) => `/job-applications/${applicationId}/attachments`
+    },
+    ATTACHMENTS: {
+      UPLOAD: '/job-attachments',
+      DELETE: (id: number) => `/job-attachments/${id}`
+    }
+  },
+  
+  // Job Applications (endpoints directs)
+  JOB_APPLICATIONS: {
+    LIST: '/job-applications',
+    CREATE: '/job-applications',
+    DETAIL: (id: number) => `/job-applications/${id}`,
+    UPDATE: (id: number) => `/job-applications/${id}`,
+    DELETE: (id: number) => `/job-applications/${id}`,
+    CHANGE_STATUS: '/job-applications/change-status',
+    REQUEST_OTP: '/job-applications/request-otp',
+    UPDATE_BY_CANDIDATE: '/job-applications/update-by-candidate',
+    ATTACHMENTS: (applicationId: number) => `/job-applications/${applicationId}/attachments`,
+    STATS: {
+      APPLICATIONS: '/job-applications/stats'
+    }
   },
   
   // Training
@@ -54,10 +99,69 @@ export const API_ENDPOINTS = {
     CENTERS: '/training/centers'
   },
   
+  // Student Applications
+  STUDENT_APPLICATIONS: {
+    LIST: '/student-applications',
+    MY_APPLICATIONS: '/my-student-applications',
+    CREATE: '/student-applications',
+    DETAIL: (id: number) => `/student-applications/${id}`,
+    UPDATE: (id: number) => `/student-applications/${id}`,
+    MY_UPDATE: (id: number) => `/my-student-applications/${id}`,
+    DELETE: (id: number) => `/student-applications/${id}`,
+    MY_DELETE: (id: number) => `/my-student-applications/${id}`,
+    SUBMIT: '/student-applications/submit',
+    CHANGE_STATUS: '/student-applications/change-status',
+    PAY_TRAINING_FEE: '/my-student-applications/pay-training-fee',
+    SUBMIT_WITH_PAYMENT: (id: number) => `/my-student-applications/${id}/submit`,
+    ATTACHMENTS: (applicationId: number) => `/student-applications/${applicationId}/attachments`,
+    STATS: '/student-applications/stats',
+    EXPORT: '/student-applications/export',
+    BULK_UPDATE: '/student-applications/bulk-update',
+    BULK_DELETE: '/student-applications/bulk-delete',
+    CAN_EDIT: (applicationId: number) => `/student-applications/${applicationId}/can-edit`,
+    HISTORY: (applicationId: number) => `/student-applications/${applicationId}/history`,
+    DUPLICATE: (applicationId: number) => `/student-applications/${applicationId}/duplicate`,
+    NOTIFICATIONS: '/student-applications/notifications',
+    MARK_NOTIFICATION_READ: (notificationId: string) => `/student-applications/notifications/${notificationId}/read`
+  },
+  
   // Payments
   PAYMENTS: {
     LIST: '/payments',
     DETAIL: (id: string) => `/payments/${id}`
+  },
+  
+    // Reclamations
+    RECLAMATIONS: {
+      LIST: '/reclamations',
+      MY_RECLAMATIONS: '/my-reclamations',
+      CREATE: '/my-reclamations',
+      DETAIL: (id: number) => `/reclamations/${id}`,
+      UPDATE: (id: number) => `/my-reclamations/${id}`,
+      DELETE: (id: number) => `/my-reclamations/${id}`,
+      UPDATE_STATUS: (id: number) => `/reclamations/${id}/status`
+    },
+  
+  // Reclamation Types
+  RECLAMATION_TYPES: {
+    LIST: '/reclamation-types',
+    ACTIVE: '/reclamation-types/active/all',
+    CREATE: '/reclamation-types',
+    DETAIL: (id: number) => `/reclamation-types/${id}`,
+    UPDATE: (id: number) => `/reclamation-types/${id}`,
+    DELETE: (id: number) => `/reclamation-types/${id}`
+  },
+
+  // Payments
+  PAYMENTS: {
+    LIST: '/payments/payments',
+    CREATE: '/payments/payments',
+    DETAIL: (id: number) => `/payments/payments/${id}`,
+    UPDATE: (id: number) => `/payments/payments/${id}`,
+    DELETE: (id: number) => `/payments/payments/${id}`,
+    BY_TRANSACTION: (transactionId: string) => `/payments/payments-by-transaction/${transactionId}`,
+    CHECK_STATUS: (transactionId: string) => `/payments/check-status/${transactionId}`,
+    CINETPAY_WEBHOOK: '/payments/cinetpay/notify'
   }
 }
 

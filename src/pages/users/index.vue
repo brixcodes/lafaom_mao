@@ -97,19 +97,6 @@
           </VCardText>
         </VCard>
       </VCol>
-      <!-- <VCol cols="12" md="2">
-        <VCard>
-          <VCardText>
-            <div class="d-flex align-center">
-              <VIcon icon="ri-group-line" size="32" color="secondary" class="mr-2" />
-              <div>
-                <div class="text-h5">{{ userStats.total }}</div>
-                <div class="text-caption">Total</div>
-              </div>
-            </div>
-          </VCardText>
-        </VCard>
-      </VCol> -->
     </VRow>
 
     <!-- Barre de recherche et filtres -->
@@ -133,13 +120,6 @@
         <div v-else>
           <UserTable :users="users" :headers="headers" :is-loading="isLoading" @detail="goToDetail" @edit="goToEdit"
             @delete="confirmDelete" />
-          <!-- <UserPagination
-            :page="pagination.page"
-            :page-size="pagination.page_size"
-            :total="pagination.total"
-            @page-change="handlePageChange"
-            @page-size-change="handlePageSizeChange"
-          /> -->
         </div>
       </VCardText>
     </VCard>
@@ -204,8 +184,8 @@ const filters = ref({
   search: '',
   user_type: undefined,
   status: undefined,
-  order_by: 'created_at',
-  asc: 'desc',
+  order_by: 'created_at' as const,
+  asc: 'desc' as const,
 })
 
 const userTypeOptions = ref<{ title: string; value: string }[]>([])
@@ -216,19 +196,20 @@ const statusOptions = ref<{ title: string; value: string }[]>([
   { value: 'deleted', title: 'Supprimé' },
 ])
 
-const fetchFilterOptions = async () => {
-  // Fetch user types from API or fallback to enums
-  try {
-    const rolesRes = await userService.getRoles()
-    userTypeOptions.value = rolesRes.data.map(role => ({ title: role.name, value: role.name }))
-  } catch {
-    userTypeOptions.value = [
-      { title: 'Admin', value: 'admin' },
-      { title: 'Staff', value: 'staff' },
-      { title: 'Student', value: 'student' },
-    ]
-  }
+const fetchFilterOptions = () => {
+  // Utiliser directement les types d'utilisateurs standards
+  // Cela évite les appels API non nécessaires et les erreurs de permissions
+  userTypeOptions.value = [
+    { title: 'Admin', value: 'admin' },
+    { title: 'Staff', value: 'staff' },
+    { title: 'Teacher', value: 'teacher' },
+    { title: 'Student', value: 'student' },
+    { title: 'User', value: 'user' },
+    { title: 'Jobseeker', value: 'jobseeker' },
+    { title: 'Employer', value: 'employer' },
+  ]
 }
+
 const headers = [
   { title: '', key: 'picture', sortable: false, width: '60px' },
   { title: 'Utilisateur', key: 'full_name', sortable: true },
@@ -243,33 +224,42 @@ const fetchUsers = async () => {
   await userStore.fetchUsers(filters.value)
   computeUserStats(userStore.users)
 }
+
 const handleSearch = (query: string) => {
   filters.value.search = query
   filters.value.page = 1
   fetchUsers()
 }
+
 const handleClear = () => {
   searchQuery.value = ''
   filters.value.search = ''
   filters.value.page = 1
   fetchUsers()
 }
+
 const handlePageChange = (page: number) => {
   filters.value.page = page
   fetchUsers()
 }
+
 const handlePageSizeChange = (pageSize: number) => {
   filters.value.page_size = pageSize
   filters.value.page = 1
   fetchUsers()
 }
+
 const goToCreate = () => router.push('/users/create')
 const goToDetail = (id: string) => router.push(`/users/${id}`)
 const goToEdit = (id: string) => router.push(`/users/${id}/edit`)
+const goToPermissions = (id: string) => router.push(`/users/${id}/permissions`)
+const goToRoles = (id: string) => router.push(`/users/${id}/roles`)
+
 const confirmDelete = (user: any) => {
   userToDelete.value = user
   deleteDialog.value = true
 }
+
 const deleteUser = async () => {
   if (!userToDelete.value) return
   await userStore.deleteUser((userToDelete.value as any).id)
@@ -277,7 +267,9 @@ const deleteUser = async () => {
   userToDelete.value = null
   showToast({ message: 'Utilisateur supprimé avec succès.', type: 'success' })
 }
+
 const clearError = () => userStore.clearError()
+
 onMounted(() => {
   fetchFilterOptions()
   fetchUsers()
@@ -288,6 +280,7 @@ watch(() => filters.value.user_type, () => {
   filters.value.page = 1
   fetchUsers()
 })
+
 watch(() => filters.value.status, () => {
   filters.value.page = 1
   fetchUsers()

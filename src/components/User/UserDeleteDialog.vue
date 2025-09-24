@@ -1,7 +1,5 @@
 
 <script setup lang="ts">
-import { defineEmits, defineProps } from 'vue'
-
 defineProps<{ modelValue: boolean }>()
 defineEmits(['update:modelValue', 'delete'])
 </script>

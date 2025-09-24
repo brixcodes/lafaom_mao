@@ -15,8 +15,15 @@
       </div>
     </div>
 
-    <UserForm :form="form" :user-type-options="userTypeOptions" :status-options="statusOptions" submit-label="Créer"
-      @submit="handleSubmit" />
+    <UserFormGuard 
+      :form="form" 
+      :user-type-options="userTypeOptions" 
+      :status-options="statusOptions" 
+      title="Créer un utilisateur"
+      submit-label="Créer"
+      @submit="handleSubmit"
+      @cancel="goBack"
+    />
   </div>
 </template>
 
@@ -24,6 +31,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import UserForm from '@/components/User/UserForm.vue'
+import UserFormGuard from '@/components/Permission/UserFormGuard.vue'
 import { userService } from '@/services/api/user'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'

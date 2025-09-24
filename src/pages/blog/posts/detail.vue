@@ -52,7 +52,7 @@
               <v-slide-y-transition>
                 <v-card class="mb-6 animate-card" elevation="1">
                   <v-card-title class="d-flex align-center">
-                    <v-icon color="primary" class="mr-2">mdi-text-box</v-icon>
+                    <v-icon color="primary" class="mr-2">ri-t-box-line</v-icon>
                     <span class="text-h6">Résumé</span>
                   </v-card-title>
                   <v-divider></v-divider>
@@ -73,7 +73,7 @@
               <v-slide-x-reverse-transition>
                 <v-card class="mb-6 animate-card" elevation="1">
                   <v-card-title class="d-flex align-center">
-                    <v-icon color="primary" class="mr-2">mdi-information</v-icon>
+                    <v-icon color="primary" class="mr-2">ri-information-line</v-icon>
                     <span class="text-h6">Informations</span>
                   </v-card-title>
                   <v-divider></v-divider>
@@ -154,6 +154,8 @@ const isLoading = ref(false)
 const postId = Number(route.params.id)
 
 import { processTags } from '@/utils/tagUtils'
+import { showToast } from '@/components/toast/toastManager'
+import { confirmAction } from '@/utils/confirm'
 
 // Computed property pour les tags nettoyés
 const cleanTags = computed(() => processTags(post.value?.tags))
@@ -179,19 +181,21 @@ const fetchPost = async () => {
 }
 
 const confirmDelete = async () => {
-  const result = await Swal.fire({
-    title: 'Supprimer cet article ?',
-    text: 'Cette action est irréversible.',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: '<span style="color:white">Oui, supprimer</span>',
+  const result = await confirmAction({
+    title: 'Êtes vous sûres?',
+    text: "Souhaitez-vous réellement supprimer cet article ? Cette action est irréversible.",
     cancelButtonText: '<span style="color:white">Annuler</span>',
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
+    confirmButtonText: '<span style="color:white">Oui, supprimer</span>',
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    customClass: {
+      confirmButton: 'swal2-confirm-white',
+      cancelButton: 'swal2-cancel-white',
+    },
   })
   if (result.isConfirmed) {
     await blogService.deletePostNoConfirm(postId)
-    Swal.fire('Supprimé !', "L'article a été supprimé.", 'success')
+    showToast({ message: '✅ Article supprimé', type: 'success' })
     router.push('/blog/posts')
   }
 }

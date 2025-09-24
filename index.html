@@ -38,16 +38,7 @@
     </div>
   </div>
   <script type="module" src="/src/main.ts"></script>
-  <script>
-    const loaderColor = localStorage.getItem('materio-initial-loader-bg') || '#FFFFFF'
-    const primaryColor = localStorage.getItem('materio-initial-loader-color') || '#9155FD'
-
-    if (loaderColor)
-      document.documentElement.style.setProperty('--initial-loader-bg', loaderColor)
-
-    if (primaryColor)
-      document.documentElement.style.setProperty('--initial-loader-color', primaryColor)
-  </script>
+  <script src="/loader-init.js"></script>
 </body>
 
 </html>

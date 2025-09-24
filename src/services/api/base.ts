@@ -1,5 +1,5 @@
 // Service API de base
-import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
+import axios, { type AxiosInstance, type AxiosResponse, type AxiosRequestConfig } from 'axios'
 import { showToast } from '../../components/toast/toastManager'
 import { API_CONFIG } from '@/config/api'
 import type { BaseOutSuccess, BaseOutFail, BaseOutPage, ErrorMessage } from '@/types'
@@ -83,6 +83,15 @@ export class ApiService {
             data: error.response?.data,
             message: error.message,
           })
+          
+          // Log detailed error information for debugging
+          if (status === 422) {
+            console.error('🔍 Validation Error Details:', {
+              requestData: error.config?.data,
+              validationErrors: error.response?.data,
+              headers: error.config?.headers,
+            })
+          }
         }
 
         if (status === 401) {
@@ -101,10 +110,13 @@ export class ApiService {
           showToast({ message: 'Erreur serveur. Veuillez réessayer plus tard.', type: 'error' })
         } else if (error.code === 'ECONNABORTED') {
           // Timeout Axios
-          showToast({ message: 'La requête a pris trop de temps. Veuillez réessayer.', type: 'error' })
+          showToast({ message: 'La requête a pris trop de temps. Vérifiez que le serveur est accessible.', type: 'error' })
+        } else if (error.code === 'ERR_NETWORK') {
+          // Erreur réseau (serveur inaccessible ou CORS)
+          showToast({ message: 'Impossible de se connecter au serveur. Vérifiez la connexion internet ou les paramètres CORS.', type: 'error' })
         } else if (!error.response) {
           // Pas de réponse, réseau ou CORS
-          showToast({ message: 'Erreur de connexion. Vérifiez votre connexion internet.', type: 'error' })
+          showToast({ message: 'Erreur de connexion au serveur. Vérifiez votre connexion internet.', type: 'error' })
         } else {
           showToast({ message: error.response?.data?.message || 'Une erreur est survenue.', type: 'error' })
         }
@@ -126,10 +138,26 @@ export class ApiService {
     return response.data
   }
 
+  // POST avec gestion des messages de succès/erreur
+  async post<T>(url: string, data?: any, confirmOptions?: any): Promise<T> {
+    try {
+      const response = await this.api.post(url, data)
+      if (confirmOptions?.successMessage) {
+        // showToast({ message: confirmOptions.successMessage, type: 'success' })
+      }
+      return response.data
+    } catch (error) {
+      if (confirmOptions?.errorMessage) {
+        showToast({ message: confirmOptions.errorMessage, type: 'error' })
+      }
+      throw error
+    }
+  }
+
   async put<T>(url: string, data?: any, confirmOptions?: any): Promise<T | undefined> {
     try {
       const response = await this.api.put(url, data)
-      showToast({ message: confirmOptions?.successMessage || 'Modification réussie', type: 'success' })
+      // showToast({ message: confirmOptions?.successMessage || 'Modification réussie', type: 'success' })
       return response.data
     } catch (error) {
       showToast({ message: confirmOptions?.errorMessage || 'Erreur lors de la modification', type: 'error' })
@@ -145,7 +173,7 @@ export class ApiService {
   async delete<T>(url: string, confirmOptions?: any): Promise<T | undefined> {
     try {
       const response = await this.api.delete(url)
-      showToast({ message: confirmOptions?.successMessage || 'Suppression réussie', type: 'success' })
+      // showToast({ message: confirmOptions?.successMessage || 'Suppression réussie', type: 'success' })
       return response.data
     } catch (error) {
       showToast({ message: confirmOptions?.errorMessage || 'Erreur lors de la suppression', type: 'error' })
@@ -154,10 +182,70 @@ export class ApiService {
   }
 
   async upload<T>(url: string, formData: FormData): Promise<T> {
+    console.log('🚀 BaseService upload - URL:', url)
+    console.log('📄 BaseService upload - FormData contents:')
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`)
+      } else {
+        console.log(`  ${key}: ${value}`)
+      }
+    }
+    
     const response = await this.api.post(url, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+    })
+    
+    console.log('✅ BaseService upload - Réponse reçue:', response.data)
+    return response.data
+  }
+
+  // POST avec FormData
+  async postFormData<T>(url: string, formData: FormData, confirmOptions?: any): Promise<T> {
+    try {
+      const response = await this.api.post(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      if (confirmOptions?.successMessage) {
+        // showToast({ message: confirmOptions.successMessage, type: 'success' })
+      }
+      return response.data
+    } catch (error) {
+      if (confirmOptions?.errorMessage) {
+        showToast({ message: confirmOptions.errorMessage, type: 'error' })
+      }
+      throw error
+    }
+  }
+
+  // PUT avec FormData
+  async putFormData<T>(url: string, formData: FormData, confirmOptions?: any): Promise<T> {
+    try {
+      const response = await this.api.put(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      if (confirmOptions?.successMessage) {
+        // showToast({ message: confirmOptions.successMessage, type: 'success' })
+      }
+      return response.data
+    } catch (error) {
+      if (confirmOptions?.errorMessage) {
+        showToast({ message: confirmOptions.errorMessage, type: 'error' })
+      }
+      throw error
+    }
+  }
+
+  // Méthode pour télécharger des fichiers
+  async downloadFile(url: string): Promise<Blob> {
+    const response = await this.api.get(url, {
+      responseType: 'blob'
     })
     return response.data
   }

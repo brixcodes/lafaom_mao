@@ -34,6 +34,11 @@ export class UserService {
     return apiService.get(`/users/${id}/full`)
   }
 
+  // Obtenir le profil complet de l'utilisateur actuel
+  async getCurrentUserProfile(): Promise<UserFullOutSuccess> {
+    return apiService.get('/users/me/full')
+  }
+
   // Mettre à jour un utilisateur
   async updateUser(id: string, data: UpdateUserInput): Promise<UserOutSuccess> {
     return apiService.put(`/users/${id}`, data)

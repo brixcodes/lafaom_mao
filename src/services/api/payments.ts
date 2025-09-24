@@ -1,46 +1,96 @@
-// Service API pour les paiements
 import { apiService } from './base'
-import type { BaseOutSuccess } from '@/types/index'
+import type {
+  Payment,
+  PaymentInitInput,
+  CinetPayInit,
+  WebhookPayload,
+  PaymentFilter,
+  PaymentOutSuccess,
+  PaymentListOutSuccess,
+  PaymentPageOutSuccess,
+  InitPaymentOut,
+} from '@/types/payments'
 
-export class PaymentsService {
-  // Obtenir les statistiques utilisateur
-  async getUserStats(): Promise<BaseOutSuccess> {
-    return apiService.getUserStats()
+export class PaymentService {
+  // ===========================================
+  // PAYMENT CRUD
+  // ===========================================
+
+  async getPayments(filters: PaymentFilter): Promise<PaymentPageOutSuccess> {
+    return apiService.get('/payments', { params: filters })
   }
 
-  // Lister les utilisateurs par IDs (endpoint interne)
-  async getUsersByIds(userIds: string[]): Promise<any> {
-    return apiService.post('/users/internal', { user_ids: userIds })
+  async getPayment(paymentId: string): Promise<PaymentOutSuccess> {
+    return apiService.get(`/payments/${paymentId}`)
   }
 
-  // Obtenir un utilisateur par ID
-  async getUserById(userId: string): Promise<any> {
-    return apiService.get(`/users/${userId}`)
+  async createPayment(data: PaymentInitInput): Promise<InitPaymentOut> {
+    return apiService.post('/payments', data)
   }
 
-  // Mettre à jour un utilisateur
-  async updateUser(userId: string, userData: any): Promise<any> {
-    return apiService.put(`/users/${userId}`, userData)
+  async updatePayment(paymentId: string, data: Partial<PaymentInitInput>): Promise<PaymentOutSuccess> {
+    return apiService.put(`/payments/${paymentId}`, data)
   }
 
-  // Setup des utilisateurs
-  async setupUsers(): Promise<BaseOutSuccess> {
-    return apiService.setupUsers()
+  async deletePayment(paymentId: string): Promise<PaymentOutSuccess> {
+    return apiService.delete(`/payments/${paymentId}`)
   }
 
-  // Tests Redis
-  async testRedisGet(testNumber: number): Promise<any> {
-    return apiService.testRedisGet(testNumber)
+  // ===========================================
+  // PAYMENT PROCESSING
+  // ===========================================
+
+  async initPayment(data: PaymentInitInput): Promise<InitPaymentOut> {
+    return apiService.post('/payments/init', data)
   }
 
-  async testRedisSet(testNumber: number): Promise<any> {
-    return apiService.testRedisSet(testNumber)
+  async initCinetPayPayment(data: CinetPayInit): Promise<InitPaymentOut> {
+    return apiService.post('/payments/cinetpay/init', data)
   }
 
-  // Test d'envoi d'email
-  async testEmail(email: string): Promise<any> {
-    return apiService.testEmail(email)
+  async verifyPayment(paymentId: string): Promise<PaymentOutSuccess> {
+    return apiService.get(`/payments/${paymentId}/verify`)
+  }
+
+  async cancelPayment(paymentId: string): Promise<PaymentOutSuccess> {
+    return apiService.post(`/payments/${paymentId}/cancel`)
+  }
+
+  async refundPayment(paymentId: string, amount?: number): Promise<PaymentOutSuccess> {
+    return apiService.post(`/payments/${paymentId}/refund`, { amount })
+  }
+
+  // ===========================================
+  // WEBHOOK HANDLING
+  // ===========================================
+
+  async handleWebhook(payload: WebhookPayload): Promise<PaymentOutSuccess> {
+    return apiService.post('/payments/webhook', payload)
+  }
+
+  // ===========================================
+  // STATISTICS
+  // ===========================================
+
+  async getPaymentStats(): Promise<any> {
+    return apiService.get('/payments/stats')
+  }
+
+  async getUserPaymentStats(userId: string): Promise<any> {
+    return apiService.get(`/payments/stats/user/${userId}`)
+  }
+
+  // ===========================================
+  // USER OPERATIONS
+  // ===========================================
+
+  async getMyPayments(): Promise<PaymentListOutSuccess> {
+    return apiService.get('/payments/my')
+  }
+
+  async getMyPayment(paymentId: string): Promise<PaymentOutSuccess> {
+    return apiService.get(`/payments/my/${paymentId}`)
   }
 }
 
-export const paymentsService = new PaymentsService()
+export const paymentService = new PaymentService()

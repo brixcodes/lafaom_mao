@@ -135,58 +135,53 @@ watch(() => form.value.cover_image, () => validateField('cover_image'))
 const isSubmitting = ref(false)
 const handleSubmit = async () => {
   if (!validateForm()) {
-    showToast({ message: 'Veuillez corriger les erreurs du formulaire.', type: 'error' });
-    return;
+    showToast({ message: 'Veuillez corriger les erreurs du formulaire.', type: 'error' })
+    return
   }
 
+  // Vérifier les champs obligatoires (sauf l'image qui peut être déjà existante)
   if (!form.value.author_name || !form.value.title || !form.value.category_id) {
-    showToast({ message: 'Tous les champs obligatoires doivent être remplis.', type: 'error' });
-    return;
+    showToast({ message: 'Tous les champs obligatoires doivent être remplis.', type: 'error' })
+    return
   }
-
+  
+  // Vérifier l'image uniquement si elle est fournie
   if (form.value.cover_image && !(form.value.cover_image instanceof File)) {
-    showToast({ message: "L'image de couverture doit être un fichier valide.", type: 'error' });
-    return;
+    showToast({ message: 'L\'image de couverture doit être un fichier valide.', type: 'error' })
+    return
   }
-
+  
   if (typeof form.value.category_id !== 'number' || isNaN(form.value.category_id)) {
-    showToast({ message: 'La catégorie doit être sélectionnée.', type: 'error' });
-    return;
+    showToast({ message: 'La catégorie doit être sélectionnée.', type: 'error' })
+    return
   }
 
-  isSubmitting.value = true;
-  const formData = new FormData();
-  formData.append('author_name', form.value.author_name);
-  formData.append('title', form.value.title);
+  isSubmitting.value = true
+  const formData = new FormData()
+  formData.append('author_name', form.value.author_name)
+  formData.append('title', form.value.title)
+  
+  // Ajouter l'image uniquement si elle est fournie
   if (form.value.cover_image instanceof File) {
-    formData.append('cover_image', form.value.cover_image);
-  } else if (form.value.cover_image_url) {
-    formData.append('cover_image_url', form.value.cover_image_url);
+    formData.append('cover_image', form.value.cover_image)
   }
-  formData.append('section_style', form.value.section_style || '');
-  if (form.value.summary) formData.append('summary', form.value.summary);
-  if (form.value.tags && Array.isArray(form.value.tags)) {
-    formData.append('tags', JSON.stringify(form.value.tags)); // Assurez-vous que tags est un tableau
-  }
-  formData.append('category_id', form.value.category_id.toString());
-
-  // Débogage : Afficher le contenu du FormData
-  for (const [key, value] of formData.entries()) {
-    console.log(`[DEBUG] FormData from PostForm: ${key}=${value}`);
-  }
+  
+  formData.append('section_style', form.value.section_style || '')
+  if (form.value.summary) formData.append('summary', form.value.summary)
+  if (form.value.tags) formData.append('tags', JSON.stringify(form.value.tags))
+  formData.append('category_id', form.value.category_id.toString())
 
   console.log('[DEBUG] Soumission du formulaire avec les données:', {
     author_name: form.value.author_name,
     title: form.value.title,
     cover_image: form.value.cover_image instanceof File ? 'Fichier présent' : 'Pas de fichier',
-    cover_image_url: form.value.cover_image_url || 'Aucune URL',
-    category_id: form.value.category_id,
-    tags: form.value.tags,
-  });
+    category_id: form.value.category_id
+  })
 
-  emit('submit', formData);
-  setTimeout(() => { isSubmitting.value = false }, 1200);
-};
+  emit('submit', formData)
+  setTimeout(() => { isSubmitting.value = false }, 1200)
+}
+
 const coverImageInput = ref<any>(null)
 
 function triggerFileInput() {
@@ -222,12 +217,20 @@ function triggerFileInput() {
                   </VBtn>
                 </div>
 
-                <VFileInput v-model="form.cover_image" ref="coverImageInput" label="Image de couverture"
-                  accept="image/jpeg,image/jpg,image/bmp" prepend-inner-icon="ri-camera-2-line"
-                  :error-messages="errors.cover_image" show-size counter chips class="d-none" />
+                <VFileInput
+                  v-model="form.cover_image"
+                  ref="coverImageInput"
+                  label="Image de couverture"
+                  accept="image/jpeg,image/jpg,image/bmp"
+                  prepend-inner-icon="ri-camera-2-line"
+                  :error-messages="errors.cover_image"
+                  show-size
+                  counter
+                  chips
+                  class="d-none"
+                />
 
-                <div v-if="form.backendErrors && form.backendErrors.cover_image" class="text-error mt-1">{{
-                  form.backendErrors.cover_image }}</div>
+                <div v-if="form.backendErrors && form.backendErrors.cover_image" class="text-error mt-1">{{ form.backendErrors.cover_image }}</div>
               </div>
             </VCol>
 
@@ -235,28 +238,36 @@ function triggerFileInput() {
             <VCol cols="12" md="6">
               <VTextField v-model="form.author_name" label="Auteur" required clearable prepend-inner-icon="ri-user-line"
                 :error-messages="errors.author_name" />
-              <div v-if="form.backendErrors && form.backendErrors.author_name" class="text-error mt-1">{{
-                form.backendErrors.author_name }}</div>
+              <div v-if="form.backendErrors && form.backendErrors.author_name" class="text-error mt-1">{{ form.backendErrors.author_name }}</div>
 
               <VTextField v-model="form.title" label="Titre" required clearable prepend-inner-icon="ri-book-2-line"
                 :error-messages="errors.title" class="mt-4" />
-              <div v-if="form.backendErrors && form.backendErrors.title" class="text-error mt-1">{{
-                form.backendErrors.title }}</div>
+              <div v-if="form.backendErrors && form.backendErrors.title" class="text-error mt-1">{{ form.backendErrors.title }}</div>
 
               <VTextField v-model="form.section_style" label="Style de section" readonly
                 prepend-inner-icon="ri-paint-brush-line" class="mt-4" />
 
-              <VSelect v-model="form.category_id" :items="categories" item-title="title" item-value="id"
-                label="Catégorie" required :error-messages="errors.category_id" prepend-inner-icon="ri-folder-line"
-                variant="outlined" density="comfortable" :loading="!categories || categories.length === 0"
+              <VSelect 
+                v-model="form.category_id" 
+                :items="categories" 
+                item-title="title" 
+                item-value="id"
+                label="Catégorie" 
+                required 
+                :error-messages="errors.category_id" 
+                prepend-inner-icon="ri-folder-line"
+                variant="outlined"
+                density="comfortable"
+                :loading="!categories || categories.length === 0"
                 :disabled="!categories || categories.length === 0"
-                :hint="!categories || categories.length === 0 ? 'Chargement des catégories...' : ''" persistent-hint
-                class="mt-4" />
-              <div v-if="form.backendErrors && form.backendErrors.category_id" class="text-error mt-1">{{
-                form.backendErrors.category_id }}</div>
+                :hint="!categories || categories.length === 0 ? 'Chargement des catégories...' : ''"
+                persistent-hint
+                class="mt-4"
+              />
+              <div v-if="form.backendErrors && form.backendErrors.category_id" class="text-error mt-1">{{ form.backendErrors.category_id }}</div>
               <div v-if="form.category_id" class="mt-2">
                 <VChip color="primary" size="small" variant="tonal">
-                  {{categories.find(c => c.id === form.category_id)?.title || 'Catégorie sélectionnée'}}
+                  {{ categories.find(c => c.id === form.category_id)?.title || 'Catégorie sélectionnée' }}
                 </VChip>
               </div>
             </VCol>
@@ -264,15 +275,13 @@ function triggerFileInput() {
             <VCol cols="12">
               <VTextarea v-model="form.summary" label="Résumé" clearable prepend-inner-icon="ri-align-left"
                 :error-messages="errors.summary" rows="4" />
-              <div v-if="form.backendErrors && form.backendErrors.summary" class="text-error mt-1">{{
-                form.backendErrors.summary }}</div>
+              <div v-if="form.backendErrors && form.backendErrors.summary" class="text-error mt-1">{{ form.backendErrors.summary }}</div>
             </VCol>
 
             <VCol cols="12">
               <TagInput v-model="form.tags" label="Tags" />
               <div v-if="form.tags && form.tags.length" class="mt-2 d-flex flex-wrap gap-1">
-                <VChip v-for="tag in form.tags" :key="tag" color="secondary" size="small" variant="tonal">{{ tag }}
-                </VChip>
+                <VChip v-for="tag in form.tags" :key="tag" color="secondary" size="small" variant="tonal">{{ tag }}</VChip>
               </div>
             </VCol>
 
@@ -302,9 +311,7 @@ function triggerFileInput() {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
 }
 
-.v-text-field,
-.v-textarea,
-.v-file-input {
+.v-text-field, .v-textarea, .v-file-input {
   margin-bottom: 8px;
 }
 

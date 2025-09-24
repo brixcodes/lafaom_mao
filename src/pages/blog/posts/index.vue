@@ -1,202 +1,375 @@
 <template>
-  <div class="post-list-page">
-    <ApiErrorHandler 
-      v-if="apiError" 
-      :error="apiErrorMessage" 
-      :showRetryButton="true"
-      @retry="retryFetch" 
-      @clear-error="apiError = false"
-    />
-    <div class="d-flex justify-space-between align-center mb-6">
-      <div>
-        <h1 class="text-h4 font-weight-bold mb-2">Mes Articles</h1>
-        <p class="text-body-1 text-medium-emphasis">Total {{ filteredPosts.length }} articles que vous avez publiés</p>
-      </div>
-      <div class="d-flex align-center gap-2">
-        <VBtn
-          prepend-icon="ri-add-line"
-          size="large"
-          elevation="2"
-          @click="goToCreate"
-        >
-          Nouvel article
-        </VBtn>
+  <div class="posts-page">
+    <!-- Header principal -->
+    <div class="mb-6">
+      <div class="header-content">
+        <div class="header-text">
+          <h1 class="display-1 font-weight-bold mb-2">
+            Mes Articles
+          </h1>
+          <p class="text-h6 text-medium-emphasis mb-4">
+            Gérez et organisez vos contenus éditoriaux
+          </p>
+        </div>
+
+        <div>
+          <VBtn color="primary" size="large" elevation="2" prepend-icon="ri-add-line" @click="goToCreate"
+            class="create-btn">
+            Nouvel article
+          </VBtn>
+        </div>
       </div>
     </div>
 
-    <VCard
-      class="mb-5 filter-card"
-      elevation="3"
-    >
-      <VCardText>
+    <!-- Barre de filtres avancée -->
+    <VCard class="filters-card mb-6" elevation="3">
+      <VCardTitle class="d-flex align-center pa-4">
+        <VIcon color="primary" class="me-2" size="24">ri-filter-3-line</VIcon>
+        <span class="text-h6">Filtres & Options d'affichage</span>
+        <VSpacer />
+
+        <!-- Toggle View Mode -->
+        <VBtnToggle v-model="viewMode" color="primary" variant="outlined" density="compact" mandatory>
+          <!-- Vue grille -->
+          <VBtn value="grid">
+            <VIcon size="16">ri-grid-fill</VIcon>
+            <VTooltip activator="parent">Vue grille</VTooltip>
+          </VBtn>
+
+          <!-- Vue liste -->
+          <VBtn value="list">
+            <VIcon size="16">ri-list-check</VIcon>
+            <VTooltip activator="parent">Vue liste</VTooltip>
+          </VBtn>
+        </VBtnToggle>
+
+      </VCardTitle>
+
+      <VDivider />
+
+      <VCardText class="pa-4">
         <VRow>
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <VTextField
-              v-model="filterTitle"
-              label="Filtrer par titre"
-              clearable
-              prepend-inner-icon="ri-book-2-line"
-              variant="outlined"
-              density="comfortable"
-            />
+          <!-- Onglets de filtrage par statut -->
+          <VCol cols="12" class="pb-2">
+            <VTabs v-model="activeTab" color="primary" align-tabs="start" class="status-tabs">
+              <VTab value="all" prepend-icon="ri-file-list-3-line">
+                Tous les articles
+                <VChip size="small" variant="text" class="ml-2">
+                  {{ totalPosts }}
+                </VChip>
+              </VTab>
+              <VTab value="published" prepend-icon="ri-check-line">
+                Publiés
+                <VChip size="small" variant="text" class="ml-2">
+                  {{ publishedCount }}
+                </VChip>
+              </VTab>
+              <VTab value="draft" prepend-icon="ri-draft-line">
+                Brouillons
+                <VChip size="small" variant="text" class="ml-2">
+                  {{ draftCount }}
+                </VChip>
+              </VTab>
+            </VTabs>
           </VCol>
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <VTextField
-              v-model="filterAuthor"
-              label="Filtrer par auteur"
-              clearable
-              prepend-inner-icon="ri-user-line"
-              variant="outlined"
-              density="comfortable"
-            />
+
+          <!-- Champs de filtrage -->
+          <VCol cols="12" md="3">
+            <VTextField v-model="filters.title" label="Rechercher par titre" prepend-inner-icon="ri-search-line"
+              variant="outlined" density="comfortable" clearable hide-details />
           </VCol>
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <VAutocomplete
-              v-model="filterCategories"
-              :items="categories"
-              item-title="title"
-              item-value="id"
-              label="Filtrer par catégorie"
-              multiple
-              clearable
-              chips
-              prepend-inner-icon="ri-folder-line"
-              variant="outlined"
-              density="comfortable"
-            />
+
+          <VCol cols="12" md="3">
+            <VTextField v-model="filters.author" label="Filtrer par auteur" prepend-inner-icon="ri-user-line"
+              variant="outlined" density="comfortable" clearable hide-details />
+          </VCol>
+
+          <VCol cols="12" md="3">
+            <VAutocomplete v-model="filters.categories" :items="categories" item-title="title" item-value="id"
+              label="Catégories" prepend-inner-icon="ri-folder-line" variant="outlined" density="comfortable" multiple
+              chips clearable hide-details :loading="categoriesLoading" />
+          </VCol>
+
+          <VCol cols="12" md="3">
+            <VAutocomplete v-model="filters.tags" :items="availableTags" label="Filtrer par tags"
+              prepend-inner-icon="ri-price-tag-3-line" variant="outlined" density="comfortable" multiple chips clearable
+              hide-details :loading="tagsLoading" />
           </VCol>
         </VRow>
+
+        <!-- Actions de filtrage -->
+        <div class="filter-actions mt-4 d-flex align-center justify-space-between">
+          <div class="filter-info">
+            <VChip v-if="hasActiveFilters" color="info" variant="tonal" prepend-icon="ri-filter-line" closable
+              @click:close="clearAllFilters">
+              {{ filteredPosts.length }} résultat{{ filteredPosts.length > 1 ? 's' : '' }} trouvé{{ filteredPosts.length
+                > 1 ? 's' : '' }}
+            </VChip>
+            <span v-else class="text-body-2 text-medium-emphasis">
+              {{ filteredPosts.length }} article{{ filteredPosts.length > 1 ? 's' : '' }} au total
+            </span>
+          </div>
+
+          <div class="sort-options">
+            <VSelect v-model="sortBy" :items="sortOptions" label="Trier par" variant="outlined" density="compact"
+              hide-details style="min-width: 200px" />
+          </div>
+        </div>
       </VCardText>
     </VCard>
 
-    <VRow  :class="{ 'list-view': filterView === 'list' }">
-      <VCol
-        v-for="post in filteredPosts"
-        :key="post.id"
-        cols="12"
-        :sm="filterView === 'list' ? 12 : 6"
-        :md="filterView === 'list' ? 12 : 4"
-        :lg="filterView === 'list' ? 12 : 3"
-        class="post-column"
-      >
-        <PostCard
-          :post="post"
-          :view-mode="filterView"
-          @edit="goToEdit"
-          @delete="handleDelete"
-        />
-      </VCol>
-    </VRow>
+    <!-- États de chargement et erreurs -->
+    <ApiErrorHandler v-if="apiError" :error="apiErrorMessage" show-retry @retry="retryFetch"
+      @close="apiError = false" />
 
-    <div
-      v-if="filteredPosts.length === 0 && !isLoading"
-      class="text-center my-10 empty-state"
-    >
-      <VIcon
-        size="64"
-        class="mb-4"
-        >ri-file-list-3-line</VIcon
-      >
-      <h3 class="text-h6 mb-2">Aucun article trouvé</h3>
-      <p class="text-body-2 text-medium-emphasis">Essayez de modifier vos filtres ou créez un nouvel article</p>
-      <VBtn
-        class="mt-4"
-        prepend-icon="ri-add-line"
-        @click="goToCreate"
-        >Créer un article</VBtn
-      >
+    <!-- État de chargement -->
+    <div v-if="isLoading && posts.length === 0" class="loading-state">
+      <VCard class="text-center pa-8" elevation="1">
+        <VProgressCircular indeterminate color="primary" size="64" width="6" />
+        <div class="text-h6 mt-4 mb-2">Chargement des articles...</div>
+        <div class="text-body-2 text-medium-emphasis">
+          Récupération de vos contenus en cours
+        </div>
+      </VCard>
     </div>
 
-    <div
-      v-if="isLoading"
-      class="text-center my-10"
-    >
-      <VProgressCircular
-        indeterminate
-        size="48"
-      />
-      <div class="text-caption mt-2">Chargement...</div>
+    <!-- Liste des posts -->
+    <div v-else-if="filteredPosts.length > 0" class="posts-container">
+      <VFadeTransition group>
+        <VRow v-if="viewMode === 'grid'" key="grid-view">
+          <VCol v-for="post in paginatedPosts" :key="post.id" cols="12" sm="6" lg="4" xl="3">
+            <PostCard :post="post" :view-mode="viewMode" @update="handlePostUpdate" @delete="handlePostDelete" />
+          </VCol>
+        </VRow>
+
+        <div v-else key="list-view" class="list-view">
+          <PostCard v-for="post in paginatedPosts" :key="post.id" :post="post" :view-mode="viewMode"
+            @update="handlePostUpdate" @delete="handlePostDelete" class="mb-4" />
+        </div>
+      </VFadeTransition>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="pagination-container mt-6">
+        <VCard class="pa-4" elevation="1">
+          <div class="d-flex align-center justify-space-between">
+            <div class="pagination-info">
+              <span class="text-body-2 text-medium-emphasis">
+                Affichage {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize,
+                  filteredPosts.length) }}
+                de {{ filteredPosts.length }} articles
+              </span>
+            </div>
+
+            <VPagination v-model="currentPage" :length="totalPages" :total-visible="7" color="primary"
+              variant="elevated" />
+          </div>
+        </VCard>
+      </div>
     </div>
+
+    <!-- État vide -->
+    <VCard v-else class="empty-state pa-8" elevation="1">
+      <div class="text-center">
+        <VIcon :icon="hasActiveFilters ? 'ri-search-line' : 'ri-file-list-3-line'" size="80" color="grey-lighten-3"
+          class="mb-4" />
+
+        <h3 class="text-h5 mb-3">
+          {{ hasActiveFilters ? 'Aucun résultat trouvé' : 'Aucun article' }}
+        </h3>
+
+        <p class="text-body-1 text-medium-emphasis mb-6" style="max-width: 400px; margin: 0 auto;">
+          {{
+            hasActiveFilters
+              ? 'Essayez de modifier vos filtres ou créez un nouvel article.'
+              : 'Commencez par créer votre premier article pour partager vos idées avec le monde.'
+          }}
+        </p>
+
+        <div class="empty-actions">
+          <VBtn v-if="hasActiveFilters" variant="outlined" color="primary" prepend-icon="ri-refresh-line"
+            @click="clearAllFilters" class="me-3">
+            Réinitialiser les filtres
+          </VBtn>
+
+          <VBtn color="primary" size="large" prepend-icon="ri-add-line" @click="goToCreate">
+            {{ hasActiveFilters ? 'Créer un article' : 'Créer votre premier article' }}
+          </VBtn>
+        </div>
+      </div>
+    </VCard>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import Swal from 'sweetalert2'
 import PostCard from '@/components/Blog/PostCard.vue'
+import ApiErrorHandler from '@/components/common/ApiErrorHandler.vue'
 import { blogService } from '@/services/api/blog'
 import { showToast } from '@/components/toast/toastManager'
-import { API_CONFIG } from '@/config/api'
-import ApiErrorHandler from '@/components/common/ApiErrorHandler.vue'
+import { processTags } from '@/utils/tagUtils'
 
+// === ROUTER ===
 const router = useRouter()
+
+// === REACTIVE STATE ===
 const posts = ref<any[]>([])
 const categories = ref<any[]>([])
-const filterAuthor = ref('')
-const filterTitle = ref('')
-const filterCategories = ref<any[]>([])
+const availableTags = ref<string[]>([])
 const isLoading = ref(false)
+const categoriesLoading = ref(false)
+const tagsLoading = ref(false)
 const apiError = ref(false)
 const apiErrorMessage = ref('')
 
+// === FILTERS ===
+const activeTab = ref('all')
+const viewMode = ref<'grid' | 'list'>('grid')
+const filters = ref({
+  title: '',
+  author: '',
+  categories: [] as number[],
+  tags: [] as string[],
+})
+
+// === SORTING & PAGINATION ===
+const sortBy = ref('created_at_desc')
+const currentPage = ref(1)
+const pageSize = ref(12)
+
+const sortOptions = [
+  { title: 'Plus récents', value: 'created_at_desc' },
+  { title: 'Plus anciens', value: 'created_at_asc' },
+  { title: 'Titre A-Z', value: 'title_asc' },
+  { title: 'Titre Z-A', value: 'title_desc' },
+  { title: 'Auteur A-Z', value: 'author_asc' },
+  { title: 'Auteur Z-A', value: 'author_desc' },
+]
+
+// === COMPUTED ===
+const totalPosts = computed(() => posts.value.length)
+
+const publishedCount = computed(() =>
+  posts.value.filter(post => post.published_at && post.published_at !== null).length
+)
+
+const draftCount = computed(() =>
+  posts.value.filter(post => !post.published_at || post.published_at === null).length
+)
+
 const filteredPosts = computed(() => {
-  let result = posts.value || []
-  if (filterAuthor.value) {
-    const f = filterAuthor.value.toLowerCase()
-    result = result.filter(p => p.author_name?.toLowerCase().includes(f))
+  let result = [...posts.value]
+
+  // Filtre par statut de publication
+  if (activeTab.value === 'published') {
+    result = result.filter(post => post.published_at && post.published_at !== null)
+  } else if (activeTab.value === 'draft') {
+    result = result.filter(post => !post.published_at || post.published_at === null)
   }
-  if (filterTitle.value) {
-    const f = filterTitle.value.toLowerCase()
-    result = result.filter(p => p.title?.toLowerCase().includes(f))
+
+  // Filtre par titre
+  if (filters.value.title) {
+    const searchTerm = filters.value.title.toLowerCase()
+    result = result.filter(post =>
+      post.title?.toLowerCase().includes(searchTerm)
+    )
   }
-  if (filterCategories.value.length > 0) {
-    result = result.filter(p => filterCategories.value.includes(p.category_id))
+
+  // Filtre par auteur
+  if (filters.value.author) {
+    const searchTerm = filters.value.author.toLowerCase()
+    result = result.filter(post =>
+      post.author_name?.toLowerCase().includes(searchTerm)
+    )
   }
+
+  // Filtre par catégories
+  if (filters.value.categories.length > 0) {
+    result = result.filter(post =>
+      filters.value.categories.includes(post.category_id)
+    )
+  }
+
+  // Filtre par tags
+  if (filters.value.tags.length > 0) {
+    result = result.filter(post => {
+      const postTags = processTags(post.tags)
+      return filters.value.tags.some(filterTag =>
+        postTags.some(postTag =>
+          postTag.toLowerCase().includes(filterTag.toLowerCase())
+        )
+      )
+    })
+  }
+
+  // Tri
+  result.sort((a, b) => {
+    switch (sortBy.value) {
+      case 'created_at_desc':
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      case 'created_at_asc':
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      case 'title_asc':
+        return (a.title || '').localeCompare(b.title || '')
+      case 'title_desc':
+        return (b.title || '').localeCompare(a.title || '')
+      case 'author_asc':
+        return (a.author_name || '').localeCompare(b.author_name || '')
+      case 'author_desc':
+        return (b.author_name || '').localeCompare(a.author_name || '')
+      default:
+        return 0
+    }
+  })
+
   return result
 })
 
+const totalPages = computed(() =>
+  Math.ceil(filteredPosts.value.length / pageSize.value)
+)
+
+const paginatedPosts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredPosts.value.slice(start, end)
+})
+
+const hasActiveFilters = computed(() =>
+  filters.value.title ||
+  filters.value.author ||
+  filters.value.categories.length > 0 ||
+  filters.value.tags.length > 0 ||
+  activeTab.value !== 'all'
+)
+
+// === WATCHERS ===
+watch([() => filters.value, activeTab, sortBy], () => {
+  currentPage.value = 1
+}, { deep: true })
+
+watch(viewMode, (newMode) => {
+  pageSize.value = newMode === 'list' ? 8 : 12
+  currentPage.value = 1
+})
+
+// === METHODS ===
 const fetchPosts = async () => {
   isLoading.value = true
   apiError.value = false
+
   try {
-    console.log('Tentative de récupération des posts depuis:', API_CONFIG.BASE_URL)
     const res = await blogService.getPosts()
-    console.log('Réponse brute de l\'API:', res)
-    
-    // Vérifier la structure de la réponse
-    if (res && typeof res === 'object') {
-      if (res.data && Array.isArray(res.data)) {
-        // Format attendu: { data: [...] }
-        posts.value = res.data
-      } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
-        // Format alternatif: { data: { data: [...] } }
-        posts.value = res.data.data
-      } else {
-        // Autre structure, essayer de l'adapter
-        console.warn('Structure de réponse inattendue:', res)
-        posts.value = Array.isArray(res) ? res : []
-      }
+
+    if (res && res.data && Array.isArray(res.data)) {
+      posts.value = res.data
     } else {
-      console.error('Réponse invalide de l\'API')
       posts.value = []
     }
-    
-    console.log('Posts après traitement:', posts.value)
-  } catch (err) {
+  } catch (err: any) {
     console.error('Erreur lors du chargement des posts:', err)
     apiError.value = true
-    apiErrorMessage.value = 'Impossible de charger les articles. Veuillez vérifier votre connexion internet ou réessayer plus tard.'
-    showToast({ message: 'Erreur lors du chargement des articles.', type: 'error' })
+    apiErrorMessage.value = 'Impossible de charger les articles. Veuillez réessayer.'
     posts.value = []
   } finally {
     isLoading.value = false
@@ -204,123 +377,210 @@ const fetchPosts = async () => {
 }
 
 const fetchCategories = async () => {
+  categoriesLoading.value = true
+
   try {
-    console.log('Tentative de récupération des catégories')
     const res = await blogService.getCategories()
-    console.log('Réponse des catégories:', res)
-    
-    // Vérifier la structure de la réponse
-    if (res && typeof res === 'object') {
-      if (res.data && Array.isArray(res.data)) {
-        // Format attendu: { data: [...] }
-        categories.value = res.data
-      } else if (res.data && res.data.data && Array.isArray(res.data.data)) {
-        // Format alternatif: { data: { data: [...] } }
-        categories.value = res.data.data
-      } else {
-        // Autre structure, essayer de l'adapter
-        console.warn('Structure de réponse inattendue pour les catégories:', res)
-        categories.value = Array.isArray(res) ? res : []
-      }
+
+    if (res && res.data && Array.isArray(res.data)) {
+      categories.value = res.data
     } else {
-      console.error('Réponse invalide de l\'API pour les catégories')
       categories.value = []
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Erreur lors du chargement des catégories:', err)
-    showToast({ message: 'Erreur lors du chargement des catégories.', type: 'error' })
     categories.value = []
+  } finally {
+    categoriesLoading.value = false
   }
 }
 
-const retryFetch = () => {
-  fetchPosts()
-  fetchCategories()
-}
+const fetchTags = async () => {
+  tagsLoading.value = true
 
-const goToCreate = () => router.push('/blog/posts/create')
-
-const goToEdit = (idOrRow: any) => {
-  const id = typeof idOrRow === 'object' && idOrRow !== null ? idOrRow.id : idOrRow
-  if (id) router.push(`/blog/posts/${id}/edit`)
-  else showToast({ message: "Impossible d'éditer : ID invalide.", type: 'error' })
-}
-
-const handleDelete = async (post: any) => {
-  const result = await Swal.fire({
-    title: 'Êtes-vous sûrs ?',
-    html: 'Supprimer cet article est irréversible.',
-    showCancelButton: true,
-    confirmButtonText: '<span style="color:white">Supprimer</span>',
-    cancelButtonText: '<span style="color:white">Annuler</span>',
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-  })
-  if (result.isConfirmed) {
-    try {
-      await blogService.deletePostNoConfirm(post.id)
-      showToast({ message: 'Article supprimé.', type: 'success' })
-      fetchPosts()
-    } catch {
-      showToast({ message: 'Erreur lors de la suppression.', type: 'error' })
-    }
+  try {
+    const tags = await blogService.getAllTags()
+    availableTags.value = tags
+  } catch (err: any) {
+    console.error('Erreur lors du chargement des tags:', err)
+    availableTags.value = []
+  } finally {
+    tagsLoading.value = false
   }
 }
 
-onMounted(() => {
-  fetchPosts()
-  fetchCategories()
+const retryFetch = async () => {
+  await Promise.all([
+    fetchPosts(),
+    fetchCategories(),
+    fetchTags()
+  ])
+}
+
+const clearAllFilters = () => {
+  filters.value = {
+    title: '',
+    author: '',
+    categories: [],
+    tags: [],
+  }
+  activeTab.value = 'all'
+  currentPage.value = 1
+}
+
+const goToCreate = () => {
+  router.push('/blog/posts/create')
+}
+
+const handlePostUpdate = (updatedPost: any) => {
+  const index = posts.value.findIndex(post => post.id === updatedPost.id)
+  if (index !== -1) {
+    posts.value[index] = { ...posts.value[index], ...updatedPost }
+  }
+}
+
+const handlePostDelete = (deletedPost: any) => {
+  const index = posts.value.findIndex(post => post.id === deletedPost.id)
+  if (index !== -1) {
+    posts.value.splice(index, 1)
+  }
+}
+
+// === LIFECYCLE ===
+onMounted(async () => {
+  await retryFetch()
 })
-
-// Ajoutez ces nouvelles variables
-const filterView = ref('grid')
-const viewOptions = [
-  { title: 'Grille', value: 'grid' },
-  { title: 'Liste', value: 'list' },
-]
-const activeTab = ref('all')
 </script>
 
 <style scoped>
-.post-list-page {
-  padding-bottom: 40px;
+.posts-page {
+  min-height: 100vh;
+  padding: 2rem 0;
 }
 
-.filter-card {
-  border-radius: 12px;
-  transition: box-shadow 0.3s ease;
+.page-header {
+  background: linear-gradient(135deg, rgba(var(--v-theme-primary), 0.05) 0%, rgba(var(--v-theme-secondary), 0.08) 100%);
+  border-radius: 24px;
+  padding: 2rem;
+  backdrop-filter: blur(20px);
 }
 
-.filter-card:hover {
-  box-shadow: 0 8px 24px rgba(18, 30, 60, 0.1);
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
 }
 
-.tab-container {
-  background-color: rgba(var(--v-theme-surface-variant), 0.5);
-  border-radius: 8px;
+.header-text {
+  flex: 1;
+}
+
+.header-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.create-btn {
+  box-shadow: 0 4px 20px rgba(var(--v-theme-primary), 0.3);
+  transition: all 0.3s ease;
+}
+
+.create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(var(--v-theme-primary), 0.4);
+}
+
+.filters-card {
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  background: rgba(var(--v-theme-surface), 0.95);
+}
+
+.status-tabs {
+  margin-bottom: 1rem;
+}
+
+.filter-actions {
+  padding-top: 1rem;
+}
+
+.posts-container {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.list-view {
+  max-width: 100%;
+}
+
+.pagination-container {
+  border-radius: 16px;
   overflow: hidden;
 }
 
-.tab-item {
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-.posts-grid {
-  margin-top: 16px;
-}
-
-.list-view .post-column {
-  margin-bottom: 16px;
-}
-
-.post-column {
-  transition: transform 0.2s ease;
-}
-
+.loading-state,
 .empty-state {
-  padding: 48px 0;
-  background-color: rgba(var(--v-theme-surface-variant), 0.2);
-  border-radius: 12px;
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+}
+
+.empty-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+  .posts-page {
+    padding: 1rem 0;
+  }
+
+  .page-header {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .header-stats {
+    justify-content: center;
+  }
+
+  .filter-actions {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 600px) {
+  .posts-page {
+    padding: 0.5rem 0;
+  }
+
+  .page-header {
+    margin: 1rem;
+    padding: 1rem;
+  }
 }
 </style>

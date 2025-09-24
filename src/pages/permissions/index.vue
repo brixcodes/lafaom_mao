@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-h4 mb-4">Gestion des permissions</h1>
+    <h1 class="text-h4 mb-4">Gestion des permissions et rôles</h1>
     <VCard class="mb-4">
       <VCardText>
         <VAutocomplete
@@ -16,8 +16,19 @@
         />
       </VCardText>
     </VCard>
+    
     <PermissionList />
-    <UserPermissionManager v-if="selectedUserId" :user-id="selectedUserId" />
+    
+    <!-- Composant de debug pour tester les API -->
+    <div class="mb-6">
+      <PermissionDebugger />
+    </div>
+    
+    <!-- Gestion des permissions et rôles pour l'utilisateur sélectionné -->
+    <div v-if="selectedUserId">
+      <UserPermissionManager :user-id="selectedUserId" />
+      <UserRoleManager :user-id="selectedUserId" />
+    </div>
   </div>
 </template>
 
@@ -25,6 +36,8 @@
 import { ref, onMounted } from 'vue'
 import PermissionList from '@/components/Permission/PermissionList.vue'
 import UserPermissionManager from '@/components/Permission/UserPermissionManager.vue'
+import UserRoleManager from '@/components/Permission/UserRoleManager.vue'
+import PermissionDebugger from '@/components/Permission/PermissionDebugger.vue'
 import { userService } from '@/services/api/user'
 
 const selectedUserId = ref<string>('')
