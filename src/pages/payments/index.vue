@@ -1,7 +1,7 @@
 <template>
   <VContainer>
-      <!-- Header avec design moderne -->
-      <VSlideYTransition>
+    <!-- Header avec design moderne -->
+    <VSlideYTransition>
       <VCard class="mb-6 payments-header-card overflow-hidden" elevation="3">
         <div class="payments-header-overlay">
           <div class="payments-header-content">
@@ -9,13 +9,13 @@
               <VAvatar size="48" class="mr-3 border-white">
                 <VIcon color="white" size="24">ri-money-dollar-circle-line</VIcon>
               </VAvatar>
-      <div>
+              <div>
                 <div class="text-white font-weight-medium">Gestion des paiements</div>
                 <div class="text-caption text-white">
                   {{ filteredPayments.length }} paiement(s) trouvé(s)
-    </div>
-        </div>
-    </div>
+                </div>
+              </div>
+            </div>
 
             <h1 class="text-h3 font-weight-bold text-white mb-4">
               Transactions et paiements
@@ -36,7 +36,7 @@
               </div>
             </div>
           </div>
-              </div>
+        </div>
       </VCard>
     </VSlideYTransition>
 
@@ -97,42 +97,40 @@
                 <VIcon icon="ri-refresh-line" class="me-2" />
                 Actualiser
               </VBtn>
-      </div>
+            </div>
             <div v-if="filteredPayments.length > 0" class="d-flex align-center">
               <VIcon icon="ri-information-line" class="mr-2" color="primary" />
               <span class="text-body-2 text-medium-emphasis">
                 {{ filteredPayments.length }} paiement(s) trouvé(s)
               </span>
-    </div>
-  </div>
+            </div>
+          </div>
         </VCardText>
       </VCard>
     </VSlideYTransition>
 
     <!-- Payment Table avec design amélioré -->
-      <VSlideYTransition>
-        <VCard class="" elevation="1">
-          <PaymentTable :payments="paginatedPayments" :headers="headers" :isLoading="isLoading" @view="handleView"
-            @view-transaction="handleViewTransaction" @edit="handleEdit" @delete="handleDelete"
-            @check-status="handleCheckStatus" />
-        </VCard>
-      </VSlideYTransition>
+    <VSlideYTransition>
+      <VCard class="" elevation="1">
+        <PaymentTable :payments="paginatedPayments" :headers="headers" :isLoading="isLoading" @view="handleView"
+          @view-transaction="handleViewTransaction" @edit="handleEdit" @delete="handleDelete"
+          @check-status="handleCheckStatus" />
+      </VCard>
+    </VSlideYTransition>
 
-      <!-- Pagination avec design amélioré -->
-      <VSlideYTransition>
-        <VCard v-if="totalFilteredPages > 1" class="mt-6 payments-pagination-card" elevation="1">
-          <VCardText class="text-center py-4">
-            <div class="d-flex align-center justify-center gap-4">
-              <span class="text-body-2 text-medium-emphasis">
-                Page {{ currentPage }} sur {{ totalFilteredPages }}
-              </span>
-              <VPagination v-model="currentPage" :length="totalFilteredPages" :total-visible="5"
-                color="primary" />
-            </div>
-          </VCardText>
-        </VCard>
-      </VSlideYTransition>
-    </div>
+    <!-- Pagination avec design amélioré -->
+    <VSlideYTransition>
+      <VCard v-if="totalFilteredPages > 1" class="mt-6 payments-pagination-card" elevation="1">
+        <VCardText class="text-center py-4">
+          <div class="d-flex align-center justify-center gap-4">
+            <span class="text-body-2 text-medium-emphasis">
+              Page {{ currentPage }} sur {{ totalFilteredPages }}
+            </span>
+            <VPagination v-model="currentPage" :length="totalFilteredPages" :total-visible="5" color="primary" />
+          </div>
+        </VCardText>
+      </VCard>
+    </VSlideYTransition>
   </VContainer>
 </template>
 
@@ -241,7 +239,7 @@ const handleSearchChange = () => {
   if (searchTimeout.value) {
     clearTimeout(searchTimeout.value)
   }
-  
+
   // Set new timeout for debounced search
   searchTimeout.value = setTimeout(async () => {
     isSearching.value = true
@@ -330,6 +328,7 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -341,6 +340,7 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -352,11 +352,11 @@ onUnmounted(() => {
   .payments-container {
     padding: 1rem;
   }
-  
+
   .payments-header-overlay {
     padding: 1.5rem;
   }
-  
+
   .payments-header-content h1 {
     font-size: 1.5rem !important;
   }

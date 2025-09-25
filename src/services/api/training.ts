@@ -118,11 +118,21 @@ export interface CreateReclamationRequest {
 class TrainingService {
   // === FORMATIONS ===
   async getTrainings(filters: TrainingFilter = {}): Promise<any> {
-    return await apiService.get('/trainings', { params: filters })
+    return await apiService.get('/trainings', filters)
+  }
+
+  // Alias pour compatibilité
+  async listTrainings(filters: TrainingFilter = {}): Promise<any> {
+    return await this.getTrainings(filters)
   }
 
   async getTrainingById(trainingId: number): Promise<Training> {
     return await apiService.get(`/trainings/${trainingId}`)
+  }
+
+  // Alias pour compatibilité
+  async getTraining(trainingId: number): Promise<Training> {
+    return await this.getTrainingById(trainingId)
   }
 
   async createTraining(trainingData: CreateTrainingRequest): Promise<Training> {
@@ -139,11 +149,21 @@ class TrainingService {
 
   // === SESSIONS DE FORMATION ===
   async getTrainingSessions(filters: any = {}): Promise<any> {
-    return await apiService.get('/training-sessions', { params: filters })
+    return await apiService.get('/training-sessions', filters)
+  }
+
+  // Alias pour compatibilité
+  async listTrainingSessions(filters: any = {}): Promise<any> {
+    return await this.getTrainingSessions(filters)
   }
 
   async getTrainingSessionById(sessionId: number): Promise<TrainingSession> {
     return await apiService.get(`/training-sessions/${sessionId}`)
+  }
+
+  // Alias pour compatibilité
+  async getTrainingSession(sessionId: number): Promise<TrainingSession> {
+    return await this.getTrainingSessionById(sessionId)
   }
 
   async createTrainingSession(sessionData: CreateTrainingSessionRequest): Promise<TrainingSession> {
@@ -164,11 +184,16 @@ class TrainingService {
 
   // === CANDIDATURES ÉTUDIANTES ===
   async getStudentApplications(filters: StudentApplicationFilter = {}): Promise<any> {
-    return await apiService.get('/student-applications', { params: filters })
+    return await apiService.get('/student-applications', filters)
   }
 
   async getStudentApplicationById(applicationId: number): Promise<StudentApplication> {
     return await apiService.get(`/student-applications/${applicationId}`)
+  }
+
+  // Alias pour compatibilité
+  async getStudentApplication(applicationId: number): Promise<StudentApplication> {
+    return await this.getStudentApplicationById(applicationId)
   }
 
   async changeApplicationStatus(applicationId: number, status: string): Promise<StudentApplication> {
@@ -185,7 +210,7 @@ class TrainingService {
   }
 
   async getMyStudentApplications(filters: StudentApplicationFilter = {}): Promise<any> {
-    return await apiService.get('/my-student-applications', { params: filters })
+    return await apiService.get('/my-student-applications', filters)
   }
 
   async getMyStudentApplicationById(applicationId: number): Promise<StudentApplication> {
@@ -224,11 +249,21 @@ class TrainingService {
 
   // === SPÉCIALITÉS ===
   async getSpecialties(filters: any = {}): Promise<any> {
-    return await apiService.get('/specialties', { params: filters })
+    return await apiService.get('/specialties', filters)
+  }
+
+  // Alias pour compatibilité
+  async listSpecialties(filters: any = {}): Promise<any> {
+    return await this.getSpecialties(filters)
   }
 
   async getSpecialtyById(specialtyId: number): Promise<Specialty> {
     return await apiService.get(`/specialties/${specialtyId}`)
+  }
+
+  // Alias pour compatibilité
+  async getSpecialty(specialtyId: number): Promise<Specialty> {
+    return await this.getSpecialtyById(specialtyId)
   }
 
   async createSpecialty(specialtyData: Partial<Specialty>): Promise<Specialty> {
@@ -253,7 +288,7 @@ class TrainingService {
   }
 
   async getMyReclamations(filters: any = {}): Promise<any> {
-    return await apiService.get('/my-reclamations', { params: filters })
+    return await apiService.get('/my-reclamations', filters)
   }
 
   async getMyReclamationById(reclamationId: number): Promise<Reclamation> {
@@ -270,7 +305,7 @@ class TrainingService {
 
   // === ADMIN RÉCLAMATIONS ===
   async getAllReclamations(filters: any = {}): Promise<any> {
-    return await apiService.get('/reclamations', { params: filters })
+    return await apiService.get('/reclamations', filters)
   }
 
   async getReclamationById(reclamationId: number): Promise<Reclamation> {

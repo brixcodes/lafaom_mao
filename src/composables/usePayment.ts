@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { paymentService } from '@/services/api/payment'
+import { paymentsService } from '@/services/api/payments'
 import { showToast } from '@/components/toast/toastManager'
 import type {
   Payment,
@@ -153,7 +153,7 @@ const loadPayments = async (reset = false) => {
     
     console.log('🔍 Chargement des paiements avec params:', params)
     
-    const response = await paymentService.getPayments(params)
+    const response = await paymentsService.getPayments(params as any)
     console.log('📋 Réponse API paiements:', response)
     
     payments.value = response.data
@@ -173,10 +173,10 @@ const getPayment = async (paymentId: number) => {
     isLoading.value = true
     error.value = ''
     
-    const response = await paymentService.getPayment(paymentId)
-    currentPayment.value = response.data
+    const response = await paymentsService.getPaymentById(paymentId)
+    currentPayment.value = response as any
     
-    return response.data
+    return response
   } catch (err: any) {
     console.error('Erreur lors du chargement du paiement:', err)
     error.value = 'Erreur lors du chargement du paiement'
@@ -192,9 +192,9 @@ const getPaymentByTransaction = async (transactionId: string) => {
     isLoading.value = true
     error.value = ''
     
-    const response = await paymentService.getPaymentByTransaction(transactionId)
+    const response = await paymentsService.getPaymentByTransactionId(transactionId)
     
-    return response.data
+    return response
   } catch (err: any) {
     console.error('Erreur lors du chargement du paiement par transaction:', err)
     error.value = 'Erreur lors du chargement du paiement'
@@ -210,9 +210,9 @@ const checkPaymentStatus = async (transactionId: string) => {
     isLoading.value = true
     error.value = ''
     
-    const response = await paymentService.checkPaymentStatus(transactionId)
+    const response = await paymentsService.checkPaymentStatus(transactionId)
     
-    return response.data
+    return response
   } catch (err: any) {
     console.error('Erreur lors de la vérification du statut:', err)
     error.value = 'Erreur lors de la vérification du statut'
@@ -228,7 +228,7 @@ const createPayment = async (data: PaymentCreateInput) => {
     isLoading.value = true
     error.value = ''
     
-    const response = await paymentService.createPayment(data)
+    const response = await paymentsService.createPayment(data as any)
     
     showToast({
       message: 'Paiement créé avec succès',
@@ -238,7 +238,7 @@ const createPayment = async (data: PaymentCreateInput) => {
     // Recharger la liste
     await loadPayments(true)
     
-    return response.data
+    return response
   } catch (err: any) {
     console.error('Erreur lors de la création du paiement:', err)
     error.value = 'Erreur lors de la création du paiement'
@@ -254,7 +254,7 @@ const updatePayment = async (paymentId: number, data: PaymentUpdateInput) => {
     isLoading.value = true
     error.value = ''
     
-    const response = await paymentService.updatePayment(paymentId, data)
+    const response = await paymentsService.updatePayment(paymentId, data)
     
     showToast({
       message: 'Paiement mis à jour avec succès',
@@ -264,7 +264,7 @@ const updatePayment = async (paymentId: number, data: PaymentUpdateInput) => {
     // Recharger la liste
     await loadPayments(true)
     
-    return response.data
+    return response
   } catch (err: any) {
     console.error('Erreur lors de la mise à jour du paiement:', err)
     error.value = 'Erreur lors de la mise à jour du paiement'
@@ -280,7 +280,7 @@ const deletePayment = async (paymentId: number) => {
     isLoading.value = true
     error.value = ''
     
-    await paymentService.deletePayment(paymentId)
+    await paymentsService.deletePayment(paymentId)
     
     showToast({
       message: 'Paiement supprimé avec succès',
@@ -305,9 +305,9 @@ const handleCinetpayWebhook = async (data: CinetpayWebhookInput) => {
     isLoading.value = true
     error.value = ''
     
-    const response = await paymentService.handleCinetpayWebhook(data)
+    const response = await paymentsService.handleCinetPayWebhook(data)
     
-    return response.data
+    return response
   } catch (err: any) {
     console.error('Erreur lors du traitement du webhook CinetPay:', err)
     error.value = 'Erreur lors du traitement du webhook'

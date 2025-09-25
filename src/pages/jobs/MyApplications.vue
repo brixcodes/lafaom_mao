@@ -134,8 +134,8 @@
                 <VCol cols="12" class="d-flex align-center mb-2">
                   <VIcon icon="ri-money-dollar-circle-line" size="small" class="me-2" />
                   Frais d'étude :
-                  <VChip :color="application.payment_id ? 'success' : 'warning'" class="mx-1" size="small">
-                    {{ application.payment_id ? 'Payés' : 'En attente' }}
+                  <VChip :color="application.submission_fee > 0 ? 'success' : 'warning'" class="mx-1" size="small">
+                    {{ application.submission_fee > 0 ? 'Payés' : 'En attente' }}
                   </VChip>
                 </VCol>
 
@@ -163,7 +163,7 @@
                     prepend-icon="ri-download-line" title="Télécharger documents"
                     @click="downloadDocuments(application)" :loading="downloading[application.id]" />
                   <VDivider />
-                  <VListItem v-if="!application.payment_id" prepend-icon="ri-money-dollar-circle-line"
+                  <VListItem v-if="application.submission_fee <= 0" prepend-icon="ri-money-dollar-circle-line"
                     title="Payer les frais" @click="payFees(application)" />
                 </VList>
               </VMenu>
@@ -226,8 +226,12 @@
       <VIcon icon="ri-file-user-line" size="80" class="text-medium-emphasis mb-6" />
       <h3 class="text-h5 mb-4">Aucune candidature trouvée</h3>
       <p class="text-body-1 text-medium-emphasis mb-6">
-        {{ hasActiveFilters ? "Aucune candidature ne correspond à vos critères de recherche." : "Vous n'avez pas encore
-        soumis de candidatures." }}
+        <template v-if="hasActiveFilters">
+          Aucune candidature ne correspond à vos critères de recherche.
+        </template>
+        <template v-else>
+          Vous n'avez pas encore soumis de candidatures.
+        </template>
       </p>
 
       <div class="d-flex justify-center gap-3">

@@ -129,7 +129,6 @@
       <VPagination v-model="currentPage" :length="totalPages" :total-visible="5"
         @update:model-value="loadReclamations(true)" />
     </div>
-    </div>
   </VContainer>
 </template>
 

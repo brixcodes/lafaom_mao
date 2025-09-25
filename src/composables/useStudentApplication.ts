@@ -167,7 +167,7 @@ export function useStudentApplication() {
         applications.value = []
       }
       
-      // Attendre que l'utilisateur soit chargé
+      // Vérifier si l'utilisateur est connecté
       if (!user.value?.id) {
         console.warn('Utilisateur non connecté, impossible de charger les candidatures')
         applications.value = []

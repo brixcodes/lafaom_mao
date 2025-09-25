@@ -75,17 +75,17 @@ class PaymentsService {
   // === PAIEMENTS ===
   // Récupérer la liste des paiements
   async getPayments(filters: PaymentFilter = {}): Promise<any> {
-    return await apiService.get('/payments', { params: filters })
+    return await apiService.get('/payments/payments', filters)
   }
 
   // Récupérer un paiement par ID
   async getPaymentById(paymentId: number): Promise<Payment> {
-    return await apiService.get(`/payments/${paymentId}`)
+    return await apiService.get(`/payments/payments/${paymentId}`)
   }
 
   // Récupérer un paiement par transaction ID
   async getPaymentByTransactionId(transactionId: string): Promise<Payment> {
-    return await apiService.get(`/payments-by-transaction/${transactionId}`)
+    return await apiService.get(`/payments/payments-by-transaction/${transactionId}`)
   }
 
   // Vérifier le statut d'un paiement

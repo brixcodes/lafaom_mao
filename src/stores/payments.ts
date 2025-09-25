@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { paymentService } from '@/services/api/payments'
+import { paymentsService } from '@/services/api/payments'
 import type {
   Payment,
   PaymentInitInput,
@@ -75,7 +75,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.getPayments(filters)
+      const response = await paymentsService.getPayments(filters)
       payments.value = response.data
       totalCount.value = response.total_number
       currentPage.value = response.page
@@ -94,7 +94,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.getPayment(paymentId)
+      const response = await paymentsService.getPayment(paymentId)
       currentPayment.value = response.data
       return response.data
     } catch (err: any) {
@@ -112,7 +112,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.createPayment(data)
+      const response = await paymentsService.createPayment(data)
       return response
     } catch (err: any) {
       error.value = err.message || 'Erreur lors de la création du paiement'
@@ -129,7 +129,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.initPayment(data)
+      const response = await paymentsService.initPayment(data)
       return response
     } catch (err: any) {
       error.value = err.message || 'Erreur lors de l\'initialisation du paiement'
@@ -146,7 +146,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.initCinetPayPayment(data)
+      const response = await paymentsService.initCinetPayPayment(data)
       return response
     } catch (err: any) {
       error.value = err.message || 'Erreur lors de l\'initialisation du paiement CinetPay'
@@ -163,7 +163,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.verifyPayment(paymentId)
+      const response = await paymentsService.verifyPayment(paymentId)
       const index = payments.value.findIndex(p => p.id === paymentId)
       if (index !== -1) {
         payments.value[index] = response.data
@@ -187,7 +187,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.cancelPayment(paymentId)
+      const response = await paymentsService.cancelPayment(paymentId)
       const index = payments.value.findIndex(p => p.id === paymentId)
       if (index !== -1) {
         payments.value[index] = response.data
@@ -211,7 +211,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.refundPayment(paymentId, amount)
+      const response = await paymentsService.refundPayment(paymentId, amount)
       const index = payments.value.findIndex(p => p.id === paymentId)
       if (index !== -1) {
         payments.value[index] = response.data
@@ -235,7 +235,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.getMyPayments()
+      const response = await paymentsService.getMyPayments()
       payments.value = response.data
     } catch (err: any) {
       error.value = err.message || 'Erreur lors du chargement de vos paiements'
@@ -250,7 +250,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.getMyPayment(paymentId)
+      const response = await paymentsService.getMyPayment(paymentId)
       currentPayment.value = response.data
       return response.data
     } catch (err: any) {
@@ -268,7 +268,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.getPaymentStats()
+      const response = await paymentsService.getPaymentStats()
       paymentStats.value = response.data
     } catch (err: any) {
       error.value = err.message || 'Erreur lors du chargement des statistiques'
@@ -283,7 +283,7 @@ export const usePaymentStore = defineStore('payments', () => {
     error.value = null
     
     try {
-      const response = await paymentService.getUserPaymentStats(userId)
+      const response = await paymentsService.getUserPaymentStats(userId)
       return response.data
     } catch (err: any) {
       error.value = err.message || 'Erreur lors du chargement des statistiques utilisateur'

@@ -120,7 +120,7 @@ export const API_ENDPOINTS = {
   
   // Payments
   PAYMENTS: {
-    LIST: '/payments',
+    LIST: '/payments/payments',
     CREATE: '/payments',
     DETAIL: (id: number) => `/payments/${id}`,
     UPDATE: (id: number) => `/payments/${id}`,
