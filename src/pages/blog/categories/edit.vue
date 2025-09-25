@@ -100,7 +100,7 @@ onMounted(async () => {
 <template>
   <div class="category-edit-page">
     <!-- Vérification des permissions d'accès -->
-    <div v-if="!hasAccess" class="text-center py-8">
+    <!-- <div  class="text-center py-8">
       <VIcon icon="ri-shield-cross-line" size="64" color="error" />
       <h3 class="mt-4">Permission insuffisante</h3>
       <p class="text-medium-emphasis">
@@ -110,10 +110,10 @@ onMounted(async () => {
         <VIcon icon="ri-arrow-left-line" class="me-2" />
         Retour aux catégories
       </VBtn>
-    </div>
+    </div> -->
 
     <!-- Contenu principal -->
-    <div v-else>
+    <div>
       <div class="d-flex align-center mb-4">
         <VBtn icon variant="text" class="mr-3" aria-label="Retour" title="Retour" @click="goBack">
           <VIcon icon="ri-arrow-left-line" color="primary" />

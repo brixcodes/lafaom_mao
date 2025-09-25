@@ -234,7 +234,6 @@
       <VAlert v-if="error" type="error" class="mt-4" closable @click:close="clearError">
         {{ error }}
       </VAlert>
-    </div>
   </div>
 </template>
 

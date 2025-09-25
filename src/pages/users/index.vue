@@ -26,15 +26,15 @@
       <VCardText>
         <VRow>
           <VCol cols="12" md="4">
-            <VTextField v-model="searchQuery" clearable label="Rechercher un utilisateur" prepend-inner-icon="ri-search-line"
-              variant="outlined"  @input="handleSearch" />
+            <VTextField v-model="searchQuery" clearable label="Rechercher un utilisateur"
+              prepend-inner-icon="ri-search-line" variant="outlined" @input="handleSearch" />
           </VCol>
           <VCol cols="12" md="4">
-            <VSelect v-model="selectedUserType" clearable :items="userTypeOptions" label="Type d'utilisateur" variant="outlined"
-             @update:model-value="handleFilter" />
+            <VSelect v-model="selectedUserType" clearable :items="userTypeOptions" label="Type d'utilisateur"
+              variant="outlined" @update:model-value="handleFilter" />
           </VCol>
           <VCol cols="12" md="4">
-            <VSelect v-model="selectedStatus" clearable :items="statusOptions" label="Statut" variant="outlined" 
+            <VSelect v-model="selectedStatus" clearable :items="statusOptions" label="Statut" variant="outlined"
               @update:model-value="handleFilter" />
           </VCol>
         </VRow>
@@ -66,14 +66,14 @@
 
         <!-- Type d'utilisateur -->
         <template #item.user_type="{ item }">
-          <VChip :color="getUserTypeColor(item.user_type)"  variant="tonal">
+          <VChip :color="getUserTypeColor(item.user_type)" variant="tonal">
             {{ item.user_type }}
           </VChip>
         </template>
 
         <!-- Statut -->
         <template #item.status="{ item }">
-          <VChip :color="getStatusColor(item.status)"  variant="tonal">
+          <VChip :color="getStatusColor(item.status)" variant="tonal">
             {{ item.status }}
           </VChip>
         </template>
@@ -83,33 +83,21 @@
           {{ formatDate(item.created_at) }}
         </template>
 
-        <!-- Actions -->
         <template #item.actions="{ item }">
           <div class="d-flex gap-2">
-            <!-- Voir utilisateur - Permission: CAN_VIEW_USER -->
-            <VBtn  color="info" variant="text" :to="`/users/${item.id}`" title="Voir les détails">
-              <VIcon icon="ri-eye-line" />
-            </VBtn>
+            <VBtn icon="ri-eye-line" size="small" variant="text" :to="`/users/${item.id}`"
+              title="Modifier l'utilisateur" />
 
-            <!-- Modifier utilisateur - Permission: CAN_UPDATE_USER -->
-            <VBtn  color="warning" variant="text" :to="`/users/${item.id}/edit`"
-              title="Modifier l'utilisateur">
-              <VIcon icon="ri-edit-line" />
-            </VBtn>
+            <VBtn icon="ri-edit-line" size="small" variant="text" :to="`/users/${item.id}/edit`"
+              title="Modifier l'utilisateur" />
 
-            <!-- Gérer les rôles - Permission: CAN_GIVE_PERMISSION ou CAN_GIVE_ROLE -->
-            <VBtn v-if="!canGivePermissions || canGiveRoles"  color="primary" variant="text"
-              :to="`/users/role-permissions`" @click="selectUserForRoleManagement(item)"
-              :title="(canGivePermissions || canGiveRoles) ? 'Gérer les rôles et permissions' : 'Permission insuffisante'">
-              <VIcon icon="ri-shield-user-line" />
-            </VBtn>
-
-            <!-- Supprimer utilisateur - Permission: CAN_DELETE_USER -->
-            <VBtn  color="error" variant="text" @click="deleteUser(item)" title="Supprimer l'utilisateur">
-              <VIcon icon="ri-delete-bin-line" />
-            </VBtn>
+            <VBtn icon="ri-delete-bin-line" size="small" variant="text" color="error" @click="deleteUser(item)"
+              title="Supprimer l'utilisateur" />
           </div>
         </template>
+
+        <!-- Actions -->
+       
       </VDataTable>
 
       <!-- Pagination -->
@@ -245,7 +233,7 @@ const selectUserForRoleManagement = (user: any) => {
 const deleteUser = async (user: any) => {
   const confirmed = await confirmAction({
     title: 'Êtes-vous sûr ?',
-    text: `Êtes-vous sûr de vouloir supprimer l'utilisateur ${user.first_name} ${user.last_name} ?`,
+    text: `Êtes-vous sûr de vouloir supprimer cet utilisateur ?`,
     confirmButtonText: '<span style="color:white">Supprimer</span>',
     cancelButtonText: '<span style="color:white">Annuler</span>',
     confirmButtonColor: '#3085d6',

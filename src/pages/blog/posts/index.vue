@@ -1,7 +1,7 @@
 <template>
   <div class="posts-page">
     <!-- Vérification des permissions d'accès -->
-    <div v-if="!hasAccess" class="text-center py-8">
+    <!-- <div  class="text-center py-8">
       <VIcon icon="ri-shield-cross-line" size="64" color="error" />
       <h3 class="mt-4">Permission insuffisante</h3>
       <p class="text-medium-emphasis">
@@ -11,10 +11,10 @@
         <VIcon icon="ri-arrow-left-line" class="me-2" />
         Retour au tableau de bord
       </VBtn>
-    </div>
+    </div> -->
 
     <!-- Contenu principal -->
-    <div v-else>
+    <div>
       <!-- Header principal -->
       <div class="mb-6">
         <div class="header-content">
@@ -30,7 +30,6 @@
           <div>
             <!-- Bouton créer - Permission: CAN_CREATE_BLOG -->
             <VBtn 
-              v-if="!canCreateBlogs"
               color="primary" 
               size="large" 
               elevation="2" 

@@ -1,87 +1,105 @@
-
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import UserForm from '@/components/User/UserForm.vue'
-import { useUserStore } from '@/stores/user'
-import { usePermissions } from '@/composables/usePermissions'
+import { useUsers } from '@/composables/useUsers'
 import { confirmAction } from '@/utils/confirm'
 import { showToast } from '@/components/toast/toastManager'
 
 const router = useRouter()
 const route = useRoute()
-const userStore = useUserStore()
-
-// Permissions
-const { canUpdateUsers } = usePermissions()
+const { loadUser, updateUser, isLoading } = useUsers()
 
 const userId = route.params.id as string
-const form = ref<any>({})
-const isLoading = ref(false)
+const formData = ref({
+  first_name: '',
+  last_name: '',
+  email: '',
+  password: '',
+  user_type: '',
+  status: 'active',
+  civility: '',
+  mobile_number: '',
+  country_code: '',
+  lang: 'fr',
+  two_factor_enabled: false,
+  birth_date: null,
+  fix_number: null,
+  web_token: null
+})
 
-const userTypeOptions = ref([
-  { value: 'admin', title: 'Administrateur' },
-  { value: 'staff', title: 'Staff' },
-  { value: 'teacher', title: 'Enseignant' },
-  { value: 'student', title: 'Étudiant' },
-])
-const statusOptions = ref([
-  { value: 'active', title: 'Actif' },
-  { value: 'inactive', title: 'Inactif' },
-  { value: 'blocked', title: 'Bloqué' },
-  { value: 'deleted', title: 'Supprimé' },
-])
+const userTypeOptions = [
+  { title: 'Admin', value: 'admin' },
+  { title: 'Staff', value: 'staff' },
+  { title: 'Teacher', value: 'teacher' },
+  { title: 'Student', value: 'student' }
+]
+
+const statusOptions = [
+  { title: 'Actif', value: 'active' },
+  { title: 'Inactif', value: 'inactive' },
+  { title: 'Bloqué', value: 'blocked' }
+]
+
+const civilityOptions = [
+  { title: 'Monsieur', value: 'Mr' },
+  { title: 'Madame', value: 'Mme' },
+  { title: 'Mademoiselle', value: 'Mlle' }
+]
+
+// Form ref
+const form = ref()
 
 const goBack = () => {
   router.push('/users')
 }
 
 const fetchUser = async () => {
-  isLoading.value = true
   try {
-    await userStore.getUserById(userId)
-    form.value = { ...userStore.currentUser }
-    console.log('[DEBUG] Données utilisateur chargées:', form.value)
+    console.log('🔍 Chargement de l\'utilisateur ID:', userId)
+    const user = await loadUser(userId)
+    console.log('✅ Utilisateur chargé:', user)
+
+    // Mapper les données de l'utilisateur vers le formulaire
+    formData.value = {
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
+      email: user.email || '',
+      password: '', // Ne pas pré-remplir le mot de passe
+      user_type: user.user_type || '',
+      status: user.status || 'active',
+      civility: user.civility || '',
+      mobile_number: user.mobile_number || '',
+      country_code: user.country_code || '',
+      lang: user.lang || 'fr',
+      two_factor_enabled: user.two_factor_enabled || false,
+      birth_date: user.birth_date || null,
+      fix_number: user.fix_number || null,
+      web_token: user.web_token || null
+    }
+
+    console.log('📋 Données du formulaire:', formData.value)
   } catch (err) {
-    showToast({ message: 'Erreur lors du chargement de l’utilisateur.', type: 'error' })
-    console.error('[DEBUG] Erreur chargement utilisateur:', err)
-  }
-  finally {
-    isLoading.value = false
+    console.error('❌ Erreur lors du chargement de l\'utilisateur:', err)
+    showToast({
+      message: 'Erreur lors du chargement de l\'utilisateur.',
+      type: 'error'
+    })
   }
 }
 
 onMounted(async () => {
-  // Vérifier les permissions avant de charger les données
-  if (!hasAccess.value) {
-    showToast({
-      message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
-      type: 'error'
-    })
-    router.push('/users')
-    return
-  }
-  
   await fetchUser()
 })
 
-// Computed
-const hasAccess = computed(() => canUpdateUsers.value)
 
-const handleSubmit = async (data: any) => {
-  // Vérifier les permissions
-  if (!canUpdateUsers.value) {
-    showToast({
-      message: 'Vous n\'avez pas les permissions nécessaires pour modifier un utilisateur',
-      type: 'error'
-    })
-    return
-  }
+const handleSubmit = async () => {
+  const validation = await form.value?.validate()
+  if (!validation?.valid) return
 
   const confirmed = await confirmAction({
     method: 'put',
     title: 'Êtes vous sûres?',
-    text: `Souhaitez-vous réellement enregistrer les modifications pour ${data.first_name} ${data.last_name} ?`,
+    text: `Souhaitez-vous réellement enregistrer les modifications pour ${formData.value.first_name} ${formData.value.last_name} ?`,
     confirmButtonText: '<span style="color:white">Enregistrer</span>',
     cancelButtonText: '<span style="color:white">Annuler</span>',
     confirmButtonColor: '#3085d6',
@@ -94,94 +112,135 @@ const handleSubmit = async (data: any) => {
 
   if (!confirmed) return
 
-  // Formatage du payload comme pour la création
-  const payload = {
-    ...data,
-    password: data.password || 'defaultPassword',
-    status: data.status || 'active',
-    user_type: data.user_type || 'admin',
-    lang: data.lang || 'fr',
-    two_factor_enabled: !!data.two_factor_enabled,
-    web_token: data.web_token ?? null,
-    birth_date: data.birth_date ?? null,
-    civility: data.civility ?? null,
-    country_code: data.country_code ?? null,
-    fix_number: data.fix_number ?? null,
-  }
-
-  console.log('[DEBUG] Payload envoyé à l’API:', payload)
   try {
-    const res = await userStore.updateUser(userId, payload)
-
-    console.log('[DEBUG] Réponse API:', res)
-
-    if (res && res.success) {
-      showToast({ message: 'Utilisateur modifié avec succès.', type: 'success' })
-      router.push('/users')
-    }
-    else {
-      showToast({ message: res?.message || 'Erreur lors de la modification.', type: 'error' })
-      console.error('[DEBUG] Erreur API:', res)
-    }
-  }
-  catch (err) {
-    showToast({ message: 'Erreur serveur ou réseau.', type: 'error' })
-    console.error('[DEBUG] Exception API:', err)
+    console.log('🔍 Données à envoyer:', formData.value)
+    await updateUser(userId, formData.value)
+    showToast({
+      message: 'Utilisateur modifié avec succès',
+      type: 'success'
+    })
+    router.push('/users')
+  } catch (error) {
+    console.error('❌ Erreur lors de la modification:', error)
+    console.error('📋 Détails de l\'erreur:', error.response?.data)
+    showToast({
+      message: 'Erreur lors de la modification de l\'utilisateur',
+      type: 'error'
+    })
   }
 }
 </script>
 
 <template>
-  <div class="user-edit-page">
-    <!-- Vérification des permissions d'accès -->
-    <div v-if="!hasAccess" class="text-center py-8">
-      <VIcon icon="ri-shield-cross-line" size="64" color="error" />
-      <h3 class="mt-4">Permission insuffisante</h3>
-      <p class="text-medium-emphasis">
-        Vous n'avez pas les permissions nécessaires pour modifier un utilisateur.
-      </p>
-      <VBtn color="primary" to="/users" class="mt-4">
-        <VIcon icon="ri-arrow-left-line" class="me-2" />
-        Retour à la liste
-      </VBtn>
-    </div>
-
-    <!-- Contenu principal -->
-    <div v-else>
-      <div class="d-flex align-center mb-4">
-        <VBtn
-          icon
-          variant="text"
-          aria-label="Retour"
-          title="Retour"
-          @click="goBack"
-        >
-          <VIcon
-            icon="ri-arrow-left-line"
-            color="primary"
-          />
-        </VBtn>
-
-        <div>
-          <h1 class="font-weight-bold mb-1">
-            Modifier un utilisateur
-          </h1>
-          <p class="text-body-2 text-secondary mb-0">
-            Modifiez les informations de l'utilisateur puis enregistrez les
-            changements.
-          </p>
-        </div>
+  <div>
+    <!-- Header -->
+    <div class="d-flex align-center justify-space-between mb-6">
+      <div>
+        <h2 class="text-h4 font-weight-bold">
+          <VIcon icon="ri-arrow-left-line" variant="outlined" color="primary" class="mr-3" @click="goBack" />
+          Modifier un utilisateur
+        </h2>
+        <p class="text-body-1 text-medium-emphasis ml-5 mt-1">
+          Modifiez les informations de l'utilisateur
+        </p>
       </div>
-
-      <div class="text-body-2 text-medium-emphasis mb-4" />
-      <UserForm
-        :form="form"
-        :user-type-options="userTypeOptions"
-        :status-options="statusOptions"
-        submit-label="Modifier"
-        @submit="handleSubmit"
-      />
     </div>
+
+    <!-- Formulaire de modification -->
+    <VCard>
+
+      <VCardText>
+        <VForm ref="form" @submit.prevent="handleSubmit">
+          <VRow>
+            <!-- Informations personnelles -->
+            <VCol cols="12" md="6">
+              <VTextField v-model="formData.first_name" label="Prénom *" prepend-inner-icon="ri-user-line"
+                variant="outlined" :rules="[v => !!v || 'Le prénom est requis']" required />
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <VTextField v-model="formData.last_name" label="Nom *" prepend-inner-icon="ri-user-line"
+                variant="outlined" :rules="[v => !!v || 'Le nom est requis']" required />
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <VTextField v-model="formData.email" label="Email *" type="email" prepend-inner-icon="ri-mail-line"
+                variant="outlined"
+                :rules="[v => !!v || 'L\'email est requis', v => /.+@.+\..+/.test(v) || 'Email invalide']" required />
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <VTextField v-model="formData.password" label="Mot de passe" type="password"
+                prepend-inner-icon="ri-lock-line" variant="outlined"
+                hint="Laissez vide pour ne pas changer le mot de passe" persistent-hint />
+            </VCol>
+
+            <!-- Civilité -->
+            <VCol cols="12" md="6">
+              <VSelect v-model="formData.civility" :items="civilityOptions" label="Civilité"
+                prepend-inner-icon="ri-user-heart-line" variant="outlined" />
+            </VCol>
+
+            <!-- Type d'utilisateur -->
+            <VCol cols="12" md="6">
+              <VSelect v-model="formData.user_type" :items="userTypeOptions" label="Type d'utilisateur *"
+                prepend-inner-icon="ri-shield-user-line" variant="outlined"
+                :rules="[v => !!v || 'Le type d\'utilisateur est requis']" required />
+            </VCol>
+
+            <!-- Statut -->
+            <VCol cols="12" md="6">
+              <VSelect v-model="formData.status" :items="statusOptions" label="Statut *"
+                prepend-inner-icon="ri-check-line" variant="outlined" :rules="[v => !!v || 'Le statut est requis']"
+                required />
+            </VCol>
+
+            <!-- Informations de contact -->
+            <VCol cols="12" md="6">
+              <VTextField v-model="formData.mobile_number" label="Numéro de mobile"
+                prepend-inner-icon="ri-smartphone-line" variant="outlined" />
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <VTextField v-model="formData.fix_number" label="Numéro de téléphone fixe"
+                prepend-inner-icon="ri-phone-line" variant="outlined" />
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <VTextField v-model="formData.country_code" label="Code pays" prepend-inner-icon="ri-flag-line"
+                variant="outlined" />
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <VTextField v-model="formData.lang" label="Langue" prepend-inner-icon="ri-translate-2"
+                variant="outlined" />
+            </VCol>
+
+            <!-- Date de naissance -->
+            <VCol cols="12" md="6">
+              <VTextField v-model="formData.birth_date" label="Date de naissance" type="date"
+                prepend-inner-icon="ri-calendar-line" variant="outlined" />
+            </VCol>
+
+            <!-- Authentification à deux facteurs -->
+            <VCol cols="12" md="6">
+              <VSwitch v-model="formData.two_factor_enabled" label="Authentification à deux facteurs" color="primary"
+                inset />
+            </VCol>
+          </VRow>
+
+          <!-- Boutons d'action -->
+          <div class="d-flex justify-end gap-3 mt-6">
+            <VBtn color="error" variant="flat" @click="goBack">
+              Annuler
+            </VBtn>
+            <VBtn type="submit" color="primary" variant="flat" :loading="isLoading">
+              Modifier
+            </VBtn>
+          </div>
+        </VForm>
+      </VCardText>
+    </VCard>
   </div>
 </template>
 

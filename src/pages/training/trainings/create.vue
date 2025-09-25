@@ -118,8 +118,8 @@ onMounted(async () => {
 <template>
   <div class="training-create-page">
     <!-- Vérification des permissions d'accès -->
-    <div v-if="!hasAccess" class="text-center py-8">
-      <VIcon icon="ri-shield-cross-line" size="64" color="error" />
+    <!-- <div  class="text-center py-8"> -->
+      <!-- <VIcon icon="ri-shield-cross-line" size="64" color="error" />
       <h3 class="mt-4">Permission insuffisante</h3>
       <p class="text-medium-emphasis">
         Vous n'avez pas les permissions nécessaires pour créer une formation.
@@ -128,10 +128,10 @@ onMounted(async () => {
         <VIcon icon="ri-arrow-left-line" class="me-2" />
         Retour aux formations
       </VBtn>
-    </div>
+    </div> -->
 
     <!-- Contenu principal -->
-    <div v-else>
+    <div>
       <!-- En-tête avec bouton retour -->
       <div class="d-flex align-center mb-6">
         <VBtn icon="ri-arrow-left-line" variant="text" @click="goBack" class="me-3" />
