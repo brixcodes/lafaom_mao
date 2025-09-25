@@ -245,7 +245,7 @@ const selectUserForRoleManagement = (user: any) => {
 const deleteUser = async (user: any) => {
   const confirmed = await confirmAction({
     title: 'Êtes-vous sûr ?',
-    text: `Êtes-vous sûr de vouloir supprimer l'utilisateur "${user.first_name} ${user.last_name}" ?`,
+    text: `Êtes-vous sûr de vouloir supprimer l'utilisateur ${user.first_name} ${user.last_name} ?`,
     confirmButtonText: '<span style="color:white">Supprimer</span>',
     cancelButtonText: '<span style="color:white">Annuler</span>',
     confirmButtonColor: '#3085d6',
@@ -254,11 +254,6 @@ const deleteUser = async (user: any) => {
       confirmButton: 'swal2-confirm-white',
       cancelButton: 'swal2-cancel-white',
     },
-
-    title: 'Supprimer l\'utilisateur',
-    text: `Êtes-vous sûr de vouloir supprimer l'utilisateur "${user.first_name} ${user.last_name}" ?`,
-    confirmButtonText: 'Supprimer',
-    cancelButtonText: 'Annuler'
   })
 
   if (!confirmed) return
