@@ -104,7 +104,7 @@
     </VRow>
 
     <!-- Bouton charger plus -->
-    <div v-if="canLoadMore" class="text-center pa-4">
+    <div v-if="!canLoadMore" class="text-center pa-4">
       <VBtn variant="outlined" color="primary" :loading="isLoading" @click="loadMoreApplications">
         <VIcon class="mr-2">ri-arrow-down-line</VIcon>
         Charger plus

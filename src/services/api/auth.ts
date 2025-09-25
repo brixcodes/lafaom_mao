@@ -83,6 +83,11 @@ export class AuthService {
     return apiService.upload('/auth/upload-profile-image', formData)
   }
 
+  // Récupérer les permissions de l'utilisateur connecté
+  async getMyPermissions(): Promise<{ data: string[]; message: string }> {
+    return apiService.get('/auth/my-permissions')
+  }
+
   // Token OAuth2 pour les clients
   async getClientAccessToken(data: ClientAccessTokenInput): Promise<{ access_token: string; token_type: string; expires_in: number }> {
     return apiService.postNoConfirm('/auth/oauth/token', data)

@@ -81,9 +81,9 @@
         </VCol>
       </VRow>
       
-      <!-- Section de debug (temporaire) -->
-      <VRow class="mt-4 d-none">
-        <VCol cols="12" >
+      <!-- Section de debug (développement uniquement) -->
+      <VRow v-if="isDevelopment" class="mt-4">
+        <VCol cols="12">
           <VExpansionPanels>
             <VExpansionPanel title="🐛 Debug - État actuel">
               <VExpansionPanelText>
@@ -117,7 +117,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { permissionService, type AssignRoleInput } from '@/services/api'
+import { permissionService } from '@/services/api/permissions'
+import type { AssignRoleInput } from '@/types/permissions'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'
 
@@ -145,6 +146,9 @@ const assigningRole = ref<number | null>(null)
 const revokingRole = ref<number | null>(null)
 const isLoading = ref(false)
 
+// Développement uniquement
+const isDevelopment = ref(import.meta.env.DEV)
+
 // Computed
 const userRoles = computed(() => {
   const roleIds = [...new Set(userPermissions.value.filter(p => p.role_id).map(p => p.role_id))]
@@ -168,9 +172,9 @@ const fetchRoles = async () => {
     console.log('🗓️ Réponse rôles brute:', response)
     
     // Extraire les données selon la structure de la réponse API
-    let rolesData = []
-    if (response && response.data) {
-      rolesData = Array.isArray(response.data) ? response.data : []
+    let rolesData: any[] = []
+    if (response && (response as any).data) {
+      rolesData = Array.isArray((response as any).data) ? (response as any).data : []
     } else if (Array.isArray(response)) {
       rolesData = response
     }
@@ -208,9 +212,9 @@ const fetchUserPermissions = async () => {
     console.log('🗓️ Réponse permissions brute:', response)
     
     // Extraire les données selon la structure de la réponse API
-    let permissionsData = []
-    if (response && response.data) {
-      permissionsData = Array.isArray(response.data) ? response.data : []
+    let permissionsData: any[] = []
+    if (response && (response as any).data) {
+      permissionsData = Array.isArray((response as any).data) ? (response as any).data : []
     } else if (Array.isArray(response)) {
       permissionsData = response
     }
@@ -232,7 +236,7 @@ const fetchUserPermissions = async () => {
     console.error('Erreur lors du chargement des permissions:', error)
     
     // En production, on affiche l'erreur à l'utilisateur
-    const message = error?.message || 'Erreur lors du chargement des permissions utilisateur'
+    const message = (error as any)?.message || 'Erreur lors du chargement des permissions utilisateur'
     showToast({ message, type: 'error' })
     
     // Réinitialiser les permissions en cas d'erreur
@@ -296,7 +300,7 @@ const assignRole = async (role: Role) => {
     showToast({ message: `Rôle "${role.name}" assigné avec succès`, type: 'success' })
   } catch (error) {
     console.error('Erreur lors de l\'assignation du rôle:', error)
-    const message = error?.message || 'Erreur lors de l\'assignation du rôle'
+    const message = (error as any)?.message || 'Erreur lors de l\'assignation du rôle'
     showToast({ message, type: 'error' })
   } finally {
     assigningRole.value = null
@@ -338,7 +342,7 @@ const revokeRole = async (role: Role) => {
     showToast({ message: `Rôle "${role.name}" révoqué avec succès`, type: 'success' })
   } catch (error) {
     console.error('Erreur lors de la révocation du rôle:', error)
-    const message = error?.message || 'Erreur lors de la révocation du rôle'
+    const message = (error as any)?.message || 'Erreur lors de la révocation du rôle'
     showToast({ message, type: 'error' })
     
     // En cas d'erreur, rafraîchir les données depuis l'API

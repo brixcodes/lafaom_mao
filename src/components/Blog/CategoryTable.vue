@@ -12,8 +12,23 @@
       </template>
       <template #item.actions="{ item }">
         <div class="d-flex gap-2">
-          <VBtn icon="ri-edit-line" size="small" variant="text" @click="$emit('edit', item.id)" />
-          <VBtn icon="ri-delete-bin-line" size="small" variant="text" color="error" @click="$emit('delete', item)" />
+          <!-- Modifier - Permission: CAN_UPDATE_BLOG -->
+          <VBtn 
+            icon="ri-edit-line" 
+            size="small" 
+            variant="text" 
+            @click="$emit('edit', item.id)"
+            title="Modifier la catégorie"
+          />
+          <!-- Supprimer - Permission: CAN_DELETE_BLOG -->
+          <VBtn 
+            icon="ri-delete-bin-line" 
+            size="small" 
+            variant="text" 
+            color="error" 
+            @click="$emit('delete', item)"
+            title="Supprimer la catégorie"
+          />
         </div>
       </template>
     </VDataTable>
@@ -22,11 +37,14 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 const props = defineProps<{
   categories: any[]
   headers: any[]
   isLoading: boolean
 }>()
+
 const emit = defineEmits(['edit', 'delete'])
 </script>
 

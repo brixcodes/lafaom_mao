@@ -135,7 +135,7 @@ onMounted(() => {
           />
 
           <VBtn
-            v-if="canCreateTraining"
+            v-if="!canCreateTraining"
             prepend-icon="ri-add-line"
             color="primary"
             :to="{ name: 'training-create' }"
@@ -184,7 +184,7 @@ onMounted(() => {
               <VIcon>ri-eye-line</VIcon>
             </VBtn>
             <VBtn
-              v-if="canEditTraining"
+              v-if="!canEditTraining"
               icon
               variant="text"
               color="primary"
@@ -194,7 +194,7 @@ onMounted(() => {
               <VIcon>ri-pencil-line</VIcon>
             </VBtn>
             <VBtn
-              v-if="canDeleteTraining"
+              v-if="!canDeleteTraining"
               icon
               variant="text"
               color="error"

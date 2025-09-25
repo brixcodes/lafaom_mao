@@ -1,20 +1,25 @@
 <template>
   <div class="job-offers-page">
-    <!-- En-tête -->
-    <div class="d-flex justify-space-between align-center mb-6">
-      <div>
-        <h1 class="text-h4 mb-2">
-          <VIcon icon="ri-briefcase-line" class="me-3" color="primary" />
-          Offres d'emploi
-        </h1>
-        <p class="text-body-1 text-medium-emphasis">
-          Gérez et consultez toutes les offres d'emploi disponibles
-        </p>
+      <!-- En-tête -->
+      <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+          <h1 class="text-h4 mb-2">
+            <VIcon icon="ri-briefcase-line" class="me-3" color="primary" />
+            Offres d'emploi
+          </h1>
+          <p class="text-body-1 text-medium-emphasis">
+            Gérez et consultez toutes les offres d'emploi disponibles
+          </p>
+        </div>
+        <!-- Bouton créer - Permission: CAN_CREATE_JOB_OFFER -->
+        <VBtn 
+          prepend-icon="ri-add-line" 
+          color="primary" 
+          :to="{ name: 'job-offers-create' }"
+        >
+          Créer une offre
+        </VBtn>
       </div>
-      <VBtn prepend-icon="ri-add-line" color="primary" :to="{ name: 'job-offers-create' }">
-        Créer une offre
-      </VBtn>
-    </div>
 
     <!-- Filtres et recherche -->
     <VCard class="mb-6">
@@ -93,7 +98,7 @@
 
                 <VCol cols="12" md="4" class="d-flex align-center mb-2">
                   <VIcon icon="ri-money-euro-circle-line" size="small" class="me-2 text-success" />
-                  <span>{{ formatSalary(offer.salary, offer.currency) }}</span>
+                  <span>{{ formatSalary(offer.salary || 0, offer.currency || 'EUR') }}</span>
                 </VCol>
 
                 <VCol cols="12" md="12" class="d-flex align-center mb-2">
@@ -106,15 +111,14 @@
 
               <!-- Attachments -->
               <v-card-title>Pièces à joindre</v-card-title>
-              <div v-if="offer.attachment.length > 0">
+              <div v-if="offer.attachment && offer.attachment.length > 0">
                 <v-chip v-for="(doc, index) in offer.attachment.slice(0, 2)" :key="doc" size="x-small" class="mx-1"
                   style="font-size: 10px; font-weight: bold;">
                   {{ doc }}
                 </v-chip>
 
                 <v-chip v-if="offer.attachment.length > 2" size="x-small" class="mx-1"
-                  style="font-size: 10px; font-weight: bold; background-color: #f5f5f5; cursor: pointer;"
-                  @click="showAllAttachments(offer)">
+                  style="font-size: 10px; font-weight: bold; background-color: #f5f5f5; cursor: pointer;">
                   Voir plus...
                 </v-chip>
               </div>
@@ -226,10 +230,11 @@
       </VCard>
     </VDialog>
 
-    <!-- Message d'erreur -->
-    <VAlert v-if="error" type="error" class="mt-4" closable @click:close="clearError">
-      {{ error }}
-    </VAlert>
+      <!-- Message d'erreur -->
+      <VAlert v-if="error" type="error" class="mt-4" closable @click:close="clearError">
+        {{ error }}
+      </VAlert>
+    </div>
   </div>
 </template>
 
@@ -241,6 +246,7 @@ import type { JobOfferOut } from '@/types/jobOffers'
 
 // Store
 const jobOffersStore = useJobOffersStore()
+
 
 // Expansion par offre
 const expandedOffers = ref<Set<string>>(new Set())
@@ -281,9 +287,7 @@ const filteredOffers = computed(() => {
     filtered = filtered.filter(
       offer =>
         (offer.title || '').toLowerCase().includes(query) ||
-        (offer.company || '').toLowerCase().includes(query) ||
         (offer.location || '').toLowerCase().includes(query) ||
-        (offer.description || '').toLowerCase().includes(query) ||
         (offer.reference || '').toLowerCase().includes(query)
     )
   }
@@ -340,6 +344,7 @@ const totalPages = computed(() => Math.ceil(filteredOffers.value.length / pageSi
 const hasActiveFilters = computed(() => {
   return searchQuery.value !== '' || filterLocation.value !== '' || filterContractType.value !== '' || sortBy.value !== 'created_at'
 })
+
 
 // Options filtres
 const contractTypeOptions = computed(() => [
@@ -411,8 +416,8 @@ const resetFilters = () => {
 }
 
 // Lifecycle
-onMounted(() => {
-  loadAllOffers()
+onMounted(async () => {
+  await loadAllOffers()
 })
 
 // Watchers

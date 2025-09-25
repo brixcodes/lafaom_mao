@@ -149,7 +149,7 @@
                 <VList>
                   <VListItem prepend-icon="ri-eye-line" title="Voir les détails"
                     @click="viewApplication(application)" />
-                  <!-- v-if="canUpdateStatus(application)" -->
+                  <!-- v-if="!canUpdateStatus(application)" -->
                   <VListItem prepend-icon="ri-edit-line" title="Modifier le statut"
                     @click="showStatusUpdateDialog(application)" />
                   <VListItem prepend-icon="ri-mail-send-line" title="Envoyer email" @click="sendEmail(application)" />

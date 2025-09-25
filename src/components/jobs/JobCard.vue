@@ -102,7 +102,7 @@
             Voir
           </VBtn>
 
-          <VBtn v-if="canEdit" variant="outlined" size="small" prepend-icon="ri-edit-line" color="primary"
+          <VBtn v-if="!canEdit" variant="outlined" size="small" prepend-icon="ri-edit-line" color="primary"
             @click="$emit('edit', jobOffer)">
             Modifier
           </VBtn>

@@ -1,10 +1,11 @@
-// Payment Status Enum
+// Payment Status Enum (based on real API data)
 export enum PaymentStatusEnum {
-  PENDING = 'PENDING',
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED'
+  PENDING = 'pending',
+  SUCCESS = 'success',
+  FAILED = 'failed',
+  REFUSED = 'refused',
+  CANCELLED = 'cancelled',
+  REFUNDED = 'refunded'
 }
 
 // Payment Method Enum
@@ -14,24 +15,20 @@ export enum PaymentMethodEnum {
   BANK_CARD = 'BANK_CARD'
 }
 
-// Payment Interface
+// Payment Interface (based on real API data)
 export interface Payment {
-  id: number
-  payment_id: string
   transaction_id: string
-  amount: number
-  currency: string
-  status: PaymentStatusEnum
-  payment_method: PaymentMethodEnum
-  user_id: string
-  application_id?: number
-  description?: string
-  metadata?: Record<string, any>
-  created_at: string
-  updated_at: string
-  paid_at?: string
-  failed_at?: string
-  refunded_at?: string
+  product_amount: number
+  product_currency: string
+  payment_currency: string
+  daily_rate: number
+  usd_product_currency_rate: number
+  usd_payment_currency_rate: number
+  status: string
+  payable_id: string
+  payable_type: string
+  payment_type_id: string
+  payment_type: string
 }
 
 // Payment Create Input
@@ -62,6 +59,10 @@ export interface PaymentFilter {
   date_to?: string
   order_by?: string
   asc?: string
+  transaction_id?: string
+  currency?: string
+  amount_min?: number
+  amount_max?: number
 }
 
 // Payment Status Check Input

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { trainingService } from '@/services/api/training'
+import { usePermissions } from '@/composables/usePermissions'
 import type { TrainingCreateInput } from '@/types/training'
 import { TrainingTypeEnum, TrainingStatus, DurationEnum } from '@/types/training'
 import { confirmAction } from '@/utils/confirm'
@@ -9,10 +10,17 @@ import { showToast } from '@/components/toast/toastManager'
 import QuillEditor from '@/components/common/QuillEditor.vue'
 
 const router = useRouter()
+
+// Permissions
+const { canCreateTraining } = usePermissions()
+
 const form = ref()
 const specialties = ref<{ id: number; name: string }[]>([])
 const isSaving = ref(false)
 const isLoading = ref(true)
+
+// Vérification des permissions d'accès
+const hasAccess = computed(() => canCreateTraining.value)
 
 // Options de formulaire
 const trainingTypes = [
@@ -92,23 +100,50 @@ const goBack = () => {
 }
 
 // Initialisation
-onMounted(fetchSpecialties)
+onMounted(async () => {
+  // Vérifier les permissions avant de charger la page
+  if (!hasAccess.value) {
+    showToast({
+      message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
+      type: 'error'
+    })
+    router.push('/training/trainings')
+    return
+  }
+  
+  await fetchSpecialties()
+})
 </script>
 
 <template>
   <div class="training-create-page">
-    <!-- En-tête avec bouton retour -->
-    <div class="d-flex align-center mb-6">
-      <VBtn icon="ri-arrow-left-line" variant="text" @click="goBack" class="me-3" />
-      <div>
-        <h1 class="text-h4 mb-1">
-          Créer une formation
-        </h1>
-        <p class="text-body-1 text-medium-emphasis">
-          Remplissez le formulaire pour créer une nouvelle formation
-        </p>
-      </div>
+    <!-- Vérification des permissions d'accès -->
+    <div v-if="!hasAccess" class="text-center py-8">
+      <VIcon icon="ri-shield-cross-line" size="64" color="error" />
+      <h3 class="mt-4">Permission insuffisante</h3>
+      <p class="text-medium-emphasis">
+        Vous n'avez pas les permissions nécessaires pour créer une formation.
+      </p>
+      <VBtn color="primary" to="/training/trainings" class="mt-4">
+        <VIcon icon="ri-arrow-left-line" class="me-2" />
+        Retour aux formations
+      </VBtn>
     </div>
+
+    <!-- Contenu principal -->
+    <div v-else>
+      <!-- En-tête avec bouton retour -->
+      <div class="d-flex align-center mb-6">
+        <VBtn icon="ri-arrow-left-line" variant="text" @click="goBack" class="me-3" />
+        <div>
+          <h1 class="text-h4 mb-1">
+            Créer une formation
+          </h1>
+          <p class="text-body-1 text-medium-emphasis">
+            Remplissez le formulaire pour créer une nouvelle formation
+          </p>
+        </div>
+      </div>
 
     <!-- Formulaire -->
     <VCard>
@@ -246,6 +281,7 @@ onMounted(fetchSpecialties)
         </VForm>
       </VCardText>
     </VCard>
+    </div>
   </div>
 </template>
 

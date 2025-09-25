@@ -134,7 +134,7 @@
                       :to="{ name: 'training-trainings-detail', params: { id: training.id } }" />
                     <VListItem v-if="training.status === TrainingStatusEnum.ACTIVE" prepend-icon="ri-send-plane-line"
                       title="Candidater" @click="goToApply(training.id)" />
-                    <VListItem v-if="hasUpdatePermission" prepend-icon="ri-edit-line" title="Modifier"
+                    <VListItem prepend-icon="ri-edit-line" title="Modifier"
                       :to="{ name: 'training-trainings-edit', params: { id: training.id } }" />
                     <VListItem prepend-icon="ri-group-2-line" title="Voir les candidatures"
                       :to="{ name: 'training-applications-index', query: { training_id: training.id } }" />
@@ -213,13 +213,10 @@ import { useRouter } from 'vue-router'
 import { trainingService } from '@/services/api/training'
 import type { Training, TrainingStatus, TrainingFilter } from '@/types/training'
 import { TrainingTypeEnum, TrainingStatus as TrainingStatusEnum, DurationEnum } from '@/types/training'
-import { usePermissions } from '@/composables/usePermissions'
-import { TrainingPermission } from '@/types/permissions'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'
 
 const router = useRouter()
-const { hasPermission } = usePermissions()
 
 // Expansion par formation
 const expandedTrainings = ref<Set<string>>(new Set())
@@ -315,9 +312,6 @@ const hasActiveFilters = computed(() => {
   return searchQuery.value !== '' || filterSpecialty.value !== '' || filterStatus.value !== '' || sortBy.value !== 'created_at'
 })
 
-// Permissions
-const hasUpdatePermission = computed(() => hasPermission(TrainingPermission.EDIT_TRAINING))
-const hasDeletePermission = computed(() => hasPermission(TrainingPermission.DELETE_TRAINING))
 
 // Options filtres
 const statusOptions = [

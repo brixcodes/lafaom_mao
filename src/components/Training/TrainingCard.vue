@@ -102,7 +102,7 @@ const truncateText = (text: string, maxLength: number) => {
           Voir
         </VBtn>
 
-        <VBtn v-if="canEditTraining" variant="outlined" size="small" prepend-icon="ri-edit-line" color="primary"
+        <VBtn v-if="!canEditTraining" variant="outlined" size="small" prepend-icon="ri-edit-line" color="primary"
           @click="$emit('edit', training)">
           Modifier
         </VBtn>

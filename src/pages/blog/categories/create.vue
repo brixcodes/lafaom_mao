@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiService } from '@/services/api/base'
+import { usePermissions } from '@/composables/usePermissions'
 import { confirmAction } from '@/utils/confirm'
 import { showToast } from '@/components/toast/toastManager'
 import CategoryForm from '@/components/Blog/CategoryForm.vue'
@@ -9,12 +10,19 @@ import CategoryForm from '@/components/Blog/CategoryForm.vue'
 import { validateRequired, validateMinLength } from '@/utils/validation'
 
 const router = useRouter()
+
+// Permissions
+const { canCreateBlogs } = usePermissions()
+
 const isLoading = ref(false)
 const form = ref({
   title: '',
   description: '',
   slug: '',
 })
+
+// Vérification des permissions d'accès
+const hasAccess = computed(() => canCreateBlogs.value)
 
 const titleRules = [
   (v: string) => {
@@ -54,6 +62,15 @@ const validate = () => {
 }
 
 const handleSubmit = async (data: any) => {
+  // Vérifier les permissions
+  if (!canCreateBlogs.value) {
+    showToast({
+      message: 'Vous n\'avez pas les permissions nécessaires pour créer une catégorie',
+      type: 'error'
+    })
+    return
+  }
+
   const confirmed = await confirmAction({
     title: 'Êtes vous sûres?',
     text: 'Souhaitez-vous réellement enregistrer cette catégorie ?',
@@ -89,27 +106,56 @@ const handleSubmit = async (data: any) => {
 const clearForm = () => {
   form.value = { title: '', description: '', slug: '' }
 }
+
+// Lifecycle
+onMounted(async () => {
+  // Vérifier les permissions avant de charger la page
+  if (!hasAccess.value) {
+    showToast({
+      message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
+      type: 'error'
+    })
+    router.push('/blog/categories')
+    return
+  }
+})
 </script>
 
 <template>
   <div class="category-create-page">
-    <div class="d-flex align-center mb-4">
-      <VBtn icon variant="text" class="mr-3" aria-label="Retour" title="Retour" @click="goBack">
-        <VIcon icon="ri-arrow-left-line" color="primary" />
+    <!-- Vérification des permissions d'accès -->
+    <div v-if="!hasAccess" class="text-center py-8">
+      <VIcon icon="ri-shield-cross-line" size="64" color="error" />
+      <h3 class="mt-4">Permission insuffisante</h3>
+      <p class="text-medium-emphasis">
+        Vous n'avez pas les permissions nécessaires pour créer une catégorie.
+      </p>
+      <VBtn color="primary" to="/blog/categories" class="mt-4">
+        <VIcon icon="ri-arrow-left-line" class="me-2" />
+        Retour aux catégories
       </VBtn>
-      <div>
-        <h1 class="font-weight-bold mb-1">Créer une catégorie</h1>
-        <p class="text-body-2 text-secondary mb-0">Remplissez le formulaire pour ajouter une nouvelle catégorie au blog.
-        </p>
-      </div>
     </div>
-    <VContainer>
-      <VCard elevation="2" class="pa-4">
-        <VCardText>
-          <CategoryForm v-model="form" :submit-label="'Enregistrer'" @submit="handleSubmit" @cancel="clearForm" />
-        </VCardText>
-      </VCard>
-    </VContainer>
+
+    <!-- Contenu principal -->
+    <div v-else>
+      <div class="d-flex align-center mb-4">
+        <VBtn icon variant="text" class="mr-3" aria-label="Retour" title="Retour" @click="goBack">
+          <VIcon icon="ri-arrow-left-line" color="primary" />
+        </VBtn>
+        <div>
+          <h1 class="font-weight-bold mb-1">Créer une catégorie</h1>
+          <p class="text-body-2 text-secondary mb-0">Remplissez le formulaire pour ajouter une nouvelle catégorie au blog.
+          </p>
+        </div>
+      </div>
+      <VContainer>
+        <VCard elevation="2" class="pa-4">
+          <VCardText>
+            <CategoryForm v-model="form" :submit-label="'Enregistrer'" @submit="handleSubmit" @cancel="clearForm" />
+          </VCardText>
+        </VCard>
+      </VContainer>
+    </div>
   </div>
 </template>
 

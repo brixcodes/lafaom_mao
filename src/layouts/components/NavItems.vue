@@ -1,15 +1,7 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
 import VerticalNavSectionTitle from '@/@layouts/components/VerticalNavSectionTitle.vue'
 import VerticalNavGroup from '@layouts/components/VerticalNavGroup.vue'
 import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
-import { usePermissions } from '@/composables/usePermissions'
-import { TrainingPermission } from '@/types/permissions'
-
-const { hasPermission } = usePermissions()
-const canViewTraining = computed(() => hasPermission(TrainingPermission.VIEW_TRAININGS))
-const canCreateTraining = computed(() => hasPermission(TrainingPermission.CREATE_TRAINING))
-const canReviewApplications = computed(() => hasPermission(TrainingPermission.REVIEW_APPLICATIONS))
 </script>
 
 <template>
@@ -24,6 +16,7 @@ const canReviewApplications = computed(() => hasPermission(TrainingPermission.RE
     }" />
   </VerticalNavGroup>
 
+  <!-- Utilisateurs -->
   <VerticalNavGroup :item="{
     title: 'Utilisateurs',
     icon: 'ri-group-line',
@@ -32,13 +25,19 @@ const canReviewApplications = computed(() => hasPermission(TrainingPermission.RE
       title: 'Utilisateurs',
       to: '/users',
     }" />
+    
     <VerticalNavLink :item="{
       title: 'Permissions',
       to: '/permissions',
     }" />
+    
+    <VerticalNavLink :item="{
+      title: 'Rôles & Permissions',
+      to: '/users/role-permissions',
+    }" />
   </VerticalNavGroup>
 
-
+  <!-- Blog -->
   <VerticalNavGroup :item="{
     title: 'Blog',
     icon: 'ri-article-line',
@@ -47,13 +46,15 @@ const canReviewApplications = computed(() => hasPermission(TrainingPermission.RE
       title: 'Catégories',
       to: '/blog/categories',
     }" />
+    
     <VerticalNavLink :item="{
       title: 'Articles',
       to: '/blog/posts',
     }" />
   </VerticalNavGroup>
 
-  <VerticalNavGroup :item="{
+  <!-- Emploi -->
+  <VerticalNavGroup :item="{     
     title: 'Emploi',
     icon: 'ri-briefcase-line',
   }">
@@ -62,18 +63,19 @@ const canReviewApplications = computed(() => hasPermission(TrainingPermission.RE
       to: '/jobs/offers',
       icon: '',
     }" />
+    
     <VerticalNavLink :item="{
       title: 'Candidatures',
       to: '/jobs/applications',
       icon: '',
     }" />
+    
     <VerticalNavLink :item="{
       title: 'Statistiques',
       to: '/jobs/stats',
       icon: '',
     }" />
   </VerticalNavGroup>
-
 
   <!-- Centres d'Organisation -->
   <VerticalNavGroup :item="{
@@ -85,11 +87,12 @@ const canReviewApplications = computed(() => hasPermission(TrainingPermission.RE
       to: '/organization-centers',
       icon: '',
     }" />
-    <!-- <VerticalNavLink :item="{
+    
+    <VerticalNavLink :item="{
       title: 'Créer un centre',
       to: '/organization-centers/create',
       icon: '',
-    }" /> -->
+    }" />
   </VerticalNavGroup>
 
   <!-- Spécialités -->
@@ -102,11 +105,12 @@ const canReviewApplications = computed(() => hasPermission(TrainingPermission.RE
       to: '/specialties',
       icon: '',
     }" />
-    <!-- <VerticalNavLink :item="{
+    
+    <VerticalNavLink :item="{
       title: 'Créer une spécialité',
       to: '/specialties/create',
-        icon: '',
-    }" /> -->
+      icon: '',
+    }" />
   </VerticalNavGroup>
 
   <!-- Candidatures d'Étudiants -->
@@ -127,23 +131,6 @@ const canReviewApplications = computed(() => hasPermission(TrainingPermission.RE
     }" />
   </VerticalNavGroup>
 
-  <!-- Paiements -->
-  <VerticalNavGroup :item="{
-    title: 'Paiements',
-    icon: 'ri-money-dollar-circle-line',
-  }">
-    <VerticalNavLink :item="{
-      title: 'Liste des paiements',
-      to: '/payments',
-      icon: '',
-    }" />
-    <VerticalNavLink :item="{
-      title: 'Nouveau paiement',
-      to: '/payments/init',
-      icon: '',
-    }" />
-  </VerticalNavGroup>
-
   <!-- Formations -->
   <VerticalNavGroup :item="{
     title: 'Formations',
@@ -154,11 +141,13 @@ const canReviewApplications = computed(() => hasPermission(TrainingPermission.RE
       to: '/training/trainings',
       icon: '',
     }" />
+    
     <VerticalNavLink :item="{
       title: 'Sessions',
       to: '/training/sessions',
       icon: '',
     }" />
+    
     <VerticalNavLink :item="{
       title: 'Spécialités',
       to: '/training/specialties',
@@ -176,14 +165,34 @@ const canReviewApplications = computed(() => hasPermission(TrainingPermission.RE
       to: '/reclamations',
       icon: '',
     }" />
+    
     <VerticalNavLink :item="{
       title: 'Mes réclamations',
       to: '/my-reclamations',
       icon: '',
     }" />
+    
     <VerticalNavLink :item="{
       title: 'Types de réclamation',
       to: '/reclamations/types',
+      icon: '',
+    }" />
+  </VerticalNavGroup>
+
+  <!-- Paiements -->
+  <VerticalNavGroup :item="{
+    title: 'Paiements',
+    icon: 'ri-money-dollar-circle-line',
+  }">
+    <VerticalNavLink :item="{
+      title: 'Liste des paiements',
+      to: '/payments',
+      icon: '',
+    }" />
+    
+    <VerticalNavLink :item="{
+      title: 'Nouveau paiement',
+      to: '/payments/init',
       icon: '',
     }" />
   </VerticalNavGroup>
@@ -193,22 +202,5 @@ const canReviewApplications = computed(() => hasPermission(TrainingPermission.RE
     title: 'Mon Profil',
     icon: 'ri-user-settings-line',
     to: '/profile',
-  }" />
-
-  <VerticalNavLink :item="{
-    title: 'Paiements',
-    icon: 'ri-money-dollar-circle-line',
-    to: '/payments',
-  }" />
-
-  <VerticalNavLink :item="{
-    title: 'Connexion',
-    icon: 'ri-login-box-line',
-    to: '/login',
-  }" />
-  <VerticalNavLink :item="{
-    title: 'Inscription',
-    icon: 'ri-user-add-line',
-    to: '/register',
   }" />
 </template>

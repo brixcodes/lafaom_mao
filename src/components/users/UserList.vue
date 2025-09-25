@@ -308,7 +308,7 @@
             </div>
             
             <v-btn
-              v-if="canLoadMore"
+              v-if="!canLoadMore"
               @click="loadMore"
               :loading="loading"
               variant="outlined"

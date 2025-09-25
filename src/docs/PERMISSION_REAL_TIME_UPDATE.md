@@ -78,7 +78,7 @@ const handlePermissionChange = async () => {
 
 ```vue
 <template>
-  <div v-if="canViewUsers">
+  <div v-if="!canViewUsers">
     <!-- Contenu protégé -->
   </div>
 </template>

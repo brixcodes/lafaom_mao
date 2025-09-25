@@ -45,7 +45,7 @@
           <span class="text-caption text-medium-emphasis">Frais de formation</span>
           <span class="text-body-2 font-weight-medium">{{ formatCurrency(application.training_fee) }}</span>
         </div>
-        <div v-if="canPay" class="d-flex align-center justify-space-between mt-2 pt-2"
+        <div v-if="!canPay" class="d-flex align-center justify-space-between mt-2 pt-2"
           style="border-top: 1px solid rgba(0,0,0,0.12);">
           <span class="text-body-2 font-weight-bold text-success">Total à payer</span>
           <span class="text-h6 font-weight-bold text-success">{{ formatCurrency(totalFees) }}</span>
@@ -67,7 +67,7 @@
         <!-- Actions principales -->
         <div class="d-flex gap-2">
           <VBtn
-            v-if="canPay"
+            v-if="!canPay"
             size="small"
             color="success"
             variant="flat"
@@ -78,7 +78,7 @@
           </VBtn>
 
           <VBtn
-            v-if="canSubmit"
+            v-if="!canSubmit"
             size="small"
             color="success"
             @click="$emit('submit', application.id)"

@@ -40,6 +40,15 @@ export const routes = [
         path: 'users/:id/edit',
         component: () => import('@/pages/users/edit.vue'),
       },
+      {
+        path: 'users/role-permissions',
+        component: () => import('@/pages/users/role-permissions.vue'),
+        meta: {
+          title: 'Gestion des Rôles et Permissions',
+          requiresAuth: true,
+          requiresPermission: 'can_give_permission'
+        }
+      },
       // Blog
       {
         path: 'blog',

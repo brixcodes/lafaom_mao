@@ -1,15 +1,19 @@
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import UserForm from '@/components/User/UserForm.vue'
 import { useUserStore } from '@/stores/user'
+import { usePermissions } from '@/composables/usePermissions'
 import { confirmAction } from '@/utils/confirm'
 import { showToast } from '@/components/toast/toastManager'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+
+// Permissions
+const { canUpdateUsers } = usePermissions()
 
 const userId = route.params.id as string
 const form = ref<any>({})
@@ -47,11 +51,33 @@ const fetchUser = async () => {
   }
 }
 
-onMounted(() => {
-  fetchUser()
+onMounted(async () => {
+  // Vérifier les permissions avant de charger les données
+  if (!hasAccess.value) {
+    showToast({
+      message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
+      type: 'error'
+    })
+    router.push('/users')
+    return
+  }
+  
+  await fetchUser()
 })
 
+// Computed
+const hasAccess = computed(() => canUpdateUsers.value)
+
 const handleSubmit = async (data: any) => {
+  // Vérifier les permissions
+  if (!canUpdateUsers.value) {
+    showToast({
+      message: 'Vous n\'avez pas les permissions nécessaires pour modifier un utilisateur',
+      type: 'error'
+    })
+    return
+  }
+
   const confirmed = await confirmAction({
     method: 'put',
     title: 'Êtes vous sûres?',
@@ -107,39 +133,55 @@ const handleSubmit = async (data: any) => {
 
 <template>
   <div class="user-edit-page">
-    <div class="d-flex align-center mb-4">
-      <VBtn
-        icon
-        variant="text"
-        aria-label="Retour"
-        title="Retour"
-        @click="goBack"
-      >
-        <VIcon
-          icon="ri-arrow-left-line"
-          color="primary"
-        />
+    <!-- Vérification des permissions d'accès -->
+    <div v-if="!hasAccess" class="text-center py-8">
+      <VIcon icon="ri-shield-cross-line" size="64" color="error" />
+      <h3 class="mt-4">Permission insuffisante</h3>
+      <p class="text-medium-emphasis">
+        Vous n'avez pas les permissions nécessaires pour modifier un utilisateur.
+      </p>
+      <VBtn color="primary" to="/users" class="mt-4">
+        <VIcon icon="ri-arrow-left-line" class="me-2" />
+        Retour à la liste
       </VBtn>
-
-      <div>
-        <h1 class="font-weight-bold mb-1">
-          Modifier un utilisateur
-        </h1>
-        <p class="text-body-2 text-secondary mb-0">
-          Modifiez les informations de l'utilisateur puis enregistrez les
-          changements.
-        </p>
-      </div>
     </div>
 
-    <div class="text-body-2 text-medium-emphasis mb-4" />
-    <UserForm
-      :form="form"
-      :user-type-options="userTypeOptions"
-      :status-options="statusOptions"
-      submit-label="Modifier"
-      @submit="handleSubmit"
-    />
+    <!-- Contenu principal -->
+    <div v-else>
+      <div class="d-flex align-center mb-4">
+        <VBtn
+          icon
+          variant="text"
+          aria-label="Retour"
+          title="Retour"
+          @click="goBack"
+        >
+          <VIcon
+            icon="ri-arrow-left-line"
+            color="primary"
+          />
+        </VBtn>
+
+        <div>
+          <h1 class="font-weight-bold mb-1">
+            Modifier un utilisateur
+          </h1>
+          <p class="text-body-2 text-secondary mb-0">
+            Modifiez les informations de l'utilisateur puis enregistrez les
+            changements.
+          </p>
+        </div>
+      </div>
+
+      <div class="text-body-2 text-medium-emphasis mb-4" />
+      <UserForm
+        :form="form"
+        :user-type-options="userTypeOptions"
+        :status-options="statusOptions"
+        submit-label="Modifier"
+        @submit="handleSubmit"
+      />
+    </div>
   </div>
 </template>
 

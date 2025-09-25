@@ -1,14 +1,14 @@
 <template>
   <VContainer fluid>
-    <!-- Header -->
-    <div class="d-flex align-center justify-space-between mb-6">
-      <div>
-        <h1 class="text-h4 font-weight-bold mb-2">Gestion des réclamations</h1>
-        <p class="text-body-1 text-medium-emphasis">
-          Gérez toutes les réclamations des utilisateurs
-        </p>
+      <!-- Header -->
+      <div class="d-flex align-center justify-space-between mb-6">
+        <div>
+          <h1 class="text-h4 font-weight-bold mb-2">Gestion des réclamations</h1>
+          <p class="text-body-1 text-medium-emphasis">
+            Gérez toutes les réclamations des utilisateurs
+          </p>
+        </div>
       </div>
-    </div>
 
     <!-- Statistiques -->
     <VRow class="mb-2">
@@ -129,6 +129,7 @@
       <VPagination v-model="currentPage" :length="totalPages" :total-visible="5"
         @update:model-value="loadReclamations(true)" />
     </div>
+    </div>
   </VContainer>
 </template>
 
@@ -142,6 +143,7 @@ import ReclamationTable from '@/components/reclamation/ReclamationTable.vue'
 
 // Router
 const router = useRouter()
+
 
 // Composable
 const {
@@ -265,8 +267,8 @@ const getStatusCount = (status: string) => {
 }
 
 // Lifecycle
-onMounted(() => {
-  loadReclamations(true)
-  loadReclamationTypes()
+onMounted(async () => {
+  await loadReclamations(true)
+  await loadReclamationTypes()
 })
 </script>

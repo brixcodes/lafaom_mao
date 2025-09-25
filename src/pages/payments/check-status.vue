@@ -29,7 +29,7 @@
                   <div class="grid grid-cols-2 gap-4">
                     <div>
                       <div class="text-caption text-medium-emphasis">Montant</div>
-                      <div class="text-h6">{{ formatAmount(statusData.amount, statusData.currency) }}</div>
+                      <div class="text-h6">{{ formatAmount(statusData.product_amount || statusData.amount, statusData.product_currency || statusData.currency) }}</div>
                     </div>
                     <div>
                       <div class="text-caption text-medium-emphasis">Méthode</div>
@@ -182,10 +182,18 @@ const getMethodText = (method: PaymentMethodEnum) => {
 }
 
 const formatAmount = (amount: number, currency: string) => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: currency
-  }).format(amount)
+  // Fallback currency if not provided or invalid
+  const validCurrency = currency && currency.length >= 3 ? currency : 'XOF'
+  
+  try {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: validCurrency
+    }).format(amount)
+  } catch (error) {
+    // Fallback if currency is not supported
+    return `${amount} ${validCurrency}`
+  }
 }
 
 const formatDate = (dateString: string) => {

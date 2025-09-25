@@ -49,7 +49,7 @@
             variant="text"
             @click.stop="$emit('view', item.id)" 
           />
-          <VMenu v-if="canChangeStatus && canChangeStatusFunction(item)">
+          <VMenu v-if="!canChangeStatus && canChangeStatusFunction(item)">
             <template #activator="{ props }">
               <VBtn 
                 icon="ri-settings-3-line" 

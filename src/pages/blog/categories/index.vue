@@ -3,36 +3,46 @@
 
 <template>
   <div class="category-list-page">
-    <div class="d-flex justify-space-between align-center mb-6">
-      <div>
-        <h1 class="text-h4 mb-2">Catégories du blog</h1>
-        <p class="text-body-1 text-medium-emphasis">Gérez toutes les catégories du blog</p>
+      <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+          <h1 class="text-h4 mb-2">Catégories du blog</h1>
+          <p class="text-body-1 text-medium-emphasis">Gérez toutes les catégories du blog</p>
+        </div>
+        <VBtn 
+          color="primary" 
+          prepend-icon="ri-add-line" 
+          @click="goToCreate"
+        >
+          Nouvelle catégorie
+        </VBtn>
       </div>
-      <VBtn color="primary" prepend-icon="ri-add-line" @click="goToCreate">Nouvelle catégorie</VBtn>
-    </div>
-    <VCard class="mb-5">
-      <VCardText>
-        <VTextField
-          v-model="filter"
-          label="Filtrer les catégories"
-          clearable
-          prepend-inner-icon="ri-filter-line"
-        />
-      </VCardText>
-    </VCard>
-    <CategoryTable
-      :categories="filteredCategories"
-      :headers="headers"
-      :isLoading="isLoading"
-      @edit="goToEdit"
-      @delete="handleDelete"
-    />
+      
+      <!-- Filtres -->
+      <VCard class="mb-5">
+        <VCardText>
+          <VTextField
+            v-model="filter"
+            label="Filtrer les catégories"
+            clearable
+            prepend-inner-icon="ri-filter-line"
+          />
+        </VCardText>
+      </VCard>
+      
+      <!-- Tableau des catégories -->
+      <CategoryTable
+        :categories="filteredCategories"
+        :headers="headers"
+        :isLoading="isLoading"
+        @edit="goToEdit"
+        @delete="handleDelete"
+      />
   </div>
 </template>
 
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { blogService } from '@/services/api/blog'
 import CategoryTable from '@/components/Blog/CategoryTable.vue'
@@ -41,6 +51,8 @@ import { showToast } from '@/components/toast/toastManager'
 
 
 const router = useRouter()
+
+
 const categories = ref<any[]>([])
 const filter = ref('')
 const filteredCategories = computed(() => {
@@ -53,6 +65,7 @@ const filteredCategories = computed(() => {
   )
 })
 const isLoading = ref(false)
+
 const headers = [
   { title: 'Titre', key: 'title' },
   { title: 'Slug', key: 'slug' },
@@ -115,7 +128,9 @@ const handleDelete = async (category: any) => {
 }
 
 
-onMounted(fetchCategories)
+onMounted(async () => {
+  await fetchCategories()
+})
 </script>
 
 <style scoped>

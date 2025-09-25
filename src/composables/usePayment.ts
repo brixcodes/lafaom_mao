@@ -24,21 +24,105 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const totalPages = ref(0)
 const filters = ref<Partial<PaymentFilter>>({})
+const searchQuery = ref('')
 
 // Computed
 const hasNextPage = computed(() => currentPage.value < totalPages.value)
 const hasPreviousPage = computed(() => currentPage.value > 1)
 
+// Filtrage côté client comme les posts
+const filteredPayments = computed(() => {
+  if (!searchQuery.value && !Object.keys(filters.value).length) {
+    return payments.value
+  }
+
+  return payments.value.filter(payment => {
+    // Recherche textuelle
+    if (searchQuery.value) {
+      const query = searchQuery.value.toLowerCase()
+      const matchesSearch = 
+        payment.transaction_id.toLowerCase().includes(query) ||
+        payment.payable_id.toLowerCase().includes(query) ||
+        payment.payable_type.toLowerCase().includes(query) ||
+        payment.payment_type.toLowerCase().includes(query)
+      
+      if (!matchesSearch) return false
+    }
+
+    // Filtre par statut
+    if (filters.value.status && payment.status !== filters.value.status) {
+      return false
+    }
+
+    // Filtre par méthode de paiement
+    if (filters.value.payment_method && payment.payment_type !== filters.value.payment_method) {
+      return false
+    }
+
+    // Filtre par devise
+    if (filters.value.currency && payment.product_currency !== filters.value.currency) {
+      return false
+    }
+
+    // Filtre par montant minimum
+    if (filters.value.amount_min && payment.product_amount < filters.value.amount_min) {
+      return false
+    }
+
+    // Filtre par montant maximum
+    if (filters.value.amount_max && payment.product_amount > filters.value.amount_max) {
+      return false
+    }
+
+    // Filtre par date de début
+    if (filters.value.date_from) {
+      const paymentDate = new Date() // Utiliser la date actuelle comme fallback
+      const fromDate = new Date(filters.value.date_from)
+      if (paymentDate < fromDate) return false
+    }
+
+    // Filtre par date de fin
+    if (filters.value.date_to) {
+      const paymentDate = new Date() // Utiliser la date actuelle comme fallback
+      const toDate = new Date(filters.value.date_to)
+      if (paymentDate > toDate) return false
+    }
+
+    return true
+  })
+})
+
+const totalFilteredPages = computed(() =>
+  Math.ceil(filteredPayments.value.length / pageSize.value)
+)
+
+const paginatedPayments = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredPayments.value.slice(start, end)
+})
+
+const hasActiveFilters = computed(() =>
+  searchQuery.value ||
+  filters.value.status ||
+  filters.value.payment_method ||
+  filters.value.currency ||
+  filters.value.amount_min ||
+  filters.value.amount_max ||
+  filters.value.date_from ||
+  filters.value.date_to
+)
+
 // Payment Status Configuration
 const getStatusConfig = (status: PaymentStatusEnum): PaymentStatusConfig => {
-  const configs = {
+  const configs: Record<string, PaymentStatusConfig> = {
     PENDING: { color: 'warning', text: 'En attente', icon: 'ri-time-line' },
     SUCCESS: { color: 'success', text: 'Réussi', icon: 'ri-check-line' },
     FAILED: { color: 'error', text: 'Échoué', icon: 'ri-close-line' },
     CANCELLED: { color: 'info', text: 'Annulé', icon: 'ri-close-circle-line' },
     REFUNDED: { color: 'secondary', text: 'Remboursé', icon: 'ri-refresh-line' }
   }
-  return configs[status] || { color: 'default', text: status, icon: 'ri-question-line' }
+  return configs[status.toString()] || { color: 'default', text: status.toString(), icon: 'ri-question-line' }
 }
 
 // Payment Method Configuration
@@ -61,10 +145,10 @@ const loadPayments = async (reset = false) => {
       currentPage.value = 1
     }
     
+    // Charger toutes les données d'un coup (comme les posts)
     const params: PaymentFilter = {
-      page: currentPage.value,
-      page_size: pageSize.value,
-      ...filters.value
+      page: 1,
+      page_size: 1000, // Charger beaucoup de données
     }
     
     console.log('🔍 Chargement des paiements avec params:', params)
@@ -74,7 +158,6 @@ const loadPayments = async (reset = false) => {
     
     payments.value = response.data
     totalCount.value = response.total_number
-    totalPages.value = Math.ceil(response.total_number / pageSize.value)
     
   } catch (err: any) {
     console.error('Erreur lors du chargement des paiements:', err)
@@ -235,14 +318,20 @@ const handleCinetpayWebhook = async (data: CinetpayWebhookInput) => {
   }
 }
 
+const searchPayments = async (query: string) => {
+  searchQuery.value = query
+  currentPage.value = 1
+}
+
 const applyFilters = async (newFilters: Partial<PaymentFilter>) => {
   filters.value = { ...filters.value, ...newFilters }
-  await loadPayments(true)
+  currentPage.value = 1
 }
 
 const clearFilters = async () => {
   filters.value = {}
-  await loadPayments(true)
+  searchQuery.value = ''
+  currentPage.value = 1
 }
 
 const loadNextPage = async () => {
@@ -271,10 +360,15 @@ export const usePayment = () => ({
   pageSize,
   totalPages,
   filters,
+  searchQuery,
   
   // Computed
   hasNextPage,
   hasPreviousPage,
+  filteredPayments,
+  totalFilteredPages,
+  paginatedPayments,
+  hasActiveFilters,
   
   // Methods
   loadPayments,
@@ -285,6 +379,7 @@ export const usePayment = () => ({
   updatePayment,
   deletePayment,
   handleCinetpayWebhook,
+  searchPayments,
   applyFilters,
   clearFilters,
   loadNextPage,

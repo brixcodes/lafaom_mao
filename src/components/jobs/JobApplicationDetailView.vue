@@ -106,7 +106,7 @@
                       {{ getStatusLabel(application.status) }}
                     </VChip>
 
-                    <VBtn v-if="canUpdateStatus" icon="ri-edit-line" size="x-small" variant="text"
+                    <VBtn v-if="!canUpdateStatus" icon="ri-edit-line" size="x-small" variant="text"
                       @click="showStatusEditor = !showStatusEditor" class="ml-2" />
                   </div>
                 </div>

@@ -1,111 +1,208 @@
-// Composable pour la gestion des utilisateurs
-import { computed } from 'vue'
-import { useUserStore } from '@/stores/user'
-import type { 
-  CreateUserInput, 
-  UpdateUserInput, 
-  UserFilter,
-  AssignPermissionsInput,
-  AssignRoleInput 
-} from '@/types/user'
+import { ref, computed } from 'vue'
+import { userService } from '@/services/api/user'
+import { showToast } from '@/components/toast/toastManager'
 
-export function useUsers() {
-  const userStore = useUserStore()
+export interface User {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+  user_type: string
+  status: string
+  picture?: string
+  created_at: string
+  updated_at: string
+}
 
-  // Getters réactifs
-  const users = computed(() => userStore.users)
-  const currentUser = computed(() => userStore.currentUser)
-  const permissions = computed(() => userStore.permissions)
-  const isLoading = computed(() => userStore.isLoading)
-  const error = computed(() => userStore.error)
-  const pagination = computed(() => userStore.pagination)
-  const hasUsers = computed(() => userStore.hasUsers)
-  const currentUserPermissions = computed(() => userStore.currentUserPermissions)
+export const useUsers = () => {
+  // States
+  const users = ref<User[]>([])
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
+  const totalUsers = ref(0)
+  const currentPage = ref(1)
+  const pageSize = ref(20)
 
-  // Actions CRUD
-  const fetchUsers = async (filter?: UserFilter) => {
-    return await userStore.fetchUsers(filter)
+  // Computed
+  const totalPages = computed(() => Math.ceil(totalUsers.value / pageSize.value))
+
+  // Charger la liste des utilisateurs
+  const loadUsers = async (page = 1, size = 20, search = '') => {
+    try {
+      isLoading.value = true
+      error.value = null
+      
+      const response = await userService.getUsers({
+        page,
+        page_size: size,
+        search,
+        order_by: 'created_at',
+        asc: 'desc'
+      })
+      
+      users.value = response.data || []
+      totalUsers.value = response.total_number || 0
+      currentPage.value = page
+      pageSize.value = size
+      
+    } catch (err: any) {
+      console.error('Erreur lors du chargement des utilisateurs:', err)
+      error.value = 'Erreur lors du chargement des utilisateurs'
+      showToast({
+        message: 'Erreur lors du chargement des utilisateurs',
+        type: 'error'
+      })
+    } finally {
+      isLoading.value = false
+    }
   }
 
-  const createUser = async (userData: CreateUserInput) => {
-    return await userStore.createUser(userData)
+  // Charger un utilisateur par ID
+  const loadUser = async (userId: string) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      
+      const response = await userService.getUser(userId)
+      return response.data
+    } catch (err: any) {
+      console.error('Erreur lors du chargement de l\'utilisateur:', err)
+      error.value = 'Erreur lors du chargement de l\'utilisateur'
+      showToast({
+        message: 'Erreur lors du chargement de l\'utilisateur',
+        type: 'error'
+      })
+      throw err
+    } finally {
+      isLoading.value = false
+    }
   }
 
-  const updateUser = async (userId: string, userData: UpdateUserInput) => {
-    return await userStore.updateUser(userId, userData)
+  // Créer un utilisateur
+  const createUser = async (userData: any) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      
+      const response = await userService.createUser(userData)
+      
+      showToast({
+        message: 'Utilisateur créé avec succès',
+        type: 'success'
+      })
+      
+      // Recharger la liste
+      await loadUsers(currentPage.value, pageSize.value)
+      
+      return response
+    } catch (err: any) {
+      console.error('Erreur lors de la création de l\'utilisateur:', err)
+      error.value = 'Erreur lors de la création de l\'utilisateur'
+      showToast({
+        message: err.response?.data?.message || 'Erreur lors de la création de l\'utilisateur',
+        type: 'error'
+      })
+      throw err
+    } finally {
+      isLoading.value = false
+    }
   }
 
+  // Mettre à jour un utilisateur
+  const updateUser = async (userId: string, userData: any) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      
+      const response = await userService.updateUser(userId, userData)
+      
+      showToast({
+        message: 'Utilisateur mis à jour avec succès',
+        type: 'success'
+      })
+      
+      // Recharger la liste
+      await loadUsers(currentPage.value, pageSize.value)
+      
+      return response
+    } catch (err: any) {
+      console.error('Erreur lors de la mise à jour de l\'utilisateur:', err)
+      error.value = 'Erreur lors de la mise à jour de l\'utilisateur'
+      showToast({
+        message: err.response?.data?.message || 'Erreur lors de la mise à jour de l\'utilisateur',
+        type: 'error'
+      })
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Supprimer un utilisateur
   const deleteUser = async (userId: string) => {
-    return await userStore.deleteUser(userId)
+    try {
+      isLoading.value = true
+      error.value = null
+      
+      const response = await userService.deleteUser(userId)
+      
+      showToast({
+        message: 'Utilisateur supprimé avec succès',
+        type: 'success'
+      })
+      
+      // Recharger la liste
+      await loadUsers(currentPage.value, pageSize.value)
+      
+      return response
+    } catch (err: any) {
+      console.error('Erreur lors de la suppression de l\'utilisateur:', err)
+      error.value = 'Erreur lors de la suppression de l\'utilisateur'
+      showToast({
+        message: err.response?.data?.message || 'Erreur lors de la suppression de l\'utilisateur',
+        type: 'error'
+      })
+      throw err
+    } finally {
+      isLoading.value = false
+    }
   }
 
-  const getUserById = async (userId: string) => {
-    return await userStore.getUserById(userId)
+  // Rechercher des utilisateurs
+  const searchUsers = async (searchTerm: string) => {
+    await loadUsers(1, pageSize.value, searchTerm)
   }
 
-  // Actions de permissions et rôles
-  const assignPermissions = async (data: AssignPermissionsInput) => {
-    return await userStore.assignPermissions(data)
+  // Changer de page
+  const changePage = async (page: number) => {
+    await loadUsers(page, pageSize.value)
   }
 
-  const revokePermissions = async (data: AssignPermissionsInput) => {
-    return await userStore.revokePermissions(data)
-  }
-
-  const assignRole = async (data: AssignRoleInput) => {
-    return await userStore.assignRole(data)
-  }
-
-  const revokeRole = async (data: AssignRoleInput) => {
-    return await userStore.revokeRole(data)
-  }
-
-  const fetchUserPermissions = async () => {
-    return await userStore.fetchUserPermissions()
-  }
-
-  // Actions utilitaires
-  const setupUsers = async () => {
-    return await userStore.setupUsers()
-  }
-
-  const getUserStats = async () => {
-    return await userStore.getUserStats()
-  }
-
-  const clearError = () => {
-    userStore.clearError()
-  }
-
-  const clearUsers = () => {
-    userStore.clearUsers()
+  // Changer la taille de page
+  const changePageSize = async (size: number) => {
+    await loadUsers(1, size)
   }
 
   return {
-    // State
+    // States
     users,
-    currentUser,
-    permissions,
     isLoading,
     error,
-    pagination,
-    hasUsers,
-    currentUserPermissions,
-
-    // Actions
-    fetchUsers,
+    totalUsers,
+    currentPage,
+    pageSize,
+    
+    // Computed
+    totalPages,
+    
+    // Methods
+    loadUsers,
+    loadUser,
     createUser,
     updateUser,
     deleteUser,
-    getUserById,
-    assignPermissions,
-    revokePermissions,
-    assignRole,
-    revokeRole,
-    fetchUserPermissions,
-    setupUsers,
-    getUserStats,
-    clearError,
-    clearUsers,
+    searchUsers,
+    changePage,
+    changePageSize,
   }
 }

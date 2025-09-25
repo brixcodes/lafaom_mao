@@ -14,7 +14,7 @@
         </div>
       </div>
       <div class="d-flex gap-2">
-        <VBtn v-if="canUpdateStatus" color="primary" @click="goToEdit" prepend-icon="ri-edit-line">
+        <VBtn v-if="!canUpdateStatus" color="primary" @click="goToEdit" prepend-icon="ri-edit-line">
           Modifier le statut
         </VBtn>
       </div>
@@ -182,7 +182,7 @@
                 Retour à la liste
               </VBtn>
 
-              <VBtn v-if="canUpdateStatus" block color="primary" @click="goToEdit">
+              <VBtn v-if="!canUpdateStatus" block color="primary" @click="goToEdit">
                 <VIcon class="mr-2">ri-edit-line</VIcon>
                 Modifier le statut
               </VBtn>

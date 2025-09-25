@@ -1,19 +1,27 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import CategoryForm from '@/components/Blog/CategoryForm.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { blogService } from '@/services/api/blog'
+import { usePermissions } from '@/composables/usePermissions'
 import { confirmAction } from '@/utils/confirm'
 import { showToast } from '@/components/toast/toastManager'
 
 const route = useRoute()
 const router = useRouter()
+
+// Permissions
+const { canUpdateBlogs } = usePermissions()
+
 const categoryId = Number(route.params.id)
 const isLoading = ref(false)
 const form = ref({
   title: '',
   description: '',
 })
+
+// Vérification des permissions d'accès
+const hasAccess = computed(() => canUpdateBlogs.value)
 
 const goBack = () => {
   router.push('/blog/categories')
@@ -34,6 +42,15 @@ const fetchCategory = async () => {
 }
 
 const handleSubmit = async (data: any) => {
+  // Vérifier les permissions
+  if (!canUpdateBlogs.value) {
+    showToast({
+      message: 'Vous n\'avez pas les permissions nécessaires pour modifier une catégorie',
+      type: 'error'
+    })
+    return
+  }
+
   const confirmed = await confirmAction({
     title: 'Êtes vous sûres?',
     text: 'Voulez-vous vraiment enregistrer les modifications ?',
@@ -65,27 +82,54 @@ const handleSubmit = async (data: any) => {
   }
 }
 
-onMounted(fetchCategory)
+onMounted(async () => {
+  // Vérifier les permissions avant de charger les données
+  if (!hasAccess.value) {
+    showToast({
+      message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
+      type: 'error'
+    })
+    router.push('/blog/categories')
+    return
+  }
+  
+  await fetchCategory()
+})
 </script>
 
 <template>
   <div class="category-edit-page">
-    <div class="d-flex align-center mb-4">
-      <VBtn icon variant="text" class="mr-3" aria-label="Retour" title="Retour" @click="goBack">
-        <VIcon icon="ri-arrow-left-line" color="primary" />
+    <!-- Vérification des permissions d'accès -->
+    <div v-if="!hasAccess" class="text-center py-8">
+      <VIcon icon="ri-shield-cross-line" size="64" color="error" />
+      <h3 class="mt-4">Permission insuffisante</h3>
+      <p class="text-medium-emphasis">
+        Vous n'avez pas les permissions nécessaires pour modifier une catégorie.
+      </p>
+      <VBtn color="primary" to="/blog/categories" class="mt-4">
+        <VIcon icon="ri-arrow-left-line" class="me-2" />
+        Retour aux catégories
       </VBtn>
-      <div>
-        <h1 class="font-weight-bold mb-1">Modifier la catégorie</h1>
-        <p class="text-body-2 text-secondary mb-0">Modifiez les informations de la catégorie puis enregistrez les
-          changements.</p>
-      </div>
     </div>
-    <VCard elevation="2" class="pa-4">
-      <VCardText>
-        <CategoryForm v-model="form" :submit-label="'Modifier'" @submit="handleSubmit" @cancel="goBack" />
 
-      </VCardText>
-    </VCard>
+    <!-- Contenu principal -->
+    <div v-else>
+      <div class="d-flex align-center mb-4">
+        <VBtn icon variant="text" class="mr-3" aria-label="Retour" title="Retour" @click="goBack">
+          <VIcon icon="ri-arrow-left-line" color="primary" />
+        </VBtn>
+        <div>
+          <h1 class="font-weight-bold mb-1">Modifier la catégorie</h1>
+          <p class="text-body-2 text-secondary mb-0">Modifiez les informations de la catégorie puis enregistrez les
+            changements.</p>
+        </div>
+      </div>
+      <VCard elevation="2" class="pa-4">
+        <VCardText>
+          <CategoryForm v-model="form" :submit-label="'Modifier'" @submit="handleSubmit" @cancel="goBack" />
+        </VCardText>
+      </VCard>
+    </div>
   </div>
 </template>
 

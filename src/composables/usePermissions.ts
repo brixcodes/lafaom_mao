@@ -1,7 +1,7 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { permissionService } from '@/services/api/permissions'
-import { usePermissionEvents } from '@/utils/permissionEvents'
+// import { usePermissionEvents } from '@/utils/permissionEvents'
 import { 
   PermissionEnum, 
   RoleEnum, 
@@ -14,14 +14,14 @@ import {
 
 export const usePermissions = () => {
   const authStore = useAuthStore()
-  const { permissionEvents } = usePermissionEvents()
+  // const { permissionEvents } = usePermissionEvents()
   
   // States
   const userPermissions = ref<string[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  // Charger les permissions depuis l'API
+  // Charger les permissions de l'utilisateur
   const loadUserPermissions = async () => {
     if (!authStore.isAuthenticated) {
       userPermissions.value = []
@@ -31,13 +31,34 @@ export const usePermissions = () => {
     try {
       isLoading.value = true
       error.value = null
+      
+      // Essayer de récupérer les permissions depuis l'API
       const response = await permissionService.getMyPermissions()
-      userPermissions.value = response.data?.map(p => p.permission) || []
+      
+      if (response.success && response.data && response.data.length > 0) {
+        // Utiliser les permissions de l'API
+        userPermissions.value = response.data.map(p => p.permission)
+        console.log('✅ Permissions chargées depuis l\'API:', userPermissions.value)
+        
+        // Permissions mises à jour avec succès
+        console.log('✅ Permissions mises à jour:', userPermissions.value.length, 'permissions')
+      } else {
+        // Fallback sur les permissions basées sur le rôle
+        userPermissions.value = getFallbackPermissions()
+        console.log('⚠️ Permissions chargées basées sur le rôle (fallback):', userPermissions.value)
+        
+        // Permissions mises à jour avec succès
+        console.log('✅ Permissions mises à jour:', userPermissions.value.length, 'permissions')
+      }
     } catch (err) {
-      console.error('Erreur lors du chargement des permissions:', err)
+      console.error('❌ Erreur lors du chargement des permissions:', err)
       error.value = 'Erreur lors du chargement des permissions'
       // Fallback sur les permissions basées sur le rôle
       userPermissions.value = getFallbackPermissions()
+      console.log('⚠️ Permissions chargées basées sur le rôle (erreur):', userPermissions.value)
+      
+      // Permissions mises à jour même en cas d'erreur
+      console.log('⚠️ Permissions mises à jour (fallback):', userPermissions.value.length, 'permissions')
     } finally {
       isLoading.value = false
     }
@@ -70,17 +91,37 @@ export const usePermissions = () => {
   const currentRole = computed(() => getCurrentRole())
   const currentRoleEnum = computed(() => userRoleToRoleEnum[currentRole.value])
 
+  // Fonction pour recharger les permissions
+  const refreshPermissions = async () => {
+    console.log('🔄 Rechargement des permissions...')
+    await loadUserPermissions()
+  }
+
   // Charger les permissions au montage
   onMounted(() => {
-    loadUserPermissions()
-  })
-
-  // Écouter les événements de mise à jour des permissions
-  watch(permissionEvents, (newEvents) => {
-    if (newEvents.permissionsUpdated) {
+    if (authStore.isAuthenticated) {
       loadUserPermissions()
     }
-  }, { deep: true })
+  })
+
+  // Watcher pour l'authentification
+  watch(() => authStore.isAuthenticated, (newValue) => {
+    if (newValue) {
+      loadUserPermissions()
+    } else {
+      userPermissions.value = []
+    }
+  })
+
+  // Watcher pour les changements d'utilisateur
+  watch(() => authStore.user?.id, (newUserId, oldUserId) => {
+    if (newUserId && newUserId !== oldUserId) {
+      console.log('👤 Changement d\'utilisateur détecté, rechargement des permissions...')
+      loadUserPermissions()
+    }
+  })
+
+  // Les permissions se rechargent automatiquement via les watchers
 
   // Méthodes de vérification des permissions
   const hasPermission = (permission: PermissionEnum | TrainingPermission): boolean => {
@@ -188,5 +229,8 @@ export const usePermissions = () => {
     // Permissions de gestion
     canGivePermissions,
     canGiveRoles,
+    
+    // Méthodes
+    refreshPermissions
   }
 }

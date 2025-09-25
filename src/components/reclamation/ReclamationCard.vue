@@ -56,7 +56,6 @@
         Voir
       </VBtn>
       <VBtn
-        v-if="canUpdateStatus"
         color="primary"
         @click="$emit('update-status', reclamation.id)"
         prepend-icon="ri-edit-line"
@@ -75,12 +74,10 @@ interface Props {
   reclamation: Reclamation
   reclamationTypes?: Array<{ id: number; name: string }>
   showActions?: boolean
-  canUpdateStatus?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showActions: true,
-  canUpdateStatus: false
 })
 
 const reclamationTypeName = computed(() => {

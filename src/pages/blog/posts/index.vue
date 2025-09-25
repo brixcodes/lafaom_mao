@@ -1,25 +1,48 @@
 <template>
   <div class="posts-page">
-    <!-- Header principal -->
-    <div class="mb-6">
-      <div class="header-content">
-        <div class="header-text">
-          <h1 class="display-1 font-weight-bold mb-2">
-            Mes Articles
-          </h1>
-          <p class="text-h6 text-medium-emphasis mb-4">
-            Gérez et organisez vos contenus éditoriaux
-          </p>
-        </div>
+    <!-- Vérification des permissions d'accès -->
+    <div v-if="!hasAccess" class="text-center py-8">
+      <VIcon icon="ri-shield-cross-line" size="64" color="error" />
+      <h3 class="mt-4">Permission insuffisante</h3>
+      <p class="text-medium-emphasis">
+        Vous n'avez pas les permissions nécessaires pour accéder aux articles du blog.
+      </p>
+      <VBtn color="primary" to="/dashboard" class="mt-4">
+        <VIcon icon="ri-arrow-left-line" class="me-2" />
+        Retour au tableau de bord
+      </VBtn>
+    </div>
 
-        <div>
-          <VBtn color="primary" size="large" elevation="2" prepend-icon="ri-add-line" @click="goToCreate"
-            class="create-btn">
-            Nouvel article
-          </VBtn>
+    <!-- Contenu principal -->
+    <div v-else>
+      <!-- Header principal -->
+      <div class="mb-6">
+        <div class="header-content">
+          <div class="header-text">
+            <h1 class="display-1 font-weight-bold mb-2">
+              Mes Articles
+            </h1>
+            <p class="text-h6 text-medium-emphasis mb-4">
+              Gérez et organisez vos contenus éditoriaux
+            </p>
+          </div>
+
+          <div>
+            <!-- Bouton créer - Permission: CAN_CREATE_BLOG -->
+            <VBtn 
+              v-if="!canCreateBlogs"
+              color="primary" 
+              size="large" 
+              elevation="2" 
+              prepend-icon="ri-add-line" 
+              @click="goToCreate"
+              class="create-btn"
+            >
+              Nouvel article
+            </VBtn>
+          </div>
         </div>
       </div>
-    </div>
 
     <!-- Barre de filtres avancée -->
     <VCard class="filters-card mb-6" elevation="3">
@@ -197,6 +220,7 @@
         </div>
       </div>
     </VCard>
+    </div>
   </div>
 </template>
 
@@ -206,11 +230,15 @@ import { useRouter } from 'vue-router'
 import PostCard from '@/components/Blog/PostCard.vue'
 import ApiErrorHandler from '@/components/common/ApiErrorHandler.vue'
 import { blogService } from '@/services/api/blog'
+import { usePermissions } from '@/composables/usePermissions'
 import { showToast } from '@/components/toast/toastManager'
 import { processTags } from '@/utils/tagUtils'
 
 // === ROUTER ===
 const router = useRouter()
+
+// === PERMISSIONS ===
+const { canViewBlogs, canCreateBlogs, canUpdateBlogs, canDeleteBlogs } = usePermissions()
 
 // === REACTIVE STATE ===
 const posts = ref<any[]>([])
@@ -343,6 +371,9 @@ const hasActiveFilters = computed(() =>
   activeTab.value !== 'all'
 )
 
+// Vérification des permissions d'accès
+const hasAccess = computed(() => canViewBlogs.value || canCreateBlogs.value || canUpdateBlogs.value || canDeleteBlogs.value)
+
 // === WATCHERS ===
 watch([() => filters.value, activeTab, sortBy], () => {
   currentPage.value = 1
@@ -448,6 +479,16 @@ const handlePostDelete = (deletedPost: any) => {
 
 // === LIFECYCLE ===
 onMounted(async () => {
+  // Vérifier les permissions avant de charger les données
+  if (!hasAccess.value) {
+    showToast({
+      message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
+      type: 'error'
+    })
+    router.push('/dashboard')
+    return
+  }
+  
   await retryFetch()
 })
 </script>
