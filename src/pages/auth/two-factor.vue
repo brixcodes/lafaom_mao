@@ -144,12 +144,9 @@ const goBack = () => {
   <div class="auth-wrapper d-flex align-center justify-center pa-4">
     <VCard class="auth-card pa-4 pt-7" max-width="448">
       <VCardItem class="justify-center">
-        <RouterLink to="/" class="d-flex align-center gap-3">
-          <!-- eslint-disable vue/no-v-html -->
-          <div class="d-flex" v-html="logo" />
-          <h2 class="font-weight-medium text-2xl text-uppercase">
-            Materio
-          </h2>
+        <RouterLink to="/" class="d-flex align-center gap-1">
+          <VImg src="logo_lafaom.png" width="60" height="40" contain />
+          <h2 class="font-weight-medium text-2xl">LAFAOM-MAO</h2>
         </RouterLink>
       </VCardItem>
 

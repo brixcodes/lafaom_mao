@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTheme } from 'vuetify'
-import logo from '@images/logo.svg?raw'
+const logo = '/logo.png'
 import authV1MaskDark from '@images/pages/auth-v1-mask-dark.png'
 import authV1MaskLight from '@images/pages/auth-v1-mask-light.png'
 import authV1Tree2 from '@images/pages/auth-v1-tree-2.png'
@@ -79,22 +79,15 @@ const onSubmit = async () => {
   <div class="auth-wrapper d-flex align-center justify-center pa-4">
     <VCard class="auth-card pa-4 pt-7" max-width="448">
       <VCardItem class="justify-center">
-        <RouterLink to="/" class="d-flex align-center gap-3">
-          <!-- eslint-disable vue/no-v-html -->
-          <div class="d-flex" v-html="logo" />
-          <h2 class="font-weight-medium text-2xl text-uppercase">
-            Materio
-          </h2>
+        <RouterLink to="/" class="d-flex align-center gap-1">
+          <VImg src="logo_lafaom.png" width="60" height="40" contain />
+          <h2 class="font-weight-medium text-2xl">LAFAOM-MAO</h2>
         </RouterLink>
       </VCardItem>
 
+      
       <VCardText class="pt-2 text-center">
-        <h4 class="text-h4 mb-1">
-          Bienvenue sur Materio ! 👋🏻
-        </h4>
-        <p class="mb-0">
-          Connectez-vous à votre compte pour commencer l'aventure
-        </p>
+        <p class="mb-0">Institution de formation et d'intervention sociale en milieu carcéral</p>
       </VCardText>
 
       <VCardText>
@@ -135,9 +128,9 @@ const onSubmit = async () => {
         </VForm>
       </VCardText>
     </VCard>
-
+<!-- 
     <VImg class="auth-footer-start-tree d-none d-md-block" :src="authV1Tree" :width="250" />
-    <VImg :src="authV1Tree2" class="auth-footer-end-tree d-none d-md-block" :width="350" />
+    <VImg :src="authV1Tree2" class="auth-footer-end-tree d-none d-md-block" :width="350" /> -->
     <!-- bg img -->
     <VImg class="auth-footer-mask d-none d-md-block" :src="authThemeMask" />
   </div>

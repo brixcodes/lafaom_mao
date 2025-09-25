@@ -27,15 +27,10 @@
     <!-- Formulaire -->
     <VCard v-else-if="currentSpecialty">
       <VForm ref="formRef" v-model="isFormValid" @submit.prevent="handleSubmit">
-        <VCardTitle class="d-flex align-center">
-          <VIcon icon="ri-award-line" class="me-2" color="primary" />
-          <span>Informations de la spécialité</span>
-        </VCardTitle>
-        <VDivider />
         <VCardText>
           <VRow>
             <!-- Nom de la spécialité -->
-            <VCol cols="12" md="8">
+            <VCol cols="12" md="12">
               <VTextField v-model="specialty.name" label="Nom de la spécialité *"
                 placeholder="Ex: Développement Web, Marketing Digital, Gestion de Projet..." variant="outlined"
                 density="comfortable" prepend-inner-icon="ri-award-line"

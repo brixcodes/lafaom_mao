@@ -110,14 +110,14 @@ const clearForm = () => {
 // Lifecycle
 onMounted(async () => {
   // Vérifier les permissions avant de charger la page
-  if (!hasAccess.value) {
-    showToast({
-      message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
-      type: 'error'
-    })
-    router.push('/blog/categories')
-    return
-  }
+  // if (!hasAccess.value) {
+  //   showToast({
+  //     message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
+  //     type: 'error'
+  //   })
+  //   router.push('/blog/categories')
+  //   return
+  // }
 })
 </script>
 

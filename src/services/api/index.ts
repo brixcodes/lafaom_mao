@@ -1,9 +1,13 @@
-// Export de tous les services API
-export { apiService } from './base'
+// Export all API services
 export { authService } from './auth'
 export { userService } from './user'
-export { blogService } from './blog'
-export { jobOffersService } from './jobOffers'
 export { trainingService } from './training'
-export { paymentService } from './payments'
+export { jobOffersService } from './job-offers'
+export { paymentsService } from './payments'
+export { blogService } from './blog'
+export { systemService } from './system'
+export { dashboardService } from './dashboard'
 export { permissionService } from './permissions'
+
+// Export base API service
+export { apiService } from './base'

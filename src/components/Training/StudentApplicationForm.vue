@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" name="TrainingStudentApplicationForm">
 import { ref, computed } from 'vue'
 import type {
   StudentApplication,

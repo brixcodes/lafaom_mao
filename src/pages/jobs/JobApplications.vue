@@ -125,9 +125,9 @@
                 <VCol cols="12" class="d-flex align-center mb-2 mt-2">
                   <VIcon icon="ri-shield-user-line" size="small" class="me-2" />
                   Statut candidature :
-                  <VChip :color="getStatusColor1(application.status)" class="mx-1" size="small">
-                    {{ getStatusLabel1(application.status) }}
-                  </VChip>
+                <VChip :color="getStatusColor1(application.status as any)" class="mx-1" size="small">
+                  {{ getStatusLabel1(application.status as any) }}
+                </VChip>
                 </VCol>
 
               </VRow>
@@ -294,7 +294,7 @@
 import { ref, computed, onMounted, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useJobOffersStore } from '@/stores/jobOffers'
-import type { JobApplication, JobApplicationStatus, JobApplicationUpdateInput } from '@/types/jobOffers'
+import type { JobApplication, JobApplicationUpdateInput } from '@/types/jobOffers'
 import { APPLICATION_STATUSES } from '@/types/jobOffers'
 
 // Composables
@@ -308,7 +308,7 @@ const selectedApplication = ref<JobApplication | null>(null)
 const updatingStatus = ref(false)
 const deleting = ref(false)
 const downloading = ref<Record<string, boolean>>({})
-const newStatus = ref<JobApplicationStatus>('')
+const newStatus = ref<LocalJobApplicationStatus | ''>('')
 const statusComment = ref('')
 const expandedApplications = ref<number[]>([])
 const currentPage = ref(1)
@@ -317,33 +317,33 @@ const sortBy = ref('created_at')
 const sortOrder = ref<'asc' | 'desc'>('desc')
 
 // TypeScript : définir les statuts possibles
-type JobApplicationStatus = 'RECEIVED' | 'REFUSED' | 'APPROVED';
+type LocalJobApplicationStatus = 'RECEIVED' | 'REFUSED' | 'APPROVED';
 
 // Couleurs associées aux statuts
-const statusColors: Record<JobApplicationStatus, string> = {
+const statusColors: Record<LocalJobApplicationStatus, string> = {
   RECEIVED: 'primary',
   REFUSED: 'error',
   APPROVED: 'success',
 };
 
 // Icônes associées aux statuts
-const statusIcons: Record<JobApplicationStatus, string> = {
+const statusIcons: Record<LocalJobApplicationStatus, string> = {
   RECEIVED: 'ri-mail-line',
   REFUSED: 'ri-close-circle-line',
   APPROVED: 'ri-check-line',
 };
 
 // Labels à afficher
-const statusLabels: Record<JobApplicationStatus, string> = {
+const statusLabels: Record<LocalJobApplicationStatus, string> = {
   RECEIVED: 'En étude de dossier',
   REFUSED: 'Refusée',
   APPROVED: 'Approuvée',
 };
 
 // Fonctions utilitaires pour le template
-const getStatusColor1 = (status: JobApplicationStatus) => statusColors[status] || 'grey lighten-2';
-const getStatusIcon1 = (status: JobApplicationStatus) => statusIcons[status] || 'ri-question-line';
-const getStatusLabel1 = (status: JobApplicationStatus) => statusLabels[status] || status;
+const getStatusColor1 = (status: LocalJobApplicationStatus) => statusColors[status] || 'grey lighten-2';
+const getStatusIcon1 = (status: LocalJobApplicationStatus) => statusIcons[status] || 'ri-question-line';
+const getStatusLabel1 = (status: LocalJobApplicationStatus) => statusLabels[status] || status;
 
 
 const filters = reactive({
@@ -353,7 +353,10 @@ const filters = reactive({
 })
 
 // Computed
-const applications = computed(() => jobOffersStore.jobApplications)
+const applications = computed(() => {
+  // Filtrer uniquement les candidatures avec payment_id non vide
+  return jobOffersStore.jobApplications.filter(app => (app as any).payment_id && (app as any).payment_id !== null && (app as any).payment_id !== '')
+})
 
 const totalPages = computed(() => {
   return Math.ceil(jobOffersStore.applicationsPagination.total / jobOffersStore.applicationsPagination.pageSize)
@@ -403,17 +406,19 @@ const loadApplications = async () => {
 
     await jobOffersStore.getJobApplications({
       search: filters.search || undefined,
-      status: filters.status || undefined,
+      status: filters.status || undefined as any,
       job_offer_id: filters.job_offer_id || undefined,
       page: currentPage.value,
       page_size: pageSize.value,
       order_by: orderBy as 'created_at' | 'application_number' | 'status',
-      asc: asc
+      asc: asc,
+      payment_id: true // ✅ récupère uniquement les candidatures avec payment_id défini
     })
   } catch (error) {
     console.error('Erreur lors du chargement des candidatures:', error)
   }
 }
+
 
 const debouncedSearch = (() => {
   let timeout: ReturnType<typeof setTimeout>
@@ -460,7 +465,7 @@ const truncateText = (text: string, maxLength: number = 50): string => {
 // Méthodes pour fermer les dialogs proprement
 const closeStatusDialog = () => {
   statusDialog.value = false
-  newStatus.value = ''
+  newStatus.value = '' as any
   statusComment.value = ''
 }
 
@@ -474,13 +479,13 @@ const getJobOfferTitle = (jobOfferId: string) => {
   return jobOffer?.title || 'Offre supprimée'
 }
 
-const getStatusLabel = (status: JobApplicationStatus) => {
+const getStatusLabel = (status: string) => {
   const statusObj = APPLICATION_STATUSES.find(s => s.value === status)
   return statusObj?.text || status
 }
 
-const getStatusColor = (status: JobApplicationStatus) => {
-  const colors: Record<JobApplicationStatus, string> = {
+const getStatusColor = (status: string) => {
+  const colors: Record<string, string> = {
     pending: 'warning',
     processing: 'info',
     accepted: 'success',
@@ -490,8 +495,8 @@ const getStatusColor = (status: JobApplicationStatus) => {
   return colors[status] || 'surface'
 }
 
-const getStatusIcon = (status: JobApplicationStatus) => {
-  const icons: Record<JobApplicationStatus, string> = {
+const getStatusIcon = (status: string) => {
+  const icons: Record<string, string> = {
     pending: 'ri-time-line',
     processing: 'ri-loader-line',
     accepted: 'ri-check-circle-line',
@@ -551,7 +556,7 @@ const canUpdateStatus = (application: JobApplication) => {
 
 const showStatusUpdateDialog = (application: JobApplication) => {
   selectedApplication.value = application
-  newStatus.value = application.status
+  newStatus.value = application.status as any
   statusComment.value = ''
   statusDialog.value = true
 }
@@ -563,8 +568,8 @@ const updateApplicationStatus = async () => {
     updatingStatus.value = true
 
     const updateData: JobApplicationUpdateInput = {
-      id: selectedApplication.value.id,
-      status: newStatus.value,
+      id: selectedApplication.value.id.toString(),
+      status: newStatus.value as any,
       notes: statusComment.value || undefined
     }
 
@@ -580,11 +585,11 @@ const updateApplicationStatus = async () => {
   }
 }
 
-const handleStatusUpdate = async (applicationId: string, status: JobApplicationStatus, comment?: string) => {
+const handleStatusUpdate = async (applicationId: string, status: string, comment?: string) => {
   try {
     const updateData: JobApplicationUpdateInput = {
       id: applicationId,
-      status,
+      status: status as any,
       notes: comment
     }
 
@@ -603,7 +608,7 @@ const downloadDocuments = async (application: JobApplication) => {
     downloading.value[application.id] = true
 
     for (const attachment of application.attachments) {
-      await jobOffersStore.downloadJobAttachment(attachment.id, attachment.name)
+      await jobOffersStore.downloadJobAttachment(attachment.id.toString(), attachment.name)
     }
 
   } catch (error) {
@@ -649,7 +654,7 @@ const deleteApplication = async () => {
 
   try {
     deleting.value = true
-    await jobOffersStore.deleteJobApplication(selectedApplication.value.id)
+    await jobOffersStore.deleteJobApplication(selectedApplication.value.id.toString())
     deleteDialog.value = false
     await loadApplications()
 
@@ -723,6 +728,7 @@ watch(
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

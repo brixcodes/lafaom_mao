@@ -1,0 +1,43 @@
+{
+  "dashboard": {
+    "users": {
+      "title": "Utilisateurs",
+      "subtitle": "Ce mois"
+    },
+    "trainings": {
+      "title": "Formations",
+      "subtitle": "Sessions actives"
+    },
+    "jobs": {
+      "title": "Emplois",
+      "subtitle": "Offres publiées"
+    },
+    "revenue": {
+      "title": "Revenus",
+      "subtitle": "Ce mois"
+    },
+    "charts": {
+      "revenue": {
+        "title": "Évolution des revenus"
+      },
+      "registrations": {
+        "title": "Inscriptions utilisateurs"
+      },
+      "training_applications": {
+        "title": "Candidatures formations"
+      },
+      "job_applications": {
+        "title": "Candidatures emplois"
+      }
+    },
+    "activities": {
+      "title": "Activités récentes",
+      "empty": "Aucune activité récente"
+    },
+    "alerts": {
+      "title": "Alertes",
+      "empty": "Aucune alerte",
+      "empty_description": "Tout fonctionne correctement !"
+    }
+  }
+}

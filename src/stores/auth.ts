@@ -187,8 +187,8 @@ export const useAuthStore = defineStore('auth', () => {
       isLoading.value = true
       error.value = null
       
-      const response: UserFullOutSuccess = await authService.updateProfile(profileData)
-      user.value = response.data
+      const response = await authService.updateProfile(profileData)
+      user.value = response
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur de mise à jour du profil'
@@ -266,7 +266,7 @@ export const useAuthStore = defineStore('auth', () => {
         code
       })
       
-      user.value = response.data
+      user.value = response
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Code invalide ou expiré'
@@ -287,7 +287,7 @@ export const useAuthStore = defineStore('auth', () => {
         new_password: newPassword,
       })
       
-      user.value = response.data
+      user.value = response
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur de changement de mot de passe'
@@ -307,7 +307,7 @@ export const useAuthStore = defineStore('auth', () => {
       formData.append('image', file)
       
       const response = await authService.uploadProfileImage(formData)
-      user.value = response.data
+      user.value = response
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur d\'upload de l\'image'
@@ -322,8 +322,8 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       if (!token.value) return
       
-      const response: UserFullOutSuccess = await authService.getMe()
-      user.value = response.data
+      const response = await authService.getCurrentUser()
+      user.value = response
     } catch (err) {
       console.error('Erreur lors du chargement du profil:', err)
       clearAuthData()

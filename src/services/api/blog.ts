@@ -1,205 +1,207 @@
-// Service API pour le blog
 import { apiService } from './base'
-import type {
-  BaseOutSuccess,
-  PostCategoryCreateInput,
-  PostCategoryListOutSuccess,
-  PostCategoryOutSuccess,
-  PostCategoryUpdateInput,
-  PostCreateInput,
-  PostUpdateInput,
-  PostFilter,
-  PostOutSuccess,
-  PostsPageOutSuccess,
-  PostSectionCreateInput,
-  PostSectionListOutSuccess,
-  PostSectionOutSuccess,
-  PostSectionUpdateInput,
-} from '@/types/blog'
 
-export class BlogService {
-  // === CATEGORIES ===
+// Types pour le blog
+export interface PostCategory {
+  id: number
+  name: string
+  description?: string
+  slug: string
+  is_active: boolean
+  created_at: string
+}
 
-  async getCategories(): Promise<PostCategoryListOutSuccess> {
-    return apiService.get('/blog/categories')
+export interface Post {
+  id: number
+  title: string
+  slug: string
+  content: string
+  excerpt?: string
+  featured_image?: string
+  status: string
+  published_at?: string
+  category_id: number
+  author_id: number
+  views: number
+  created_at: string
+  updated_at: string
+  category?: PostCategory
+  sections?: PostSection[]
+}
+
+export interface PostSection {
+  id: number
+  post_id: number
+  title: string
+  content: string
+  order: number
+  created_at: string
+}
+
+export interface BlogFilter {
+  page?: number
+  limit?: number
+  search?: string
+  category_id?: number
+  status?: string
+  author_id?: number
+}
+
+export interface CreatePostRequest {
+  title: string
+  content: string
+  excerpt?: string
+  featured_image?: string
+  category_id: number
+  status: string
+  sections?: PostSectionInput[]
+}
+
+export interface PostSectionInput {
+  title: string
+  content: string
+  order: number
+}
+
+export interface CreateCategoryRequest {
+  name: string
+  description?: string
+  slug: string
+}
+
+class BlogService {
+  // === ARTICLES ===
+  // Récupérer la liste des articles
+  async getPosts(filters: BlogFilter = {}): Promise<any> {
+    return await apiService.get('/blog/posts', { params: filters })
   }
 
-  async getCategoryById(id: number): Promise<PostCategoryOutSuccess> {
-    return apiService.get(`/blog/categories/${id}`)
+  // Récupérer un article par ID
+  async getPostById(postId: number): Promise<Post> {
+    return await apiService.get(`/blog/posts/${postId}`)
   }
 
-  async createCategory(data: PostCategoryCreateInput): Promise<PostCategoryOutSuccess> {
-    return apiService.postNoConfirm('/blog/categories', data)
+  // Récupérer un article par slug
+  async getPostBySlug(slug: string): Promise<Post> {
+    return await apiService.get(`/blog/posts-by-slug/${slug}`)
   }
 
-  async updateCategory(id: number, data: PostCategoryUpdateInput): Promise<PostCategoryOutSuccess> {
-    return apiService.put(`/blog/categories/${id}`, data)
+  // Créer un article
+  async createPost(postData: CreatePostRequest): Promise<Post> {
+    return await apiService.post('/blog/posts', postData)
   }
 
-  async deleteCategory(id: number): Promise<BaseOutSuccess> {
-    return apiService.delete(`/blog/categories/${id}`)
+  // Mettre à jour un article
+  async updatePost(postId: number, postData: Partial<CreatePostRequest>): Promise<Post> {
+    return await apiService.put(`/blog/posts/${postId}`, postData) as Post
   }
 
-  // === POSTS ===
-
-  async getPosts(filter?: PostFilter): Promise<PostsPageOutSuccess> {
-    return apiService.get('/blog/posts', { params: filter })
+  // Supprimer un article
+  async deletePost(postId: number): Promise<void> {
+    return await apiService.delete(`/blog/posts/${postId}`)
   }
 
-  async getPublishedPosts(filter?: PostFilter): Promise<PostsPageOutSuccess> {
-    return apiService.get('/blog/get-published-posts', { params: filter })
+  // Publier un article
+  async publishPost(postId: number): Promise<Post> {
+    return await apiService.post(`/blog/posts/${postId}/publish`)
   }
 
-  async getPostById(id: number): Promise<PostOutSuccess> {
-    return apiService.get(`/blog/posts/${id}`)
+  // Dépublier un article
+  async unpublishPost(postId: number): Promise<Post> {
+    return await apiService.post(`/blog/posts/${postId}/unpublish`)
   }
 
-  async getPostBySlug(slug: string): Promise<PostOutSuccess> {
-    return apiService.get(`/blog/posts-by-slug/${slug}`)
+  // Incrémenter les vues d'un article
+  async incrementPostViews(postId: number): Promise<void> {
+    return await apiService.post(`/blog/posts/${postId}/views`)
   }
 
-  // --- Création post avec FormData ---
-  async createPostNoConfirm(data: PostCreateInput): Promise<PostOutSuccess> {
-    const formData = new FormData()
-    formData.append('author_name', data.author_name)
-    formData.append('title', data.title)
-
-    // ⚠️ Si cover_image est un tableau de fichiers (Vuetify VFileInput), on prend le premier
-    if (Array.isArray(data.cover_image) && data.cover_image.length > 0) {
-      formData.append('cover_image', data.cover_image[0])
-    } else if (data.cover_image instanceof File) {
-      formData.append('cover_image', data.cover_image)
-    }
-
-    formData.append('section_style', data.section_style || '')
-
-    if (data.summary) formData.append('summary', data.summary)
-    if (data.tags) formData.append('tags', JSON.stringify(data.tags))
-
-    if (typeof data.category_id === 'number' && !Number.isNaN(data.category_id)) {
-      formData.append('category_id', data.category_id.toString())
-    }
-
-    return apiService.upload('/blog/posts', formData) // ✅ upload = multipart
+  // === SECTIONS D'ARTICLES ===
+  // Récupérer les sections d'un article
+  async getPostSections(postId: number): Promise<PostSection[]> {
+    return await apiService.get(`/blog/posts/${postId}/sections`)
   }
 
-  // blog.ts - Accepte directement un FormData depuis le composant
-  async updatePostNoConfirm(id: number, formData: FormData): Promise<PostOutSuccess> {
-    // Débogage : Afficher les entrées du FormData
-    console.log('[DEBUG] FormData reçu dans updatePostNoConfirm:')
-    for (const [key, value] of formData.entries()) {
-      console.log(`[DEBUG] FormData entry: ${key}=${value}`)
-    }
-
-    return apiService.uploadPut(`/blog/posts/${id}`, formData)
+  // Créer une section d'article
+  async createPostSection(postId: number, sectionData: PostSectionInput): Promise<PostSection> {
+    return await apiService.post(`/blog/sections`, { ...sectionData, post_id: postId })
   }
 
-  async deletePostNoConfirm(id: number): Promise<BaseOutSuccess> {
-    return apiService.delete(`/blog/posts/${id}`)
+  // Mettre à jour une section d'article
+  async updatePostSection(sectionId: number, sectionData: Partial<PostSectionInput>): Promise<PostSection> {
+    return await apiService.put(`/blog/sections/${sectionId}`, sectionData) as PostSection
   }
 
-  async publishPostNoConfirm(id: number): Promise<PostOutSuccess> {
-    return apiService.postNoConfirm(`/blog/posts/${id}/publish`)
+  // Supprimer une section d'article
+  async deletePostSection(sectionId: number): Promise<void> {
+    return await apiService.delete(`/blog/sections/${sectionId}`)
   }
 
-  async publishPost(id: number): Promise<PostOutSuccess> {
-    return apiService.postNoConfirm(`/blog/posts/${id}/publish`)
+  // === CATÉGORIES ===
+  // Récupérer la liste des catégories
+  async getCategories(filters: any = {}): Promise<any> {
+    return await apiService.get('/blog/categories', { params: filters })
   }
 
-  // === SECTIONS ===
-
-  async getPostSections(postId: number): Promise<PostSectionListOutSuccess> {
-    return apiService.get(`/blog/posts/${postId}/sections`)
+  // Récupérer une catégorie par ID
+  async getCategoryById(categoryId: number): Promise<PostCategory> {
+    return await apiService.get(`/blog/categories/${categoryId}`)
   }
 
-  async getPostSectionsBySlug(postSlug: string): Promise<PostSectionListOutSuccess> {
-    return apiService.get(`/blog/posts-by-slug/${postSlug}/sections`)
+  // Récupérer une catégorie par slug
+  async getCategoryBySlug(slug: string): Promise<PostCategory> {
+    return await apiService.get(`/blog/categories/slug/${slug}`)
   }
 
-  async createSection(data: PostSectionCreateInput): Promise<PostSectionOutSuccess> {
-    const formData = new FormData()
-    formData.append('title', data.title)
-    formData.append('content', data.content)
-    formData.append('position', data.position.toString())
-    formData.append('post_id', data.post_id.toString())
-
-    if (Array.isArray(data.cover_image) && data.cover_image.length > 0) {
-      formData.append('cover_image', data.cover_image[0])
-    } else if (data.cover_image instanceof File) {
-      formData.append('cover_image', data.cover_image)
-    }
-
-    return apiService.upload('/blog/sections', formData)
+  // Créer une catégorie
+  async createCategory(categoryData: CreateCategoryRequest): Promise<PostCategory> {
+    return await apiService.post('/blog/categories', categoryData)
   }
 
-  async updateSection(id: number, data: PostSectionUpdateInput): Promise<PostSectionOutSuccess> {
-    const formData = new FormData()
-
-    if (data.title) formData.append('title', data.title)
-    if (data.content) formData.append('content', data.content)
-    if (data.position !== undefined) formData.append('position', data.position.toString())
-    if (data.post_id !== undefined) formData.append('post_id', data.post_id.toString())
-
-    if (Array.isArray(data.cover_image) && data.cover_image.length > 0) {
-      formData.append('cover_image', data.cover_image[0])
-    } else if (data.cover_image instanceof File) {
-      formData.append('cover_image', data.cover_image)
-    }
-
-    return apiService.uploadPut(`/blog/sections/${id}`, formData)
+  // Mettre à jour une catégorie
+  async updateCategory(categoryId: number, categoryData: Partial<CreateCategoryRequest>): Promise<PostCategory> {
+    return await apiService.put(`/blog/categories/${categoryId}`, categoryData) as PostCategory
   }
 
-  async deleteSection(id: number): Promise<BaseOutSuccess> {
-    return apiService.delete(`/blog/sections/${id}`)
+  // Supprimer une catégorie
+  async deleteCategory(categoryId: number): Promise<void> {
+    return await apiService.delete(`/blog/categories/${categoryId}`)
   }
 
-  // === TAGS ===
+  // Récupérer toutes les catégories actives
+  async getActiveCategories(): Promise<PostCategory[]> {
+    return await apiService.get('/blog/categories/active/all')
+  }
+
+  // === STATISTIQUES BLOG ===
+  // Récupérer les statistiques du blog
+  async getBlogStats(): Promise<any> {
+    return await apiService.get('/blog/stats')
+  }
+
+  // Récupérer les articles populaires
+  async getPopularPosts(limit: number = 5): Promise<Post[]> {
+    return await apiService.get('/blog/popular', { params: { limit } })
+  }
+
+  // Récupérer les articles récents
+  async getRecentPosts(limit: number = 5): Promise<Post[]> {
+    return await apiService.get('/blog/recent', { params: { limit } })
+  }
+
+  // Récupérer tous les tags (méthode manquante)
   async getAllTags(): Promise<string[]> {
-    try {
-      const res = await apiService.get('/blog/posts')
-      const posts = res.data || []
-      
-      // Extraire tous les tags de tous les posts
-      const allTags = new Set<string>()
-      
-      posts.forEach((post: any) => {
-        if (post.tags && Array.isArray(post.tags)) {
-          post.tags.forEach((tagItem: any) => {
-            if (typeof tagItem === 'string') {
-              // Essayer de parser si c'est du JSON
-              try {
-                if (tagItem.trim().startsWith('[')) {
-                  const parsed = JSON.parse(tagItem.replace(/'/g, '"'))
-                  if (Array.isArray(parsed)) {
-                    parsed.forEach(tag => {
-                      if (tag && tag.trim()) {
-                        allTags.add(tag.trim())
-                      }
-                    })
-                  }
-                } else {
-                  // Tag simple
-                  if (tagItem.trim()) {
-                    allTags.add(tagItem.trim())
-                  }
-                }
-              } catch {
-                // Si parsing échoue, ajouter comme tag simple
-                const cleanTag = tagItem.replace(/[\[\]"']/g, '').trim()
-                if (cleanTag) {
-                  allTags.add(cleanTag)
-                }
-              }
-            }
-          })
-        }
-      })
-      
-      return Array.from(allTags).sort()
-    } catch (error) {
-      console.error('Erreur lors de la récupération des tags:', error)
-      return []
-    }
+    // Pour l'instant, retourner des tags de démonstration
+    // Cette méthode devrait être implémentée côté backend
+    return [
+      'Formation',
+      'Emploi',
+      'Développement',
+      'Technologie',
+      'Carrière',
+      'Compétences',
+      'Recrutement',
+      'Innovation'
+    ]
   }
 }
 

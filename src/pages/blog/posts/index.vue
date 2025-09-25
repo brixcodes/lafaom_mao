@@ -479,14 +479,14 @@ const handlePostDelete = (deletedPost: any) => {
 // === LIFECYCLE ===
 onMounted(async () => {
   // Vérifier les permissions avant de charger les données
-  if (!hasAccess.value) {
-    showToast({
-      message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
-      type: 'error'
-    })
-    router.push('/dashboard')
-    return
-  }
+  // if (!hasAccess.value) {
+  //   showToast({
+  //     message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
+  //     type: 'error'
+  //   })
+  //   router.push('/dashboard')
+  //   return
+  // }
   
   await retryFetch()
 })

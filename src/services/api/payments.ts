@@ -1,96 +1,118 @@
 import { apiService } from './base'
-import type {
-  Payment,
-  PaymentInitInput,
-  CinetPayInit,
-  WebhookPayload,
-  PaymentFilter,
-  PaymentOutSuccess,
-  PaymentListOutSuccess,
-  PaymentPageOutSuccess,
-  InitPaymentOut,
-} from '@/types/payments'
 
-export class PaymentService {
-  // ===========================================
-  // PAYMENT CRUD
-  // ===========================================
+// Types pour les paiements
+export interface Payment {
+  id: number
+  user_id: number
+  product_name: string
+  product_amount: number
+  product_currency: string
+  status: string
+  transaction_id?: string
+  created_at: string
+  updated_at: string
+}
 
-  async getPayments(filters: PaymentFilter): Promise<PaymentPageOutSuccess> {
-    return apiService.get('/payments', { params: filters })
+export interface CinetPayPayment {
+  id: number
+  payment_id: number
+  transaction_id: string
+  amount: number
+  currency: string
+  status: string
+  created_at: string
+}
+
+export interface PaymentFilter {
+  page?: number
+  limit?: number
+  status?: string
+  user_id?: number
+  date_from?: string
+  date_to?: string
+}
+
+export interface CreatePaymentRequest {
+  product_name: string
+  product_amount: number
+  product_currency: string
+}
+
+export interface UpdatePaymentRequest {
+  product_name?: string
+  product_amount?: number
+  product_currency?: string
+  status?: string
+}
+
+export interface PaymentStatusCheck {
+  transaction_id: string
+  status: string
+  amount: number
+  currency: string
+}
+
+export interface CinetPayWebhook {
+  cpm_trans_id: string
+  cpm_trans_date: string
+  cpm_amount: number
+  cpm_currency: string
+  cpm_payid: string
+  cpm_payment_date: string
+  cpm_payment_time: string
+  cpm_error_message: string
+  cpm_phone_prefixe: string
+  cpm_phone_number: string
+  cpm_ipn_ack: string
+  cpm_result: string
+  cpm_trans_status: string
+  cpm_designation: string
+  cpm_custom: string
+  cpm_signature: string
+}
+
+class PaymentsService {
+  // === PAIEMENTS ===
+  // Récupérer la liste des paiements
+  async getPayments(filters: PaymentFilter = {}): Promise<any> {
+    return await apiService.get('/payments', { params: filters })
   }
 
-  async getPayment(paymentId: string): Promise<PaymentOutSuccess> {
-    return apiService.get(`/payments/${paymentId}`)
+  // Récupérer un paiement par ID
+  async getPaymentById(paymentId: number): Promise<Payment> {
+    return await apiService.get(`/payments/${paymentId}`)
   }
 
-  async createPayment(data: PaymentInitInput): Promise<InitPaymentOut> {
-    return apiService.post('/payments', data)
+  // Récupérer un paiement par transaction ID
+  async getPaymentByTransactionId(transactionId: string): Promise<Payment> {
+    return await apiService.get(`/payments-by-transaction/${transactionId}`)
   }
 
-  async updatePayment(paymentId: string, data: Partial<PaymentInitInput>): Promise<PaymentOutSuccess> {
-    return apiService.put(`/payments/${paymentId}`, data)
+  // Vérifier le statut d'un paiement
+  async checkPaymentStatus(transactionId: string): Promise<PaymentStatusCheck> {
+    return await apiService.get(`/check-status/${transactionId}`)
   }
 
-  async deletePayment(paymentId: string): Promise<PaymentOutSuccess> {
-    return apiService.delete(`/payments/${paymentId}`)
+  // Créer un paiement
+  async createPayment(paymentData: CreatePaymentRequest): Promise<Payment> {
+    return await apiService.post('/payments', paymentData)
   }
 
-  // ===========================================
-  // PAYMENT PROCESSING
-  // ===========================================
-
-  async initPayment(data: PaymentInitInput): Promise<InitPaymentOut> {
-    return apiService.post('/payments/init', data)
+  // Mettre à jour un paiement
+  async updatePayment(paymentId: number, paymentData: UpdatePaymentRequest): Promise<Payment> {
+    return await apiService.put(`/payments/${paymentId}`, paymentData)
   }
 
-  async initCinetPayPayment(data: CinetPayInit): Promise<InitPaymentOut> {
-    return apiService.post('/payments/cinetpay/init', data)
+  // Supprimer un paiement
+  async deletePayment(paymentId: number): Promise<void> {
+    return await apiService.delete(`/payments/${paymentId}`)
   }
 
-  async verifyPayment(paymentId: string): Promise<PaymentOutSuccess> {
-    return apiService.get(`/payments/${paymentId}/verify`)
-  }
-
-  async cancelPayment(paymentId: string): Promise<PaymentOutSuccess> {
-    return apiService.post(`/payments/${paymentId}/cancel`)
-  }
-
-  async refundPayment(paymentId: string, amount?: number): Promise<PaymentOutSuccess> {
-    return apiService.post(`/payments/${paymentId}/refund`, { amount })
-  }
-
-  // ===========================================
-  // WEBHOOK HANDLING
-  // ===========================================
-
-  async handleWebhook(payload: WebhookPayload): Promise<PaymentOutSuccess> {
-    return apiService.post('/payments/webhook', payload)
-  }
-
-  // ===========================================
-  // STATISTICS
-  // ===========================================
-
-  async getPaymentStats(): Promise<any> {
-    return apiService.get('/payments/stats')
-  }
-
-  async getUserPaymentStats(userId: string): Promise<any> {
-    return apiService.get(`/payments/stats/user/${userId}`)
-  }
-
-  // ===========================================
-  // USER OPERATIONS
-  // ===========================================
-
-  async getMyPayments(): Promise<PaymentListOutSuccess> {
-    return apiService.get('/payments/my')
-  }
-
-  async getMyPayment(paymentId: string): Promise<PaymentOutSuccess> {
-    return apiService.get(`/payments/my/${paymentId}`)
+  // === WEBHOOK CINETPAY ===
+  // Recevoir la notification CinetPay
+  async handleCinetPayWebhook(webhookData: CinetPayWebhook): Promise<any> {
+    return await apiService.post('/cinetpay/notify', webhookData)
   }
 }
 
-export const paymentService = new PaymentService()
+export const paymentsService = new PaymentsService()

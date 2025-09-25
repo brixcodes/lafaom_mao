@@ -1,101 +1,124 @@
-
 import { apiService } from './base'
-import type {
-  ChangeEmailInput,
-  ClientAccessTokenInput,
-  ForgottenPasswordInput,
-  LoginInput,
-  RefreshTokenInput,
-  UpdateAddressInput,
-  UpdateDeviceInput,
-  UpdatePasswordInput,
-  UpdateUserProfile,
-  UserTokenOut,
-  ValidateChangeCodeInput,
-  ValidateForgottenCodeInput,
-} from '@/types/auth'
-import type { BaseOutSuccess } from '@/types/index'
-import type { UserFullOutSuccess } from '@/types/user'
 
-export class AuthService {
-  // Login principal
-  async login(data: LoginInput): Promise<UserTokenOut | BaseOutSuccess> {
-    return apiService.postNoConfirm('/auth/token', data)
+// Types pour l'authentification
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface LoginResponse {
+  access_token: string
+  token_type: string
+  user: User
+}
+
+export interface User {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  status: string
+  created_at: string
+  last_login?: string
+}
+
+export interface RegisterRequest {
+  email: string
+  password: string
+  first_name: string
+  last_name: string
+}
+
+export interface ForgotPasswordRequest {
+  email: string
+}
+
+export interface ResetPasswordRequest {
+  token: string
+  new_password: string
+}
+
+class AuthService {
+  // Connexion
+  async login(credentials: LoginRequest): Promise<LoginResponse> {
+    return await apiService.post('/auth/token', credentials)
   }
 
-  // Authentification à deux facteurs
-  async twoFactorToken(data: ValidateChangeCodeInput): Promise<UserTokenOut> {
-    return apiService.postNoConfirm('/auth/two-factor-token', data)
+  // Inscription
+  async register(userData: RegisterRequest): Promise<LoginResponse> {
+    return await apiService.post('/auth/register', userData)
   }
 
-  // Refresh token
-  async refreshToken(data: RefreshTokenInput): Promise<UserTokenOut> {
-    return apiService.postNoConfirm('/auth/refresh-token', data)
+  // Récupérer l'utilisateur actuel
+  async getCurrentUser(): Promise<User> {
+    return await apiService.get('/auth/me')
+  }
+
+  // Déconnexion
+  async logout(): Promise<void> {
+    return await apiService.post('/auth/logout')
+  }
+
+  // Rafraîchir le token
+  async refreshToken(): Promise<LoginResponse> {
+    return await apiService.post('/auth/refresh')
   }
 
   // Mot de passe oublié
-  async passwordForgotten(data: ForgottenPasswordInput): Promise<BaseOutSuccess> {
-    return apiService.postNoConfirm('/auth/password-forgotten', data)
+  async forgotPassword(data: ForgotPasswordRequest): Promise<void> {
+    return await apiService.post('/auth/forgot-password', data)
   }
 
-  // Validation du code de mot de passe oublié
-  async validateForgottenCode(data: ValidateForgottenCodeInput): Promise<UserTokenOut> {
-    return apiService.postNoConfirm('/auth/validate-password-forgotten-code', data)
+  // Réinitialiser le mot de passe
+  async resetPassword(data: ResetPasswordRequest): Promise<void> {
+    return await apiService.post('/auth/reset-password', data)
   }
 
-  // Changement d'email
-  async changeEmail(data: ChangeEmailInput): Promise<BaseOutSuccess> {
-    return apiService.postNoConfirm('/auth/change-email', data)
+  // Vérifier l'email
+  async verifyEmail(token: string): Promise<void> {
+    return await apiService.post('/auth/verify-email', { token })
   }
 
-  // Validation du code de changement d'email
-  async validateChangeEmailCode(data: ValidateChangeCodeInput): Promise<UserFullOutSuccess> {
-    return apiService.postNoConfirm('/auth/validate-change-email-code', data)
+  // Renvoyer l'email de vérification
+  async resendVerificationEmail(): Promise<void> {
+    return await apiService.post('/auth/resend-verification')
   }
 
-  // Obtenir le profil utilisateur
-  async getMe(): Promise<UserFullOutSuccess> {
-    return apiService.get('/auth/me')
+  // Méthodes supplémentaires pour le store auth
+  async twoFactorToken(data: { email: string; code: string }): Promise<LoginResponse> {
+    return await apiService.post('/auth/two-factor', data)
   }
 
-  // Mise à jour du profil
-  async updateProfile(data: UpdateUserProfile): Promise<UserFullOutSuccess> {
-    return apiService.postNoConfirm('/auth/update-profile', data)
+  async updateProfile(data: any): Promise<any> {
+    return await apiService.put('/auth/profile', data)
   }
 
-  // Mise à jour des adresses
-  async updateAddresses(data: UpdateAddressInput): Promise<UserFullOutSuccess> {
-    return apiService.postNoConfirm('/auth/update-addresses', data)
+  async passwordForgotten(data: ForgotPasswordRequest): Promise<void> {
+    return await apiService.post('/auth/forgot-password', data)
   }
 
-  // Mise à jour du device ID
-  async updateDevice(data: UpdateDeviceInput): Promise<UserFullOutSuccess> {
-    return apiService.postNoConfirm('/auth/update-web-id', data)
+  async validateForgottenCode(data: { email: string; code: string; password: string }): Promise<LoginResponse> {
+    return await apiService.post('/auth/validate-forgotten-code', data)
   }
 
-  // Mise à jour du mot de passe
-  async updatePassword(data: UpdatePasswordInput): Promise<UserFullOutSuccess> {
-    return apiService.postNoConfirm('/auth/update-password', data)
+  async changeEmail(data: { email: string; password: string }): Promise<any> {
+    return await apiService.post('/auth/change-email', data)
   }
 
-  // Upload de l'image de profil
-  async uploadProfileImage(formData: FormData): Promise<UserFullOutSuccess> {
-    return apiService.upload('/auth/upload-profile-image', formData)
+  async validateChangeEmailCode(data: { email: string; code: string }): Promise<any> {
+    return await apiService.post('/auth/validate-change-email', data)
   }
 
-  // Récupérer les permissions de l'utilisateur connecté
-  async getMyPermissions(): Promise<{ data: string[]; message: string }> {
-    return apiService.get('/auth/my-permissions')
+  async updatePassword(data: { password: string; new_password: string }): Promise<any> {
+    return await apiService.post('/auth/update-password', data)
   }
 
-  // Token OAuth2 pour les clients
-  async getClientAccessToken(data: ClientAccessTokenInput): Promise<{ access_token: string; token_type: string; expires_in: number }> {
-    return apiService.postNoConfirm('/auth/oauth/token', data)
-  }
-
-  // Clés JWKS
-  async getJwks(): Promise<{ keys: any[] }> {
-    return apiService.get('/auth/jwks.json')
+  async uploadProfileImage(data: FormData): Promise<any> {
+    return await apiService.post('/auth/upload-profile-image', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
   }
 }
 

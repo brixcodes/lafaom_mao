@@ -34,10 +34,8 @@ export const useUsers = () => {
       
       const response = await userService.getUsers({
         page,
-        page_size: size,
-        search,
-        order_by: 'created_at',
-        asc: 'desc'
+        limit: size,
+        search
       })
       
       users.value = response.data || []
@@ -62,6 +60,11 @@ export const useUsers = () => {
     try {
       isLoading.value = true
       error.value = null
+      
+      // Validation de l'ID utilisateur (peut être string ou number)
+      if (!userId || userId.trim() === '') {
+        throw new Error('ID utilisateur invalide')
+      }
       
       const response = await userService.getUser(userId)
       return response.data
@@ -114,6 +117,11 @@ export const useUsers = () => {
       isLoading.value = true
       error.value = null
       
+      if (!userId || userId.trim() === '') {
+        throw new Error('ID utilisateur invalide')
+      }
+      
+      // Les IDs sont des UUIDs (strings) dans le backend
       const response = await userService.updateUser(userId, userData)
       
       showToast({
@@ -144,6 +152,11 @@ export const useUsers = () => {
       isLoading.value = true
       error.value = null
       
+      if (!userId || userId.trim() === '') {
+        throw new Error('ID utilisateur invalide')
+      }
+      
+      // Les IDs sont des UUIDs (strings) dans le backend
       const response = await userService.deleteUser(userId)
       
       showToast({

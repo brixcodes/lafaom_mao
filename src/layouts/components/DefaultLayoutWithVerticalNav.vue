@@ -14,18 +14,12 @@ import ToastContainer from '@/components/toast/ToastContainer.vue'
     <template #navbar="{ toggleVerticalOverlayNavActive }">
       <div class="d-flex h-100 align-center">
         <!-- 👉 Vertical nav toggle in overlay mode -->
-        <IconBtn
-          class="ms-n3 d-lg-none"
-          @click="toggleVerticalOverlayNavActive(true)"
-        >
+        <IconBtn class="ms-n3 d-lg-none" @click="toggleVerticalOverlayNavActive(true)">
           <VIcon icon="ri-menu-line" />
         </IconBtn>
 
         <!-- 👉 Search -->
-        <div
-          class="d-flex align-center cursor-pointer"
-          style="user-select: none;"
-        >
+        <div class="d-flex align-center cursor-pointer" style="user-select: none;">
           <!-- 👉 Search Trigger button -->
           <IconBtn>
             <VIcon icon="ri-search-line" />
@@ -46,26 +40,17 @@ import ToastContainer from '@/components/toast/ToastContainer.vue'
     </template>
 
     <template #vertical-nav-header="{ toggleIsOverlayNavActive }">
-      <RouterLink
-        to="/"
-        class="app-logo app-title-wrapper"
-      >
+      <RouterLink to="/" class="app-logo app-title-wrapper">
         <!-- eslint-disable vue/no-v-html -->
-        <div
-          class="d-flex"
-          v-html="logo"
-        />
+        <VImg src="logo_lafaom.png" width="50" height="40" contain />
         <!-- eslint-enable -->
 
-        <h1 class="font-weight-medium leading-normal text-xl text-uppercase">
-          Materio
+        <h1 class="font-weight-bold leading-normal text-xl text-uppercase mt-4">
+          LAFAOM
         </h1>
       </RouterLink>
 
-      <IconBtn
-        class="d-block d-lg-none"
-        @click="toggleIsOverlayNavActive(false)"
-      >
+      <IconBtn class="d-block d-lg-none" @click="toggleIsOverlayNavActive(false)">
         <VIcon icon="ri-close-line" />
       </IconBtn>
     </template>
@@ -75,10 +60,10 @@ import ToastContainer from '@/components/toast/ToastContainer.vue'
     </template>
 
 
-  <!-- 👉 Toast notifications -->
-  <ToastContainer />
-  <!-- 👉 Pages -->
-  <slot />
+    <!-- 👉 Toast notifications -->
+    <ToastContainer />
+    <!-- 👉 Pages -->
+    <slot />
 
     <!-- 👉 Footer -->
     <template #footer>

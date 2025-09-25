@@ -1,147 +1,305 @@
-// Service API pour les formations
 import { apiService } from './base'
-import type {
-  TrainingCreateInput,
-  TrainingUpdateInput,
-  TrainingSessionCreateInput,
-  TrainingSessionUpdateInput,
-  StudentApplicationCreateInput,
-  StudentApplicationUpdateInput,
-  TrainingFilter,
-  SessionFilter,
-  ApplicationFilter,
-  TrainingOutSuccess,
-  TrainingListOutSuccess,
-  TrainingSessionOutSuccess,
-  TrainingSessionListOutSuccess,
-  StudentApplicationOutSuccess,
-  StudentApplicationListOutSuccess,
-} from '@/types/training'
-import type {
-  SpecialtyCreateInput,
-  SpecialtyUpdateInput,
-  SpecialtyOutSuccess,
-  SpecialtyListOutSuccess,
-} from '@/types/specialty'
 
-export class TrainingService {
-  // Training CRUD
-  async createTraining(data: TrainingCreateInput): Promise<TrainingOutSuccess> {
-    return apiService.post('/trainings', data)
+// Types pour les formations
+export interface Training {
+  id: number
+  title: string
+  description: string
+  type: string
+  status: string
+  duration: number
+  created_at: string
+  updated_at: string
+}
+
+export interface TrainingSession {
+  id: number
+  training_id: number
+  start_date: string
+  end_date: string
+  status: string
+  max_participants: number
+  current_participants: number
+  created_at: string
+}
+
+export interface StudentApplication {
+  id: number
+  application_number: string
+  training_id: number
+  user_id: number
+  status: string
+  created_at: string
+  updated_at: string
+  attachments?: StudentAttachment[]
+}
+
+export interface StudentAttachment {
+  id: number
+  application_id: number
+  file_name: string
+  file_path: string
+  file_type: string
+  created_at: string
+}
+
+export interface Specialty {
+  id: number
+  name: string
+  description: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface Reclamation {
+  id: number
+  user_id: number
+  application_id?: number
+  type_id: number
+  subject: string
+  description: string
+  status: string
+  priority: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ReclamationType {
+  id: number
+  name: string
+  description: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface TrainingFilter {
+  page?: number
+  limit?: number
+  search?: string
+  type?: string
+  status?: string
+}
+
+export interface StudentApplicationFilter {
+  page?: number
+  limit?: number
+  search?: string
+  status?: string
+  training_id?: number
+}
+
+export interface CreateTrainingRequest {
+  title: string
+  description: string
+  type: string
+  duration: number
+}
+
+export interface CreateTrainingSessionRequest {
+  training_id: number
+  start_date: string
+  end_date: string
+  max_participants: number
+}
+
+export interface CreateStudentApplicationRequest {
+  training_id: number
+  attachments?: File[]
+}
+
+export interface CreateReclamationRequest {
+  application_id?: number
+  type_id: number
+  subject: string
+  description: string
+  priority: string
+}
+
+class TrainingService {
+  // === FORMATIONS ===
+  async getTrainings(filters: TrainingFilter = {}): Promise<any> {
+    return await apiService.get('/trainings', { params: filters })
   }
 
-  async updateTraining(id: string, data: TrainingUpdateInput): Promise<TrainingOutSuccess> {
-    return apiService.put(`/trainings/${id}`, data) as Promise<TrainingOutSuccess>
+  async getTrainingById(trainingId: number): Promise<Training> {
+    return await apiService.get(`/trainings/${trainingId}`)
   }
 
-  async getTraining(id: string): Promise<TrainingOutSuccess> {
-    return apiService.get(`/trainings/${id}`)
+  async createTraining(trainingData: CreateTrainingRequest): Promise<Training> {
+    return await apiService.post('/trainings', trainingData)
   }
 
-  async listTrainings(filters: TrainingFilter): Promise<TrainingListOutSuccess> {
-    return apiService.get('/trainings', { params: filters })
+  async updateTraining(trainingId: number, trainingData: Partial<CreateTrainingRequest>): Promise<Training> {
+    return await apiService.put(`/trainings/${trainingId}`, trainingData) as Training
   }
 
-  async deleteTraining(id: string): Promise<TrainingOutSuccess> {
-    return apiService.delete(`/trainings/${id}`) as Promise<TrainingOutSuccess>
+  async deleteTraining(trainingId: number): Promise<void> {
+    return await apiService.delete(`/trainings/${trainingId}`)
   }
 
-  // Training Session CRUD
-  async createTrainingSession(data: TrainingSessionCreateInput): Promise<TrainingSessionOutSuccess> {
-    return apiService.post('/training-sessions', data)
+  // === SESSIONS DE FORMATION ===
+  async getTrainingSessions(filters: any = {}): Promise<any> {
+    return await apiService.get('/training-sessions', { params: filters })
   }
 
-  async updateTrainingSession(id: string, data: TrainingSessionUpdateInput): Promise<TrainingSessionOutSuccess> {
-  return apiService.put(`/training-sessions/${id}`, data) as Promise<TrainingSessionOutSuccess>
+  async getTrainingSessionById(sessionId: number): Promise<TrainingSession> {
+    return await apiService.get(`/training-sessions/${sessionId}`)
   }
 
-  async getTrainingSession(id: string): Promise<TrainingSessionOutSuccess> {
-    return apiService.get(`/training-sessions/${id}`)
+  async createTrainingSession(sessionData: CreateTrainingSessionRequest): Promise<TrainingSession> {
+    return await apiService.post('/training-sessions', sessionData)
   }
 
-  async listTrainingSessions(filters: SessionFilter): Promise<TrainingSessionListOutSuccess> {
-    return apiService.get('/training-sessions', { params: filters })
+  async updateTrainingSession(sessionId: number, sessionData: Partial<CreateTrainingSessionRequest>): Promise<TrainingSession> {
+    return await apiService.put(`/training-sessions/${sessionId}`, sessionData) as TrainingSession
   }
 
-  async deleteTrainingSession(id: string): Promise<TrainingSessionOutSuccess> {
-    return apiService.delete(`/training-sessions/${id}`) as Promise<TrainingSessionOutSuccess>
+  async deleteTrainingSession(sessionId: number): Promise<void> {
+    return await apiService.delete(`/training-sessions/${sessionId}`)
   }
 
-  // Training Registration
-  async registerToTraining(data: any): Promise<any> {
-    return apiService.post('/student-applications', data)
+  async getSessionMembers(sessionId: number): Promise<any[]> {
+    return await apiService.get(`/training-sessions/${sessionId}/members`)
   }
 
-  async registerToSession(data: any): Promise<any> {
-    console.log('Appel API registerToSession avec endpoint /student-applications')
-    return apiService.post('/student-applications', data)
+  // === CANDIDATURES ÉTUDIANTES ===
+  async getStudentApplications(filters: StudentApplicationFilter = {}): Promise<any> {
+    return await apiService.get('/student-applications', { params: filters })
   }
 
-  async getTrainingRegistrations(filters: any): Promise<any> {
-    return apiService.get('/training-registrations', { params: filters })
+  async getStudentApplicationById(applicationId: number): Promise<StudentApplication> {
+    return await apiService.get(`/student-applications/${applicationId}`)
   }
 
-  async getSessionRegistrations(filters: any): Promise<any> {
-    return apiService.get('/student-applications', { params: filters })
+  async changeApplicationStatus(applicationId: number, status: string): Promise<StudentApplication> {
+    return await apiService.post(`/student-applications/${applicationId}/status`, { status })
   }
 
-  async getTrainingSessionMembers(sessionId: string): Promise<any> {
-    return apiService.get(`/training-sessions/${sessionId}/members`)
+  async getApplicationAttachments(applicationId: number): Promise<StudentAttachment[]> {
+    return await apiService.get(`/student-applications/${applicationId}/attachments`)
   }
 
-  // Student Application CRUD
-  async createStudentApplication(data: StudentApplicationCreateInput): Promise<StudentApplicationOutSuccess> {
-    return apiService.post('/student-applications', data)
+  // === MES CANDIDATURES ===
+  async createStudentApplication(applicationData: CreateStudentApplicationRequest): Promise<StudentApplication> {
+    return await apiService.post('/student-applications', applicationData)
   }
 
-  async updateStudentApplication(id: number, data: StudentApplicationUpdateInput): Promise<StudentApplicationOutSuccess> {
-  return apiService.put(`/student-applications/${id}`, data) as Promise<StudentApplicationOutSuccess>
+  async getMyStudentApplications(filters: StudentApplicationFilter = {}): Promise<any> {
+    return await apiService.get('/my-student-applications', { params: filters })
   }
 
-  async getStudentApplication(id: number): Promise<StudentApplicationOutSuccess> {
-    return apiService.get(`/student-applications/${id}`)
+  async getMyStudentApplicationById(applicationId: number): Promise<StudentApplication> {
+    return await apiService.get(`/my-student-applications/${applicationId}`)
   }
 
-  async listStudentApplications(filters: ApplicationFilter): Promise<StudentApplicationListOutSuccess> {
-    return apiService.get('/student-applications', { params: filters })
+  async updateMyStudentApplication(applicationId: number, applicationData: Partial<CreateStudentApplicationRequest>): Promise<StudentApplication> {
+    return await apiService.put(`/my-student-applications/${applicationId}`, applicationData) as StudentApplication
   }
 
-  async deleteStudentApplication(id: number): Promise<StudentApplicationOutSuccess> {
-  return apiService.delete(`/student-applications/${id}`) as Promise<StudentApplicationOutSuccess>
+  async deleteMyStudentApplication(applicationId: number): Promise<void> {
+    return await apiService.delete(`/my-student-applications/${applicationId}`)
   }
 
-  // My Student Applications
-  async listMyStudentApplications(filters: ApplicationFilter): Promise<StudentApplicationListOutSuccess> {
-    return apiService.get('/my-student-applications', { params: filters })
+  async getMyApplicationAttachments(applicationId: number): Promise<StudentAttachment[]> {
+    return await apiService.get(`/my-student-applications/${applicationId}/attachments`)
   }
 
-  async getMyStudentApplication(id: number): Promise<StudentApplicationOutSuccess> {
-    return apiService.get(`/my-student-applications/${id}`)
+  async addApplicationAttachment(applicationId: number, file: File): Promise<StudentAttachment> {
+    const formData = new FormData()
+    formData.append('file', file)
+    return await apiService.post(`/my-student-applications/${applicationId}/attachments`, formData)
   }
 
-  async deleteMyStudentApplication(id: number): Promise<StudentApplicationOutSuccess> {
-  return apiService.delete(`/my-student-applications/${id}`) as Promise<StudentApplicationOutSuccess>
+  async deleteApplicationAttachment(attachmentId: number): Promise<void> {
+    return await apiService.delete(`/my-student-attachments/${attachmentId}`)
   }
 
-  // Specialty CRUD
-  async createSpecialty(data: SpecialtyCreateInput): Promise<SpecialtyOutSuccess> {
-    return apiService.post('/specialties', data)
+  async submitStudentApplication(applicationId: number): Promise<any> {
+    return await apiService.post(`/my-student-applications/${applicationId}/submit`)
   }
 
-  async updateSpecialty(id: number, data: SpecialtyUpdateInput): Promise<SpecialtyOutSuccess> {
-  return apiService.put(`/specialties/${id}`, data) as Promise<SpecialtyOutSuccess>
+  async payTrainingFee(paymentData: any): Promise<any> {
+    return await apiService.post('/my-student-applications/pay-training-fee', paymentData)
   }
 
-  async getSpecialty(id: number): Promise<SpecialtyOutSuccess> {
-    return apiService.get(`/specialties/${id}`)
+  // === SPÉCIALITÉS ===
+  async getSpecialties(filters: any = {}): Promise<any> {
+    return await apiService.get('/specialties', { params: filters })
   }
 
-  async listSpecialties(filters: any): Promise<SpecialtyListOutSuccess> {
-    return apiService.get('/specialties', { params: filters })
+  async getSpecialtyById(specialtyId: number): Promise<Specialty> {
+    return await apiService.get(`/specialties/${specialtyId}`)
   }
 
-  async deleteSpecialty(id: number): Promise<SpecialtyOutSuccess> {
-  return apiService.delete(`/specialties/${id}`) as Promise<SpecialtyOutSuccess>
+  async createSpecialty(specialtyData: Partial<Specialty>): Promise<Specialty> {
+    return await apiService.post('/specialties', specialtyData)
+  }
+
+  async updateSpecialty(specialtyId: number, specialtyData: Partial<Specialty>): Promise<Specialty> {
+    return await apiService.put(`/specialties/${specialtyId}`, specialtyData) as Specialty
+  }
+
+  async deleteSpecialty(specialtyId: number): Promise<void> {
+    return await apiService.delete(`/specialties/${specialtyId}`)
+  }
+
+  async getActiveSpecialties(): Promise<Specialty[]> {
+    return await apiService.get('/specialties/active/all')
+  }
+
+  // === RÉCLAMATIONS ===
+  async createReclamation(reclamationData: CreateReclamationRequest): Promise<Reclamation> {
+    return await apiService.post('/my-reclamations', reclamationData)
+  }
+
+  async getMyReclamations(filters: any = {}): Promise<any> {
+    return await apiService.get('/my-reclamations', { params: filters })
+  }
+
+  async getMyReclamationById(reclamationId: number): Promise<Reclamation> {
+    return await apiService.get(`/my-reclamations/${reclamationId}`)
+  }
+
+  async updateMyReclamation(reclamationId: number, reclamationData: Partial<CreateReclamationRequest>): Promise<Reclamation> {
+    return await apiService.put(`/my-reclamations/${reclamationId}`, reclamationData) as Reclamation
+  }
+
+  async deleteMyReclamation(reclamationId: number): Promise<void> {
+    return await apiService.delete(`/my-reclamations/${reclamationId}`)
+  }
+
+  // === ADMIN RÉCLAMATIONS ===
+  async getAllReclamations(filters: any = {}): Promise<any> {
+    return await apiService.get('/reclamations', { params: filters })
+  }
+
+  async getReclamationById(reclamationId: number): Promise<Reclamation> {
+    return await apiService.get(`/reclamations/${reclamationId}`)
+  }
+
+  async updateReclamationStatus(reclamationId: number, status: string): Promise<Reclamation> {
+    return await apiService.put(`/reclamations/${reclamationId}/status`, { status }) as Reclamation
+  }
+
+  // === TYPES DE RÉCLAMATIONS ===
+  async getActiveReclamationTypes(): Promise<ReclamationType[]> {
+    return await apiService.get('/reclamation-types/active/all')
+  }
+
+  async createReclamationType(typeData: Partial<ReclamationType>): Promise<ReclamationType> {
+    return await apiService.post('/reclamation-types', typeData)
+  }
+
+  async getReclamationTypeById(typeId: number): Promise<ReclamationType> {
+    return await apiService.get(`/reclamation-types/${typeId}`)
+  }
+
+  async updateReclamationType(typeId: number, typeData: Partial<ReclamationType>): Promise<ReclamationType> {
+    return await apiService.put(`/reclamation-types/${typeId}`, typeData) as ReclamationType
+  }
+
+  async deleteReclamationType(typeId: number): Promise<void> {
+    return await apiService.delete(`/reclamation-types/${typeId}`)
   }
 }
 

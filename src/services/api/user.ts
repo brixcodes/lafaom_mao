@@ -1,152 +1,173 @@
-// Service API pour la gestion des utilisateurs
 import { apiService } from './base'
-import { API_ENDPOINTS } from '@/config/api'
-import type { BaseOutSuccess, BaseOutPage } from '@/types'
 
 // Types pour les utilisateurs
 export interface User {
-  id: string
+  id: number
+  email: string
   first_name: string
   last_name: string
-  email: string
-  user_type: string
   status: string
-  picture?: string
   created_at: string
-  updated_at: string
+  last_login?: string
+  roles?: Role[]
+  permissions?: Permission[]
+}
+
+export interface Role {
+  id: number
+  name: string
+  description?: string
+}
+
+export interface Permission {
+  id: number
+  name: string
+  description?: string
 }
 
 export interface UserFilter {
   page?: number
-  page_size?: number
+  limit?: number
   search?: string
-  user_type?: string
-  country_code?: string
-  order_by?: 'created_at' | 'last_login' | 'first_name' | 'last_name'
-  asc?: 'asc' | 'desc'
+  status?: string
+  role?: string
 }
 
-export interface CreateUserInput {
-  first_name: string
-  last_name: string
+export interface CreateUserRequest {
   email: string
   password: string
-  user_type: string
-  status?: string
-  birth_date?: string
-  civility?: string
-  country_code?: string
-  mobile_number?: string
-  fix_number?: string
-  lang?: string
-  two_factor_enabled?: boolean
+  first_name: string
+  last_name: string
+  role_ids?: number[]
 }
 
-export interface UpdateUserInput {
+export interface UpdateUserRequest {
   first_name?: string
   last_name?: string
   email?: string
-  password?: string
-  user_type?: string
   status?: string
-  birth_date?: string
-  civility?: string
-  country_code?: string
-  mobile_number?: string
-  fix_number?: string
-  lang?: string
-  two_factor_enabled?: boolean
 }
 
-export interface UserOutSuccess extends BaseOutSuccess {
-  data: User
+export interface AssignRoleRequest {
+  user_id: number
+  role_ids: number[]
 }
 
-export interface UserListOutSuccess extends BaseOutSuccess {
-  data: User[]
+export interface AssignPermissionRequest {
+  user_id: number
+  permission_ids: number[]
 }
 
-export interface UsersPageOutSuccess extends BaseOutPage {
-  data: User[]
+export interface UpdateUserStatusRequest {
+  status: string
 }
 
-export class UserService {
-  
-  /**
-   * Récupérer la liste des utilisateurs avec pagination
-   */
-  async getUsers(filters: UserFilter = {}): Promise<UsersPageOutSuccess> {
-    return apiService.get('/users', { params: filters })
+class UserService {
+  // Récupérer la liste des utilisateurs
+  async getUsers(filters: UserFilter = {}): Promise<any> {
+    return await apiService.get('/users', { params: filters })
   }
 
-  /**
-   * Récupérer un utilisateur par ID
-   */
-  async getUser(userId: string): Promise<UserOutSuccess> {
-    return apiService.get(`/users/${userId}`)
+  // Récupérer un utilisateur par ID
+  async getUserById(userId: number): Promise<User> {
+    return await apiService.get(`/users/${userId}`)
   }
 
-  /**
-   * Créer un nouvel utilisateur
-   */
-  async createUser(userData: CreateUserInput): Promise<UserOutSuccess> {
-    return apiService.post('/users', userData, {
-      successMessage: 'Utilisateur créé avec succès',
-      errorMessage: 'Erreur lors de la création de l\'utilisateur'
-    })
+  // Alias pour getUserById (pour compatibilité)
+  async getUser(userId: string): Promise<{ data: User }> {
+    if (!userId || userId.trim() === '') {
+      throw new Error('ID utilisateur invalide')
+    }
+    // Les IDs sont des UUIDs (strings) dans le backend
+    const user = await apiService.get(`/users/${userId}`) as User
+    return { data: user }
   }
 
-  /**
-   * Mettre à jour un utilisateur
-   */
-  async updateUser(userId: string, userData: UpdateUserInput): Promise<UserOutSuccess> {
-    return apiService.put(`/users/${userId}`, userData, {
-      successMessage: 'Utilisateur mis à jour avec succès',
-      errorMessage: 'Erreur lors de la mise à jour de l\'utilisateur'
-    })
+  // Récupérer un utilisateur complet avec toutes les informations
+  async getUserFull(userId: string): Promise<{ data: User }> {
+    if (!userId || userId.trim() === '') {
+      throw new Error('ID utilisateur invalide')
+    }
+    // Les IDs sont des UUIDs (strings) dans le backend
+    const user = await apiService.get(`/users/${userId}`) as User
+    return { data: user }
   }
 
-  /**
-   * Supprimer un utilisateur
-   */
-  async deleteUser(userId: string): Promise<UserOutSuccess> {
-    return apiService.delete(`/users/${userId}`, {
-      successMessage: 'Utilisateur supprimé avec succès',
-      errorMessage: 'Erreur lors de la suppression de l\'utilisateur'
-    })
+  // Récupérer un utilisateur avec ses permissions
+  async getUserWithPermissions(userId: string): Promise<User> {
+    if (!userId || userId.trim() === '') {
+      throw new Error('ID utilisateur invalide')
+    }
+    // Les IDs sont des UUIDs (strings) dans le backend
+    const user = await apiService.get(`/users/${userId}`) as User
+    // Ajouter les permissions si nécessaire
+    return user
   }
 
-  /**
-   * Mettre à jour le statut d'un utilisateur
-   */
-  async updateUserStatus(userId: string, status: string): Promise<UserOutSuccess> {
-    return apiService.patch(`/users/${userId}/status`, { status }, {
-      successMessage: 'Statut utilisateur mis à jour avec succès',
-      errorMessage: 'Erreur lors de la mise à jour du statut'
-    })
+  // Créer un utilisateur
+  async createUser(userData: CreateUserRequest): Promise<User> {
+    return await apiService.post('/users', userData)
   }
 
-  /**
-   * Rechercher des utilisateurs
-   */
-  async searchUsers(searchTerm: string, filters: Omit<UserFilter, 'search'> = {}): Promise<UsersPageOutSuccess> {
-    return this.getUsers({ ...filters, search: searchTerm })
+  // Mettre à jour un utilisateur
+  async updateUser(userId: string | number, userData: UpdateUserRequest): Promise<User> {
+    return await apiService.put(`/users/${userId}`, userData) as User
   }
 
-  /**
-   * Obtenir les utilisateurs par type
-   */
-  async getUsersByType(userType: string, filters: Omit<UserFilter, 'user_type'> = {}): Promise<UsersPageOutSuccess> {
-    return this.getUsers({ ...filters, user_type: userType })
+  // Supprimer un utilisateur
+  async deleteUser(userId: string | number): Promise<void> {
+    return await apiService.delete(`/users/${userId}`)
   }
 
-  /**
-   * Obtenir les utilisateurs par pays
-   */
-  async getUsersByCountry(countryCode: string, filters: Omit<UserFilter, 'country_code'> = {}): Promise<UsersPageOutSuccess> {
-    return this.getUsers({ ...filters, country_code: countryCode })
+  // Changer le statut d'un utilisateur
+  async changeUserStatus(userId: number, status: UpdateUserStatusRequest): Promise<User> {
+    return await apiService.post(`/users/change-status/${userId}`, status)
+  }
+
+  // Assigner des rôles à un utilisateur
+  async assignRoles(data: AssignRoleRequest): Promise<Permission[]> {
+    return await apiService.post('/users/assign-roles', data)
+  }
+
+  // Retirer des rôles d'un utilisateur
+  async revokeRoles(data: AssignRoleRequest): Promise<Permission[]> {
+    return await apiService.post('/users/revoke-role', data)
+  }
+
+  // Assigner des permissions à un utilisateur
+  async assignPermissions(data: AssignPermissionRequest): Promise<Permission[]> {
+    return await apiService.post('/users/assign-permissions', data)
+  }
+
+  // Retirer des permissions d'un utilisateur
+  async revokePermissions(data: AssignPermissionRequest): Promise<Permission[]> {
+    return await apiService.post('/users/revoke-permissions', data)
+  }
+
+  // Récupérer les permissions d'un utilisateur
+  async getUserPermissions(userId: number): Promise<Permission[]> {
+    return await apiService.get(`/users/permissions/${userId}`)
+  }
+
+  // Récupérer tous les rôles
+  async getRoles(): Promise<Role[]> {
+    return await apiService.get('/roles')
+  }
+
+  // Récupérer toutes les permissions
+  async getPermissions(): Promise<Permission[]> {
+    return await apiService.get('/permissions')
+  }
+
+  // Récupérer plusieurs utilisateurs par IDs (usage interne)
+  async getUsersByIds(userIds: number[]): Promise<User[]> {
+    return await apiService.post('/users/internal', { user_ids: userIds })
+  }
+
+  // Configuration des utilisateurs
+  async setupUsers(): Promise<any> {
+    return await apiService.get('/setup-users')
   }
 }
 
-// Instance singleton
 export const userService = new UserService()

@@ -61,4 +61,14 @@ export default defineConfig({
       './src/**/*.vue',
     ],
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://lafaom.vertex-cam.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      }
+    }
+  }
 })

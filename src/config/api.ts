@@ -30,14 +30,6 @@ export const API_ENDPOINTS = {
     PERMISSIONS: '/users/permissions'
   },
   
-  // Blog
-  BLOG: {
-    POSTS: '/blog/posts',
-    POST_DETAIL: (id: number) => `/blog/posts/${id}`,
-    POST_SLUG: (slug: string) => `/blog/posts/slug/${slug}`,
-    CATEGORIES: '/blog/categories',
-    SECTIONS: (postId: number) => `/blog/posts/${postId}/sections`
-  },
   
   // Job Offers
   JOB_OFFERS: {
@@ -129,19 +121,25 @@ export const API_ENDPOINTS = {
   // Payments
   PAYMENTS: {
     LIST: '/payments',
-    DETAIL: (id: string) => `/payments/${id}`
+    CREATE: '/payments',
+    DETAIL: (id: number) => `/payments/${id}`,
+    UPDATE: (id: number) => `/payments/${id}`,
+    DELETE: (id: number) => `/payments/${id}`,
+    BY_TRANSACTION: (transactionId: string) => `/payments-by-transaction/${transactionId}`,
+    CHECK_STATUS: (transactionId: string) => `/check-status/${transactionId}`,
+    CINETPAY_WEBHOOK: '/cinetpay/notify'
   },
   
-    // Reclamations
-    RECLAMATIONS: {
-      LIST: '/reclamations',
-      MY_RECLAMATIONS: '/my-reclamations',
-      CREATE: '/my-reclamations',
-      DETAIL: (id: number) => `/reclamations/${id}`,
-      UPDATE: (id: number) => `/my-reclamations/${id}`,
-      DELETE: (id: number) => `/my-reclamations/${id}`,
-      UPDATE_STATUS: (id: number) => `/reclamations/${id}/status`
-    },
+  // Reclamations
+  RECLAMATIONS: {
+    LIST: '/reclamations',
+    MY_RECLAMATIONS: '/my-reclamations',
+    CREATE: '/my-reclamations',
+    DETAIL: (id: number) => `/reclamations/${id}`,
+    UPDATE: (id: number) => `/my-reclamations/${id}`,
+    DELETE: (id: number) => `/my-reclamations/${id}`,
+    UPDATE_STATUS: (id: number) => `/reclamations/${id}/status`
+  },
   
   // Reclamation Types
   RECLAMATION_TYPES: {
@@ -152,17 +150,54 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `/reclamation-types/${id}`,
     DELETE: (id: number) => `/reclamation-types/${id}`
   },
-
-  // Payments
-  PAYMENTS: {
-    LIST: '/payments/payments',
-    CREATE: '/payments/payments',
-    DETAIL: (id: number) => `/payments/payments/${id}`,
-    UPDATE: (id: number) => `/payments/payments/${id}`,
-    DELETE: (id: number) => `/payments/payments/${id}`,
-    BY_TRANSACTION: (transactionId: string) => `/payments/payments-by-transaction/${transactionId}`,
-    CHECK_STATUS: (transactionId: string) => `/payments/check-status/${transactionId}`,
-    CINETPAY_WEBHOOK: '/payments/cinetpay/notify'
+  
+  // System
+  SYSTEM: {
+    ORGANIZATION_CENTERS: {
+      LIST: '/system/organization-centers',
+      CREATE: '/system/organization-centers',
+      DETAIL: (id: number) => `/system/organization-centers/${id}`,
+      UPDATE: (id: number) => `/system/organization-centers/${id}`,
+      DELETE: (id: number) => `/system/organization-centers/${id}`,
+      CHANGE_STATUS: (id: number) => `/system/organization-centers/change-status/${id}`,
+      BY_LOCATION: (countryCode: string) => `/system/organization-centers/location/${countryCode}`,
+      INTERNAL: '/system/organization-centers/internal'
+    }
+  },
+  
+  // Blog
+  BLOG: {
+    POSTS: {
+      LIST: '/blog/posts',
+      CREATE: '/blog/posts',
+      DETAIL: (id: number) => `/blog/posts/${id}`,
+      BY_SLUG: (slug: string) => `/blog/posts/slug/${slug}`,
+      UPDATE: (id: number) => `/blog/posts/${id}`,
+      DELETE: (id: number) => `/blog/posts/${id}`,
+      PUBLISH: (id: number) => `/blog/posts/${id}/publish`,
+      UNPUBLISH: (id: number) => `/blog/posts/${id}/unpublish`,
+      INCREMENT_VIEWS: (id: number) => `/blog/posts/${id}/views`,
+      SECTIONS: (id: number) => `/blog/posts/${id}/sections`
+    },
+    CATEGORIES: {
+      LIST: '/blog/categories',
+      CREATE: '/blog/categories',
+      DETAIL: (id: number) => `/blog/categories/${id}`,
+      BY_SLUG: (slug: string) => `/blog/categories/slug/${slug}`,
+      UPDATE: (id: number) => `/blog/categories/${id}`,
+      DELETE: (id: number) => `/blog/categories/${id}`,
+      ACTIVE: '/blog/categories/active/all'
+    },
+    SECTIONS: {
+      CREATE: (postId: number) => `/blog/posts/${postId}/sections`,
+      UPDATE: (id: number) => `/blog/sections/${id}`,
+      DELETE: (id: number) => `/blog/sections/${id}`
+    },
+    STATS: {
+      DASHBOARD: '/blog/stats',
+      POPULAR: '/blog/popular',
+      RECENT: '/blog/recent'
+    }
   }
 }
 

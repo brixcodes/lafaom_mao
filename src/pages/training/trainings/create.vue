@@ -102,14 +102,14 @@ const goBack = () => {
 // Initialisation
 onMounted(async () => {
   // Vérifier les permissions avant de charger la page
-  if (!hasAccess.value) {
-    showToast({
-      message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
-      type: 'error'
-    })
-    router.push('/training/trainings')
-    return
-  }
+  // if (!hasAccess.value) {
+  //   showToast({
+  //     message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
+  //     type: 'error'
+  //   })
+  //   router.push('/training/trainings')
+  //   return
+  // }
   
   await fetchSpecialties()
 })

@@ -25,16 +25,16 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       title: 'Utilisateurs',
       to: '/users',
     }" />
-    
+
     <VerticalNavLink :item="{
       title: 'Permissions',
       to: '/permissions',
     }" />
-    
-    <VerticalNavLink :item="{
+
+    <!-- <VerticalNavLink :item="{
       title: 'Rôles & Permissions',
       to: '/users/role-permissions',
-    }" />
+    }" /> -->
   </VerticalNavGroup>
 
   <!-- Blog -->
@@ -46,7 +46,7 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       title: 'Catégories',
       to: '/blog/categories',
     }" />
-    
+
     <VerticalNavLink :item="{
       title: 'Articles',
       to: '/blog/posts',
@@ -54,7 +54,7 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
   </VerticalNavGroup>
 
   <!-- Emploi -->
-  <VerticalNavGroup :item="{     
+  <VerticalNavGroup :item="{
     title: 'Emploi',
     icon: 'ri-briefcase-line',
   }">
@@ -63,13 +63,19 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       to: '/jobs/offers',
       icon: '',
     }" />
-    
+
     <VerticalNavLink :item="{
       title: 'Candidatures',
       to: '/jobs/applications',
       icon: '',
     }" />
-    
+
+    <VerticalNavLink :item="{
+      title: 'Mes candidatures',
+      to: '/jobs/applications/my-applications',
+      icon: '',
+    }" />
+
     <VerticalNavLink :item="{
       title: 'Statistiques',
       to: '/jobs/stats',
@@ -87,12 +93,7 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       to: '/organization-centers',
       icon: '',
     }" />
-    
-    <VerticalNavLink :item="{
-      title: 'Créer un centre',
-      to: '/organization-centers/create',
-      icon: '',
-    }" />
+
   </VerticalNavGroup>
 
   <!-- Spécialités -->
@@ -103,12 +104,6 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
     <VerticalNavLink :item="{
       title: 'spécialités',
       to: '/specialties',
-      icon: '',
-    }" />
-    
-    <VerticalNavLink :item="{
-      title: 'Créer une spécialité',
-      to: '/specialties/create',
       icon: '',
     }" />
   </VerticalNavGroup>
@@ -141,13 +136,13 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       to: '/training/trainings',
       icon: '',
     }" />
-    
+
     <VerticalNavLink :item="{
       title: 'Sessions',
       to: '/training/sessions',
       icon: '',
     }" />
-    
+
     <VerticalNavLink :item="{
       title: 'Spécialités',
       to: '/training/specialties',
@@ -165,13 +160,13 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       to: '/reclamations',
       icon: '',
     }" />
-    
+
     <VerticalNavLink :item="{
       title: 'Mes réclamations',
       to: '/my-reclamations',
       icon: '',
     }" />
-    
+
     <VerticalNavLink :item="{
       title: 'Types de réclamation',
       to: '/reclamations/types',
@@ -189,7 +184,7 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       to: '/payments',
       icon: '',
     }" />
-    
+
     <VerticalNavLink :item="{
       title: 'Nouveau paiement',
       to: '/payments/init',

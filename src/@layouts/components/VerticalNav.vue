@@ -60,13 +60,10 @@ const handleNavScroll = (evt: Event) => {
           to="/"
           class="app-logo app-title-wrapper"
         >
-          <div
-            class="d-flex"
-            v-html="logo"
-          />
+        <VImg src="logo_lafaom.png" width="90" height="90" contain />
 
           <h1 class="font-weight-medium leading-normal text-xl text-uppercase">
-            Materio
+            LAFAOM
           </h1>
         </RouterLink>
       </slot>

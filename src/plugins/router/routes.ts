@@ -172,6 +172,15 @@ export const routes = [
         props: true
       },
       {
+        path: 'jobs/applications/my-applications',
+        name: 'my-job-applications',
+        component: () => import('@/pages/jobs/MyApplications.vue'),
+        meta: {
+          title: 'Mes candidatures',
+          requiresAuth: true
+        }
+      },
+      {
         path: 'jobs/stats',
         name: 'job-stats',
         component: () => import('@/pages/jobs/JobStats.vue'),

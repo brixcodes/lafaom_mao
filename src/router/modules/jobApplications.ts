@@ -101,6 +101,22 @@ const jobApplicationsRoutes: RouteRecordRaw[] = [
           ]
         },
         props: true
+      },
+
+      // Mes candidatures (utilisateur connecté)
+      {
+        path: 'my-applications',
+        name: 'my-job-applications',
+        component: () => import('@/pages/jobs/MyApplications.vue'),
+        meta: {
+          title: 'Mes candidatures',
+          icon: 'ri-file-user-line',
+          requiresAuth: true,
+          breadcrumb: [
+            { text: 'Accueil', to: '/' },
+            { text: 'Mes candidatures', to: '' }
+          ]
+        }
       }
     ]
   }

@@ -33,7 +33,7 @@
   </VCard>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" name="TrainingSpecialtyTable">
 import type { Specialty } from '@/types/specialty'
 const props = defineProps<{
   specialties: Specialty[]

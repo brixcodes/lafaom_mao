@@ -56,8 +56,12 @@ const goBack = () => {
 const fetchUser = async () => {
   try {
     console.log('🔍 Chargement de l\'utilisateur ID:', userId)
-    const user = await loadUser(userId)
-    console.log('✅ Utilisateur chargé:', user)
+    const response = await loadUser(userId)
+    console.log('✅ Utilisateur chargé:', response)
+
+    // Extraire les données utilisateur de la réponse
+    // La réponse a la structure: {success: true, message: '...', data: {...}}
+    const user = (response as any).data || response
 
     // Mapper les données de l'utilisateur vers le formulaire
     formData.value = {
@@ -120,7 +124,7 @@ const handleSubmit = async () => {
       type: 'success'
     })
     router.push('/users')
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Erreur lors de la modification:', error)
     console.error('📋 Détails de l\'erreur:', error.response?.data)
     showToast({

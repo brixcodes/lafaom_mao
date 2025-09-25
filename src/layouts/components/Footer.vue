@@ -27,7 +27,7 @@
         target="noopener noreferrer"
       >More Themes</a>
       <a
-        href="https://demos.themeselection.com/materio-vuetify-vuejs-admin-template/documentation/"
+        href="https://demos.themeselection.com/LAFAOM-vuetify-vuejs-admin-template/documentation/"
         target="noopener noreferrer"
       >Documentation</a>
       <a

@@ -194,7 +194,7 @@ const { loadUser, isLoading } = useUsers()
 // Permissions
 const { canViewUsers, canUpdateUsers, canDeleteUsers, canGivePermissions, canGiveRoles } = usePermissions()
 
-const user = ref(null)
+const user = ref<any>(null)
 
 // Methods
 const getUserTypeColor = (userType: string): string => {
@@ -237,7 +237,9 @@ onMounted(async () => {
   const userId = route.params.id as string
   if (userId) {
     try {
-      user.value = await loadUser(userId)
+      const response = await loadUser(userId)
+      // La réponse a la structure: {success: true, message: '...', data: {...}}
+      user.value = (response as any).data || (response as any)
     } catch (error) {
       console.error('Erreur lors du chargement de l\'utilisateur:', error)
     }
