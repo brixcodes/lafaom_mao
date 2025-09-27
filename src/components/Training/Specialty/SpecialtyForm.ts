@@ -5,7 +5,7 @@ import { VBtn, VCard, VCardText, VForm, VTextField, VTextarea } from 'vuetify/co
 import type { Specialty } from '@/types/training'
 
 // Store
-import { useSpecialtyStore } from '@/stores/specialty'
+import { useTrainingStore } from '@/stores/training'
 
 export default defineComponent({
   name: 'SpecialtyForm',
@@ -28,7 +28,7 @@ export default defineComponent({
   },
   
   setup(props) {
-    const specialtyStore = useSpecialtyStore()
+    const trainingStore = useSpecialtyStore()
     const router = useRouter()
     
     const form = ref({
@@ -40,7 +40,7 @@ export default defineComponent({
     onMounted(async () => {
       if (props.specialtyId) {
         try {
-          const specialty = await specialtyStore.getSpecialtyById(props.specialtyId)
+          const specialty = await trainingStore.getSpecialtyById(props.specialtyId)
           form.value = {
             name: specialty.name,
             description: specialty.description || '',
@@ -55,9 +55,9 @@ export default defineComponent({
     const handleSubmit = async () => {
       try {
         if (props.specialtyId) {
-          await specialtyStore.updateSpecialty(props.specialtyId, form.value)
+          await trainingStore.updateSpecialty(props.specialtyId, form.value)
         } else {
-          await specialtyStore.createSpecialty(form.value)
+          await trainingStore.createSpecialty(form.value)
         }
         
         router.push({ name: 'specialty-list' })
@@ -74,7 +74,7 @@ export default defineComponent({
       form,
       handleSubmit,
       handleCancel,
-      isLoading: computed(() => specialtyStore.isLoading),
+      isLoading: computed(() => trainingStore.isLoading),
     }
   },
 })

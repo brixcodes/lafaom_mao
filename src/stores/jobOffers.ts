@@ -1,7 +1,7 @@
 // Store Pinia pour les offres d'emploi
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { jobOffersService } from '@/services/api/jobOffers'
+import { jobOffersService } from '@/services/api/job-offers'
 import type {
   JobOfferOut,
   JobOfferCreateInput,

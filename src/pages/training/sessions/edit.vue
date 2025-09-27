@@ -151,7 +151,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { trainingService } from '@/services/api/training'
-import { organizationCenterService } from '@/services/api/organizationCenters'
+import { organizationCentersService } from '@/services/api/organization-centers'
 import type { TrainingSession, TrainingSessionCreateInput } from '@/types/training'
 import { TrainingSessionStatusEnum } from '@/types/training'
 import AppDateTimePicker from '@/components/common/AppDateTimePicker.vue'
@@ -281,7 +281,7 @@ const fetchTrainings = async () => {
 const fetchCenters = async () => {
   try {
     isLoadingCenters.value = true
-    const response = await organizationCenterService.listOrganizationCenters({ page: 1, page_size: 1000 })
+    const response = await organizationCentersService.listOrganizationCenters({ page: 1, page_size: 1000 })
     centers.value = response.data.map((c: any) => ({ id: c.id, name: c.name }))
   } catch (error) {
     console.error('Erreur lors du chargement des centres:', error)

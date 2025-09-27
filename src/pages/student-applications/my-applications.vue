@@ -283,7 +283,7 @@ import { ApplicationStatusEnum } from '@/types/student-application'
 import StudentApplicationCard from '@/components/student-application/StudentApplicationCard.vue'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'
-import { studentApplicationService } from '@/services/api/student-application'
+import { studentApplicationsService } from '@/services/api/student-applications'
 
 // Router
 const router = useRouter()
@@ -461,7 +461,7 @@ const handlePayRegistrationFee = async () => {
     
     console.log('Paiement des frais d\'étude pour la candidature:', selectedApplication.value.id)
     
-    const paymentResponse = await studentApplicationService.submitApplicationWithPayment(selectedApplication.value.id)
+    const paymentResponse = await studentApplicationsService.submitApplicationWithPayment(selectedApplication.value.id)
     
     console.log('Réponse du paiement des frais d\'étude:', paymentResponse)
     
@@ -510,7 +510,7 @@ const handlePayTrainingFee = async () => {
     
     console.log('Paiement des frais de formation pour la candidature:', selectedApplication.value.id)
     
-    const paymentResponse = await studentApplicationService.submitApplicationWithPayment(selectedApplication.value.id)
+    const paymentResponse = await studentApplicationsService.submitApplicationWithPayment(selectedApplication.value.id)
     
     console.log('Réponse du paiement des frais de formation:', paymentResponse)
     

@@ -95,6 +95,7 @@ declare module 'vue' {
     TrainingForm: typeof import('./src/components/Training/TrainingForm.vue')['default']
     TrainingSessionCard: typeof import('./src/components/Training/TrainingSessionCard.vue')['default']
     TrainingSessionForm: typeof import('./src/components/Training/TrainingSessionForm.vue')['default']
+    TranslationDemo: typeof import('./src/components/Permission/TranslationDemo.vue')['default']
     UserActionGuard: typeof import('./src/components/Permission/UserActionGuard.vue')['default']
     UserBulkActionsGuard: typeof import('./src/components/Permission/UserBulkActionsGuard.vue')['default']
     UserDeleteDialog: typeof import('./src/components/User/UserDeleteDialog.vue')['default']

@@ -213,7 +213,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { organizationCenterService } from '@/services/api/organizationCenters'
+import { organizationCentersService } from '@/services/api/organization-centers'
 import type { OrganizationCenterCreateInput } from '@/types/organizationCenters'
 import { OrganizationStatusEnum, OrganizationTypeEnum } from '@/types/organizationCenters'
 import { showToast } from '@/components/toast/toastManager'
@@ -494,7 +494,7 @@ const handleSubmit = async () => {
     
     console.log('📤 Sending data to backend:', cleanData)
     
-    await organizationCenterService.createOrganizationCenter(cleanData)
+    await organizationCentersService.createOrganizationCenter(cleanData)
     showToast({ message: 'Centre d\'organisation créé avec succès', type: 'success' })
     
     // Vider le formulaire après succès

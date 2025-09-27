@@ -1,7 +1,7 @@
 // Composable pour la gestion des candidatures d'étudiants
 
 import { ref, computed, watch } from 'vue'
-import { studentApplicationService } from '@/services/api/student-application'
+import { studentApplicationsService } from '@/services/api/student-applications'
 import { useAuth } from '@/composables/useAuth'
 import type {
   StudentApplicationOut,
@@ -130,7 +130,7 @@ export function useStudentApplication() {
       }
       
       console.log('🔍 Chargement des candidatures via /student-applications avec params:', params)
-      const response = await studentApplicationService.listMyStudentApplications(params)
+      const response = await studentApplicationsService.listMyStudentApplications(params)
       console.log('📋 Réponse API candidatures:', response)
       applications.value = reset ? response.data : [...applications.value, ...response.data]
       totalCount.value = response.total_number
@@ -182,7 +182,7 @@ export function useStudentApplication() {
       }
       
       console.log('🔍 Chargement des candidatures de l\'utilisateur connecté avec params:', params)
-      const response = await studentApplicationService.listMyStudentApplications(params)
+      const response = await studentApplicationsService.listMyStudentApplications(params)
       console.log('📋 Réponse API candidatures utilisateur:', response)
       applications.value = reset ? response.data : [...applications.value, ...response.data]
       totalCount.value = response.total_number
@@ -229,7 +229,7 @@ export function useStudentApplication() {
       isLoading.value = true
       error.value = ''
       
-      const response = await studentApplicationService.getStudentApplication(id)
+      const response = await studentApplicationsService.getStudentApplication(id)
       currentApplication.value = response.data
       
     } catch (err: any) {
@@ -249,7 +249,7 @@ export function useStudentApplication() {
       isSubmitting.value = true
       error.value = ''
       
-      const response = await studentApplicationService.createStudentApplication(data)
+      const response = await studentApplicationsService.createStudentApplication(data)
       currentApplication.value = response.data
       
       showToast({ message: 'Candidature créée avec succès', type: 'success' })
@@ -275,7 +275,7 @@ export function useStudentApplication() {
       isSubmitting.value = true
       error.value = ''
       
-      const response = await studentApplicationService.updateStudentApplication(id, data)
+      const response = await studentApplicationsService.updateStudentApplication(id, data)
       
       // Mettre à jour la candidature dans la liste
       const index = applications.value.findIndex(app => app.id === id)
@@ -310,7 +310,7 @@ export function useStudentApplication() {
       isSubmitting.value = true
       error.value = ''
       
-      await studentApplicationService.deleteStudentApplication(id)
+      await studentApplicationsService.deleteStudentApplication(id)
       
       // Retirer la candidature de la liste
       applications.value = applications.value.filter(app => app.id !== id)
@@ -338,7 +338,7 @@ export function useStudentApplication() {
       isSubmitting.value = true
       error.value = ''
       
-      const response = await studentApplicationService.updateMyStudentApplication(id, data)
+      const response = await studentApplicationsService.updateMyStudentApplication(id, data)
       
       // Mettre à jour la candidature dans la liste
       const index = applications.value.findIndex(app => app.id === id)
@@ -369,7 +369,7 @@ export function useStudentApplication() {
       isSubmitting.value = true
       error.value = ''
       
-      await studentApplicationService.deleteMyStudentApplication(id)
+      await studentApplicationsService.deleteMyStudentApplication(id)
       
       // Retirer la candidature de la liste
       applications.value = applications.value.filter(app => app.id !== id)
@@ -399,7 +399,7 @@ export function useStudentApplication() {
       isSubmitting.value = true
       error.value = ''
       
-      await studentApplicationService.submitStudentApplication({
+      await studentApplicationsService.submitStudentApplication({
         application_id: applicationId,
         target_session_id: sessionId
       })
@@ -425,7 +425,7 @@ export function useStudentApplication() {
       isSubmitting.value = true
       error.value = ''
       
-      const response = await studentApplicationService.payTrainingFee(data)
+      const response = await studentApplicationsService.payTrainingFee(data)
       showToast({ message: 'Redirection vers la plateforme de paiement...', type: 'info' })
       
       return response

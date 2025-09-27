@@ -5,7 +5,7 @@ import { VBtn, VCard, VCardText, VDivider, VList, VListItem, VListItemTitle } fr
 import type { Specialty } from '@/types/training'
 
 // Store
-import { useSpecialtyStore } from '@/stores/specialty'
+import { useTrainingStore } from '@/stores/training'
 
 export default defineComponent({
   name: 'SpecialtyList',
@@ -21,11 +21,11 @@ export default defineComponent({
   },
   
   setup() {
-    const specialtyStore = useSpecialtyStore()
+    const trainingStore = useSpecialtyStore()
     const router = useRouter()
     
     onMounted(async () => {
-      await specialtyStore.fetchSpecialties()
+      await trainingStore.fetchSpecialties()
     })
     
     const handleCreate = () => {
@@ -38,15 +38,15 @@ export default defineComponent({
     
     const handleDelete = async (id: number) => {
       try {
-        await specialtyStore.deleteSpecialty(id)
+        await trainingStore.deleteSpecialty(id)
       } catch (error) {
         console.error('Error deleting specialty:', error)
       }
     }
     
     return {
-      specialties: computed(() => specialtyStore.specialties),
-      isLoading: computed(() => specialtyStore.isLoading),
+      specialties: computed(() => trainingStore.specialties),
+      isLoading: computed(() => trainingStore.isLoading),
       handleCreate,
       handleEdit,
       handleDelete,

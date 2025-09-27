@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { reclamationService } from '@/services/api/reclamations'
+import { reclamationsService } from '@/services/api/reclamations'
 import type {
   Reclamation,
   ReclamationCreateInput,
@@ -57,7 +57,7 @@ export const useReclamationStore = defineStore('reclamations', () => {
     error.value = null
     
     try {
-      const response = await reclamationService.getReclamations(filters)
+      const response = await reclamationsService.getReclamations(filters)
       reclamations.value = response.data
       totalCount.value = response.total_number
       currentPage.value = response.page
@@ -76,7 +76,7 @@ export const useReclamationStore = defineStore('reclamations', () => {
     error.value = null
     
     try {
-      const response = await reclamationService.getReclamation(reclamationId)
+      const response = await reclamationsService.getReclamation(reclamationId)
       currentReclamation.value = response.data
       return response.data
     } catch (err: any) {
@@ -94,7 +94,7 @@ export const useReclamationStore = defineStore('reclamations', () => {
     error.value = null
     
     try {
-      const response = await reclamationService.createReclamation(data)
+      const response = await reclamationsService.createReclamation(data)
       reclamations.value.unshift(response.data)
       return response.data
     } catch (err: any) {
@@ -112,7 +112,7 @@ export const useReclamationStore = defineStore('reclamations', () => {
     error.value = null
     
     try {
-      const response = await reclamationService.updateReclamation(reclamationId, data)
+      const response = await reclamationsService.updateReclamation(reclamationId, data)
       const index = reclamations.value.findIndex(r => r.id === reclamationId)
       if (index !== -1) {
         reclamations.value[index] = response.data
@@ -136,7 +136,7 @@ export const useReclamationStore = defineStore('reclamations', () => {
     error.value = null
     
     try {
-      await reclamationService.deleteReclamation(reclamationId)
+      await reclamationsService.deleteReclamation(reclamationId)
       reclamations.value = reclamations.value.filter(r => r.id !== reclamationId)
       if (currentReclamation.value?.id === reclamationId) {
         currentReclamation.value = null
@@ -156,7 +156,7 @@ export const useReclamationStore = defineStore('reclamations', () => {
     error.value = null
     
     try {
-      const response = await reclamationService.getAllReclamationsAdmin(filters)
+      const response = await reclamationsService.getAllReclamationsAdmin(filters)
       reclamations.value = response.data
       totalCount.value = response.total_number
       currentPage.value = response.page
@@ -174,7 +174,7 @@ export const useReclamationStore = defineStore('reclamations', () => {
     error.value = null
     
     try {
-      const response = await reclamationService.updateReclamationStatus(reclamationId, data)
+      const response = await reclamationsService.updateReclamationStatus(reclamationId, data)
       const index = reclamations.value.findIndex(r => r.id === reclamationId)
       if (index !== -1) {
         reclamations.value[index] = response.data
@@ -198,7 +198,7 @@ export const useReclamationStore = defineStore('reclamations', () => {
     error.value = null
     
     try {
-      const response = await reclamationService.getMyReclamations()
+      const response = await reclamationsService.getMyReclamations()
       reclamations.value = response.data
     } catch (err: any) {
       error.value = err.message || 'Erreur lors du chargement de vos réclamations'
@@ -213,7 +213,7 @@ export const useReclamationStore = defineStore('reclamations', () => {
     error.value = null
     
     try {
-      const response = await reclamationService.getMyReclamation(reclamationId)
+      const response = await reclamationsService.getMyReclamation(reclamationId)
       currentReclamation.value = response.data
       return response.data
     } catch (err: any) {
@@ -231,7 +231,7 @@ export const useReclamationStore = defineStore('reclamations', () => {
     error.value = null
     
     try {
-      const response = await reclamationService.getReclamationTypes()
+      const response = await reclamationsService.getReclamationTypes()
       reclamationTypes.value = response.data
     } catch (err: any) {
       error.value = err.message || 'Erreur lors du chargement des types de réclamation'
@@ -246,7 +246,7 @@ export const useReclamationStore = defineStore('reclamations', () => {
     error.value = null
     
     try {
-      const response = await reclamationService.getActiveReclamationTypes()
+      const response = await reclamationsService.getActiveReclamationTypes()
       reclamationTypes.value = response.data
     } catch (err: any) {
       error.value = err.message || 'Erreur lors du chargement des types actifs'

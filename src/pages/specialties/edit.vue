@@ -78,14 +78,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useSpecialtyStore } from '@/stores/specialties'
+import { useTrainingStore } from '@/stores/training'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'
 import type { Specialty, SpecialtyUpdateInput } from '@/types/specialties'
 
 const router = useRouter()
 const route = useRoute()
-const specialtyStore = useSpecialtyStore()
+const trainingStore = useSpecialtyStore()
 
 // Form ref
 const formRef = ref()
@@ -103,13 +103,13 @@ const specialty = ref<SpecialtyUpdateInput>({
 })
 
 // Computed
-const isLoading = computed(() => specialtyStore.isLoading)
+const isLoading = computed(() => trainingStore.isLoading)
 
 // Methods
 const loadSpecialty = async () => {
   try {
     const specialtyId = parseInt(route.params.id as string)
-    currentSpecialty.value = await specialtyStore.fetchSpecialty(specialtyId)
+    currentSpecialty.value = await trainingStore.fetchSpecialty(specialtyId)
 
     // Populate form with current specialty data
     specialty.value = {
@@ -143,7 +143,7 @@ const handleSubmit = async () => {
   isSaving.value = true
   try {
     const specialtyId = parseInt(route.params.id as string)
-    await specialtyStore.updateSpecialty(specialtyId, specialty.value)
+    await trainingStore.updateSpecialty(specialtyId, specialty.value)
     showToast({ message: 'Spécialité modifiée avec succès', type: 'success' })
     router.push({ name: 'specialties-index' })
   } catch (err: any) {

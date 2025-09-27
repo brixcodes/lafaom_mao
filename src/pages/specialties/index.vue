@@ -90,14 +90,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSpecialtyStore } from '@/stores/specialties'
+import { useTrainingStore } from '@/stores/training'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'
 import type { Specialty } from '@/types/specialties'
 import SpecialtyTable from '@/components/Specialty/SpecialtyTable.vue'
 
 const router = useRouter()
-const specialtyStore = useSpecialtyStore()
+const trainingStore = useTrainingStore()
 
 // State
 const searchQuery = ref('')
@@ -106,11 +106,11 @@ const itemsPerPage = ref(10)
 const currentPage = ref(1)
 
 // Computed
-const isLoading = computed(() => specialtyStore.isLoading)
-const error = computed(() => specialtyStore.error)
-const specialties = computed(() => specialtyStore.specialties)
-const totalPages = computed(() => specialtyStore.totalPages)
-const allSpecialties = computed(() => specialtyStore.specialties)
+const isLoading = computed(() => trainingStore.isLoading)
+const error = computed(() => trainingStore.error)
+const specialties = computed(() => trainingStore.specialties)
+const totalPages = computed(() => trainingStore.totalPages)
+const allSpecialties = computed(() => trainingStore.specialties)
 
 const hasSpecialties = computed(() => specialties.value.length > 0)
 const hasActiveFilters = computed(() =>
@@ -169,7 +169,7 @@ const headers = [
 // Methods
 const loadSpecialties = async () => {
   try {
-    await specialtyStore.fetchSpecialties({
+    await trainingStore.fetchSpecialties({
       page: currentPage.value,
       limit: itemsPerPage.value,
       search: searchQuery.value || undefined,
@@ -208,7 +208,7 @@ const confirmDelete = async (specialty: Specialty) => {
 
   if (confirmed) {
     try {
-      await specialtyStore.deleteSpecialty(specialty.id)
+      await trainingStore.deleteSpecialty(specialty.id)
       showToast({ message: 'Spécialité supprimée avec succès', type: 'success' })
       loadSpecialties()
     } catch (err) {
@@ -219,7 +219,7 @@ const confirmDelete = async (specialty: Specialty) => {
 }
 
 const clearError = () => {
-  specialtyStore.clearError()
+  trainingStore.clearError()
 }
 
 // Navigation methods

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { useAuthStore } from './auth'
-import { permissionService } from '@/services/api/permissions'
+import { rolesPermissionsService } from '@/services/api/roles-permissions'
 import { usePermissionEvents } from '@/utils/permissionEvents'
 import { PermissionEnum, RoleEnum, rolePermissions, userRoleToRoleEnum, UserRole } from '@/types/permissions'
 
@@ -118,7 +118,7 @@ export const usePermissionStore = defineStore('permission', () => {
     }
 
     try {
-      const response = await permissionService.getMyPermissions()
+      const response = await rolesPermissionsService.getMyPermissions()
       permissions.value = response.data?.map(p => p.permission) || []
     } catch (error) {
       console.error('Erreur lors du chargement des permissions:', error)

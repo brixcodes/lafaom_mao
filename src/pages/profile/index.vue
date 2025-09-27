@@ -555,7 +555,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { userService } from '@/services/api/user'
+import { usersService } from '@/services/api/users'
 
 // Store
 const authStore = useAuthStore()
@@ -798,7 +798,7 @@ const fetchUserProfile = async () => {
   try {
     loading.value = true
     // Utiliser la méthode pour obtenir le profil complet de l'utilisateur actuel
-    const profileData = await userService.getCurrentUserProfile()
+    const profileData = await usersService.getCurrentUserProfile()
     user.value = profileData.data || profileData
     
     // Populate editable fields
@@ -816,7 +816,7 @@ const fetchUserProfile = async () => {
     try {
       const currentUser = authStore.user
       if (currentUser?.id) {
-        const basicUser = await userService.getUserById(currentUser.id)
+        const basicUser = await usersService.getUserById(currentUser.id)
         user.value = basicUser.data || basicUser
       }
     } catch (fallbackError) {
@@ -831,7 +831,7 @@ const updateProfessionalInfo = async () => {
   try {
     loading.value = true
     // API call to update professional information
-    // await userService.updateProfessionalInfo(user.value.id, editableProfile.value)
+    // await usersService.updateProfessionalInfo(user.value.id, editableProfile.value)
     console.log('Mise à jour des informations professionnelles:', editableProfile.value)
     editMode.value = false
   } catch (error) {

@@ -1,161 +1,207 @@
 <template>
-  <VCard>
-    <VCardTitle class="d-flex align-center">
-      <VIcon icon="ri-shield-user-line" class="me-2" />
-      Gestion des Rôles et Permissions
-    </VCardTitle>
-    
-    <VCardText>
-      <!-- Informations utilisateur -->
-      <VAlert
-        v-if="userInfo"
-        type="info"
-        class="mb-4"
-      >
-        <VAlertTitle>Utilisateur sélectionné</VAlertTitle>
-        <div class="d-flex align-center">
-          <VAvatar class="me-3">
+  <div class="role-permission-manager">
+    <!-- Informations utilisateur -->
+    <VCard class="mb-6">
+      <VCardText>
+        <div v-if="userInfo" class="d-flex align-center">
+          <VAvatar size="48" class="me-4">
             <VImg v-if="userInfo.picture" :src="userInfo.picture" />
-            <VIcon v-else icon="ri-user-line" />
+            <VIcon v-else icon="ri-user-line" size="24" />
           </VAvatar>
-          <div>
-            <div class="font-weight-medium">{{ userInfo.first_name }} {{ userInfo.last_name }}</div>
-            <div class="text-caption">{{ userInfo.email }}</div>
-            <VChip size="small" :color="getUserTypeColor(userInfo.user_type)">
-              {{ userInfo.user_type }}
-            </VChip>
+          <div class="flex-grow-1">
+            <div class="text-h6 font-weight-bold">{{ userInfo.first_name }} {{ userInfo.last_name }}</div>
+            <div class="text-body-2 text-medium-emphasis mb-2">{{ userInfo.email }}</div>
+            <div class="d-flex align-center gap-2">
+              <VChip :color="getUserTypeColor(userInfo.user_type)" size="small">
+                <VIcon :icon="getUserTypeIcon(userInfo.user_type)" class="me-1" />
+                {{ getUserTypeLabel(userInfo.user_type) }}
+              </VChip>
+              <VChip v-if="userRole" :color="getRoleColor(userRole.name)" size="small">
+                <VIcon icon="ri-shield-user-line" class="me-1" />
+                {{ translateRole(userRole.name) }}
+              </VChip>
+            </div>
           </div>
         </div>
-      </VAlert>
+      </VCardText>
+    </VCard>
 
-      <!-- Rôles actuels -->
-      <div class="mb-6">
-        <h4 class="mb-3">Rôles actuels</h4>
-        <div v-if="userRoles.length > 0" class="d-flex flex-wrap gap-2">
-          <VChip
-            v-for="role in userRoles"
-            :key="role.id"
-            :color="getRoleColor(role.name)"
-            size="small"
-            closable
-            @click:close="removeRole(role.id)"
-          >
+    <!-- Gestion des rôles -->
+    <VCard class="mb-6">
+      <VCardTitle class="d-flex align-center justify-space-between">
+        <div class="d-flex align-center">
+          <VIcon icon="ri-shield-user-line" class="me-2" />
+          {{ translateInterface('role_management') }}
+        </div>
+        <VBtn color="primary" size="small" @click="showRoleDialog = true" :disabled="userRoles.length > 0">
+          <VIcon icon="ri-add-line" class="me-1" />
+          {{ userRoles.length > 0 ? translateInterface('role_already_assigned') : translateInterface('assign_role') }}
+        </VBtn>
+      </VCardTitle>
+
+      <VCardText>
+        <!-- Rôles actuels -->
+        <div v-if="userRoles.length > 0" class="d-flex flex-wrap gap-2 mb-4">
+          <VChip v-for="role in userRoles" :key="role.id" :color="getRoleColor(role.name)" size="small" closable
+            @click:close="removeRole(role.id)">
             <VIcon :icon="getRoleIcon(role.name)" class="me-1" />
-            {{ role.name }}
+            {{ translateRole(role.name) }}
           </VChip>
         </div>
-        <VAlert v-else type="warning" variant="tonal">
-          Aucun rôle assigné
+        <VAlert v-else type="info" variant="tonal" class="mb-4">
+          <VIcon icon="ri-information-line" class="me-2" />
+          {{ translateInterface('no_role_assigned') }}
         </VAlert>
-      </div>
 
-      <!-- Assigner un nouveau rôle -->
-      <div class="mb-6">
-        <h4 class="mb-3">Assigner un rôle</h4>
-        <div class="d-flex gap-3 align-center">
-          <VSelect
-            v-model="selectedRoleId"
-            :items="availableRoles"
-            item-title="name"
-            item-value="id"
-            label="Sélectionner un rôle"
-            variant="outlined"
-            density="compact"
-            style="min-width: 200px"
-          />
-          <VBtn
-            :disabled="!selectedRoleId || isLoading"
-            :loading="isLoading"
-            color="primary"
-            @click="assignSelectedRole"
-          >
-            <VIcon icon="ri-add-line" class="me-1" />
-            Assigner
-          </VBtn>
+        <!-- Message si l'utilisateur a déjà un rôle -->
+        <VAlert v-if="userRoles.length > 0" type="error" variant="tonal" class="mb-4">
+          <VIcon icon="ri-information-line" class="me-2" />
+          {{ translateInterface('user_has_role_warning') }}
+        </VAlert>
+
+        <!-- Statistiques des rôles -->
+        <div class="d-flex gap-4 text-caption">
+          <div class="d-flex align-center">
+            <VIcon icon="ri-shield-check-line" class="me-1 text-success" />
+            <span>{{ userRoles.length }} {{ translateInterface('roles_assigned') }}</span>
+          </div>
         </div>
-      </div>
+      </VCardText>
+    </VCard>
 
-      <!-- Permissions actuelles -->
-      <div class="mb-6">
-        <h4 class="mb-3">Permissions actuelles</h4>
-        <div v-if="userPermissionsList.length > 0" class="d-flex flex-wrap gap-2">
-          <VChip
-            v-for="permission in userPermissionsList"
-            :key="permission"
-            :color="getPermissionColor(permission)"
-            size="small"
-            closable
-            @click:close="removePermission(permission)"
-          >
+    <!-- Gestion des permissions -->
+    <VCard class="mb-6">
+      <VCardTitle class="d-flex align-center justify-space-between">
+        <div class="d-flex align-center">
+          <VIcon icon="ri-key-line" class="me-2" />
+          {{ translateInterface('permission_management') }}
+        </div>
+        <VBtn color="primary" size="small" @click="showPermissionDialog = true">
+          <VIcon icon="ri-add-line" class="me-1" />
+          {{ translateInterface('assign_permissions') }}
+        </VBtn>
+      </VCardTitle>
+
+      <VCardText>
+        <!-- Permissions actuelles -->
+        <div v-if="userPermissionsList.length > 0" class="d-flex flex-wrap gap-2 mb-4">
+          <VChip v-for="permission in userPermissionsList" :key="permission" :color="getPermissionColor(permission)"
+            size="small" closable @click:close="removePermission(permission)">
             <VIcon :icon="getPermissionIcon(permission)" class="me-1" />
-            {{ formatPermissionName(permission) }}
+            {{ translatePermission(permission) }}
           </VChip>
         </div>
-        <VAlert v-else type="warning" variant="tonal">
-          Aucune permission assignée
+        <VAlert v-else type="info" variant="tonal" class="mb-4">
+          <VIcon icon="ri-information-line" class="me-2" />
+          {{ translateInterface('no_permissions_assigned') }}
         </VAlert>
-      </div>
 
-      <!-- Assigner des permissions -->
-      <div class="mb-6">
-        <h4 class="mb-3">Assigner des permissions</h4>
-        <div class="d-flex gap-3 align-center">
-          <VSelect
-            v-model="selectedPermissions"
-            :items="availablePermissions"
-            item-title="label"
-            item-value="value"
-            label="Sélectionner des permissions"
-            variant="outlined"
-            density="compact"
-            multiple
-            chips
-            style="min-width: 300px"
-          />
-          <VBtn
-            :disabled="!selectedPermissions.length || isLoading"
-            :loading="isLoading"
-            color="primary"
-            @click="assignSelectedPermissions"
-          >
-            <VIcon icon="ri-add-line" class="me-1" />
-            Assigner
-          </VBtn>
+        <!-- Statistiques des permissions -->
+        <div class="d-flex gap-4 text-caption">
+          <div class="d-flex align-center">
+            <VIcon icon="ri-key-line" class="me-1 text-success" />
+            <span>{{ userPermissionsList.length }} {{ translateInterface('permissions_assigned') }}</span>
+          </div>
         </div>
-      </div>
+      </VCardText>
+    </VCard>
+    <!-- Dialog pour assigner un rôle -->
+    <VDialog v-model="showRoleDialog" max-width="480" transition="dialog-bottom-transition">
+      <VCard class="shadow-lg">
 
-      <!-- Actions en lot -->
-      <div class="d-flex gap-3">
-        <VBtn
-          color="success"
-          variant="outlined"
-          @click="assignAllPermissions"
-          :disabled="isLoading"
-        >
-          <VIcon icon="ri-checkbox-circle-line" class="me-1" />
-          Toutes les permissions
-        </VBtn>
-        <VBtn
-          color="warning"
-          variant="outlined"
-          @click="assignManagerPermissions"
-          :disabled="isLoading"
-        >
-          <VIcon icon="ri-user-settings-line" class="me-1" />
-          Permissions Manager
-        </VBtn>
-        <VBtn
-          color="error"
-          variant="outlined"
-          @click="clearAllPermissions"
-          :disabled="isLoading"
-        >
-          <VIcon icon="ri-delete-bin-line" class="me-1" />
-          Tout révoquer
-        </VBtn>
-      </div>
-    </VCardText>
-  </VCard>
+        <!-- Header -->
+        <VCardTitle class="flex items-center gap-2 text-lg font-semibold border-b pb-2">
+          <VIcon icon="ri-shield-user-line" size="20" class="text-primary" />
+          {{ translateInterface('assign_role') }}
+        </VCardTitle>
+
+        <!-- Content -->
+        <VCardText class="py-6">
+          <VSelect v-model="selectedRoleId" :items="availableRoles" item-title="translatedName" item-value="id"
+            :label="translateInterface('select_role')" variant="outlined" density="comfortable" clearable
+            prepend-inner-icon="ri-shield-star-line" />
+        </VCardText>
+
+        <!-- Actions -->
+        <VCardActions class="px-6 pb-4 pt-2">
+          <VSpacer />
+          <VBtn variant="flat" color="error" class="me-2" @click="showRoleDialog = false">
+            {{ translateInterface('cancel') }}
+          </VBtn>
+          <VBtn color="primary" variant="flat" class="rounded-lg shadow-sm" @click="assignSelectedRole"
+            :disabled="!selectedRoleId || isLoading" :loading="isLoading">
+            {{ translateInterface('assign') }}
+          </VBtn>
+        </VCardActions>
+
+      </VCard>
+    </VDialog>
+
+
+    <!-- Dialog pour assigner des permissions -->
+    <VDialog v-model="showPermissionDialog" max-width="1200" transition="dialog-bottom-transition">
+      <VCard class="shadow-lg">
+
+        <!-- Header -->
+        <VCardTitle class="flex items-center gap-2 text-lg font-semibold border-b pb-2">
+          <VIcon icon="ri-key-line" size="20" class="text-primary" />
+          {{ translateInterface('assign_permissions') }}
+        </VCardTitle>
+
+        <!-- Content -->
+        <VCardText class="py-6">
+          <!-- Filtres -->
+          <div class="mb-4">
+            <VRow>
+              <VCol cols="12" md="6">
+                <VSelect v-model="permissionFilter" :items="permissionCategories" item-title="label" item-value="value"
+                  :label="translateInterface('filter_by_category')" variant="outlined" density="compact" clearable
+                  prepend-inner-icon="ri-filter-line" />
+              </VCol>
+              <VCol cols="12" md="6">
+                <VTextField v-model="permissionSearch" :label="translateInterface('search_permission')" variant="outlined"
+                  density="compact" clearable prepend-inner-icon="ri-search-line" />
+              </VCol>
+              <!-- <VCol cols="12" md="2">
+                <VBtn v-if="permissionFilter || permissionSearch" color="secondary" variant="outlined" size="small"
+                  block @click="clearFilters" prepend-icon="ri-refresh-line">
+                  Réinitialiser
+                </VBtn>
+              </VCol> -->
+            </VRow>
+          </div>
+
+          <!-- Indicateur de filtrage -->
+          <div v-if="permissionFilter || permissionSearch" class="mb-3">
+            <VChip color="info" size="small">
+              <VIcon icon="ri-filter-line" class="me-1" />
+              {{ filteredPermissions.length }} {{ translateInterface('permissions_found') }}
+            </VChip>
+          </div>
+
+          <!-- Sélection des permissions -->
+          <VSelect v-model="selectedPermissions" :items="filteredPermissions" item-title="label" item-value="value"
+            :label="translateInterface('select_permissions')" variant="outlined" density="comfortable" multiple chips clearable
+            prepend-inner-icon="ri-lock-unlock-line">
+          </VSelect>
+        </VCardText>
+
+        <!-- Actions -->
+        <VCardActions class="px-6 pb-4 pt-2">
+          <VSpacer />
+          <VBtn variant="text" color="secondary" class="me-2" @click="showPermissionDialog = false">
+            {{ translateInterface('cancel') }}
+          </VBtn>
+          <VBtn color="primary" variant="flat" class="rounded-lg shadow-sm" @click="assignSelectedPermissions"
+            :disabled="!selectedPermissions.length || isLoading" :loading="isLoading">
+            {{ translateInterface('assign') }}
+          </VBtn>
+        </VCardActions>
+
+      </VCard>
+    </VDialog>
+
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -163,6 +209,15 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRolePermissionManagement } from '@/composables/useRolePermissionManagement'
 import { PermissionEnum, RoleEnum } from '@/types/permissions'
 import { confirmAction } from '@/utils/confirm'
+import {
+  translateRole,
+  translatePermission,
+  translateInterface,
+  getRoleDescription,
+  getPermissionCategory,
+  getPermissionIcon,
+  getPermissionColor
+} from '@/utils/translations'
 
 interface UserInfo {
   id: string
@@ -183,10 +238,16 @@ const {
   roles,
   permissions,
   userPermissions,
+  userRole,
+  myRole,
   isLoading,
+  canManageRoles,
+  canManagePermissions,
   loadRoles,
   loadPermissions,
   loadUserPermissions,
+  loadUserRole,
+  loadMyRole,
   assignPermissions,
   revokePermissions,
   assignRole,
@@ -195,34 +256,81 @@ const {
   getUserPermissions,
 } = useRolePermissionManagement()
 
+
 // Local state
 const selectedRoleId = ref<number | null>(null)
 const selectedPermissions = ref<string[]>([])
+const showRoleDialog = ref(false)
+const showPermissionDialog = ref(false)
+const permissionFilter = ref<string>('')
+const permissionSearch = ref<string>('')
 
 // Computed
-const availableRoles = computed(() => roles.value)
-const availablePermissions = computed(() => 
-  permissions.value.map(permission => ({
+const availableRoles = computed(() =>
+  Array.isArray(roles.value) ? roles.value.map(role => ({
+    ...role,
+    translatedName: translateRole(role.name),
+    description: getRoleDescription(role.name)
+  })) : []
+)
+
+const availablePermissions = computed(() =>
+  Array.isArray(permissions.value) ? permissions.value.map(permission => ({
     value: permission,
-    label: formatPermissionName(permission)
-  }))
+    label: translatePermission(permission),
+    category: getPermissionCategory(permission),
+    icon: getPermissionIcon(permission),
+    color: getPermissionColor(permission)
+  })) : []
 )
 
 const userRoles = computed(() => {
   if (!props.userInfo) return []
-  const roleIds = getUserRoles(props.userInfo.id)
-  return roles.value.filter(role => roleIds.includes(role.id))
+  // Utiliser directement userRole.value au lieu de getUserRoles
+  if (userRole.value) {
+    return [userRole.value]
+  }
+  return []
 })
 
 const userPermissionsList = computed(() => {
   if (!props.userInfo) return []
-  return getUserPermissions(props.userInfo.id)
+  // Utiliser directement userPermissions.value au lieu de getUserPermissions
+  return userPermissions.value.map(p => p.permission)
+})
+
+// Catégories de permissions pour le filtre
+const permissionCategories = computed(() => {
+  const categories = new Set(availablePermissions.value.map(p => p.category))
+  return Array.from(categories).map(category => ({
+    label: category,
+    value: category
+  }))
+})
+
+// Permissions filtrées
+const filteredPermissions = computed(() => {
+  let filtered = availablePermissions.value
+
+  // Filtre par catégorie
+  if (permissionFilter.value) {
+    filtered = filtered.filter(p => p.category === permissionFilter.value)
+  }
+
+  // Filtre par recherche textuelle
+  if (permissionSearch.value) {
+    const search = permissionSearch.value.toLowerCase()
+    filtered = filtered.filter(p =>
+      p.label.toLowerCase().includes(search) ||
+      p.value.toLowerCase().includes(search) ||
+      p.category.toLowerCase().includes(search)
+    )
+  }
+
+  return filtered
 })
 
 // Methods
-const formatPermissionName = (permission: string): string => {
-  return permission.replace(/can_/g, '').replace(/_/g, ' ').toUpperCase()
-}
 
 const getRoleColor = (roleName: string): string => {
   const colors: Record<string, string> = {
@@ -242,21 +350,7 @@ const getRoleIcon = (roleName: string): string => {
   return icons[roleName] || 'ri-user-line'
 }
 
-const getPermissionColor = (permission: string): string => {
-  if (permission.includes('view')) return 'info'
-  if (permission.includes('create')) return 'success'
-  if (permission.includes('update')) return 'warning'
-  if (permission.includes('delete')) return 'error'
-  return 'default'
-}
-
-const getPermissionIcon = (permission: string): string => {
-  if (permission.includes('view')) return 'ri-eye-line'
-  if (permission.includes('create')) return 'ri-add-line'
-  if (permission.includes('update')) return 'ri-edit-line'
-  if (permission.includes('delete')) return 'ri-delete-bin-line'
-  return 'ri-shield-line'
-}
+// Les fonctions getPermissionColor et getPermissionIcon sont maintenant importées depuis translations.ts
 
 const getUserTypeColor = (userType: string): string => {
   const colors: Record<string, string> = {
@@ -268,46 +362,136 @@ const getUserTypeColor = (userType: string): string => {
   return colors[userType] || 'default'
 }
 
+const getUserTypeIcon = (userType: string): string => {
+  const icons: Record<string, string> = {
+    admin: 'ri-admin-line',
+    staff: 'ri-user-settings-line',
+    teacher: 'ri-graduation-cap-line',
+    student: 'ri-user-line',
+  }
+  return icons[userType] || 'ri-user-line'
+}
+
+
+const getUserTypeLabel = (userType: string): string => {
+  const labels: Record<string, string> = {
+    admin: 'Administrateur',
+    staff: 'Personnel',
+    teacher: 'Formateur',
+    student: 'Étudiant',
+  }
+  return labels[userType] || userType
+}
+
 const assignSelectedRole = async () => {
-  if (!props.userInfo || !selectedRoleId.value) return
-  
+  if (!props.userInfo || !selectedRoleId.value) {
+    return
+  }
+
+  // Trouver le nom du rôle sélectionné
+  const selectedRole = availableRoles.value.find(role => role.id === selectedRoleId.value)
+  const roleName = selectedRole ? selectedRole.translatedName : 'ce rôle'
+
+  // Fermer le modal temporairement pour afficher la confirmation
+  showRoleDialog.value = false
+
+  // Confirmation avant assignation
+  const confirmed = await confirmAction({
+    title: translateInterface('confirm_title'),
+    html: `${translateInterface('confirm_assign_role')} <b>${roleName}</b> à cet utilisateur ? ${translateInterface('user_will_have_role_permissions')}`,
+    cancelButtonText: `<span style="color:white">${translateInterface('cancel')}</span>`,
+    confirmButtonText: `<span style="color:white">${translateInterface('assign')}</span>`,
+    confirmButtonColor: "#b92858ff",
+    cancelButtonColor: "#FF4C51",
+    customClass: {
+      confirmButton: 'swal2-confirm-white',
+      cancelButton: 'swal2-cancel-white',
+    },
+  })
+
+  if (!confirmed) {
+    // Si l'utilisateur annule, rouvrir le modal
+    showRoleDialog.value = true
+    return
+  }
+
   try {
     await assignRole({
       user_id: props.userInfo.id,
       role_id: selectedRoleId.value
     })
     selectedRoleId.value = null
+    // Le modal reste fermé car l'opération a réussi
   } catch (error) {
-    console.error('Erreur lors de l\'assignation du rôle:', error)
+    console.error('❌ Erreur lors de l\'assignation du rôle:', error)
+    // En cas d'erreur, rouvrir le modal
+    showRoleDialog.value = true
   }
 }
 
 const assignSelectedPermissions = async () => {
-  if (!props.userInfo || !selectedPermissions.value.length) return
-  
+  if (!props.userInfo || !selectedPermissions.value.length) {
+    return
+  }
+
+  // Fermer le modal temporairement pour afficher la confirmation
+  showPermissionDialog.value = false
+
+  // Confirmation avant assignation
+  const confirmed = await confirmAction({
+    title: translateInterface('confirm_title'),
+    html: `${translateInterface('confirm_assign_permissions')} <b>${selectedPermissions.value.length}</b> permission(s) à cet utilisateur ? ${translateInterface('user_will_have_functionalities')}`,
+    cancelButtonText: `<span style="color:white">${translateInterface('cancel')}</span>`,
+    confirmButtonText: `<span style="color:white">${translateInterface('assign')}</span>`,
+    confirmButtonColor: "#b92858ff",
+    cancelButtonColor: "#FF4C51",
+    customClass: {
+      confirmButton: 'swal2-confirm-white',
+      cancelButton: 'swal2-cancel-white',
+    },
+  })
+
+  if (!confirmed) {
+    // Si l'utilisateur annule, rouvrir le modal
+    showPermissionDialog.value = true
+    return
+  }
+
   try {
     await assignPermissions({
       user_id: props.userInfo.id,
       permissions: selectedPermissions.value
     })
     selectedPermissions.value = []
+    // Le modal reste fermé car l'opération a réussi
+    // Réinitialiser les filtres
+    permissionFilter.value = ''
+    permissionSearch.value = ''
   } catch (error) {
-    console.error('Erreur lors de l\'assignation des permissions:', error)
+    console.error('❌ Erreur lors de l\'assignation des permissions:', error)
+    // En cas d'erreur, rouvrir le modal
+    showPermissionDialog.value = true
   }
 }
 
 const removeRole = async (roleId: number) => {
   if (!props.userInfo) return
-  
+
   const confirmed = await confirmAction({
-    title: 'Révoquer le rôle',
-    text: 'Êtes-vous sûr de vouloir révoquer ce rôle ?',
-    confirmButtonText: 'Révoquer',
-    cancelButtonText: 'Annuler'
+    title: translateInterface('confirm_title'),
+    text: translateInterface('confirm_revoke_role'),
+    cancelButtonText: `<span style="color:white">${translateInterface('cancel')}</span>`,
+    confirmButtonText: `<span style="color:white">${translateInterface('revoke')}</span>`,
+    confirmButtonColor: "#b92858ff",
+    cancelButtonColor: "#FF4C51",
+    customClass: {
+      confirmButton: 'swal2-confirm-white',
+      cancelButton: 'swal2-cancel-white',
+    },
   })
-  
+
   if (!confirmed) return
-  
+
   try {
     await revokeRole({
       user_id: props.userInfo.id,
@@ -320,16 +504,22 @@ const removeRole = async (roleId: number) => {
 
 const removePermission = async (permission: string) => {
   if (!props.userInfo) return
-  
+
   const confirmed = await confirmAction({
-    title: 'Révoquer la permission',
-    text: 'Êtes-vous sûr de vouloir révoquer cette permission ?',
-    confirmButtonText: 'Révoquer',
-    cancelButtonText: 'Annuler'
+    title: translateInterface('confirm_title'),
+    html: `${translateInterface('confirm_revoke_permission')} <b>${translatePermission(permission)}</b> ? ${translateInterface('user_will_lose_capacity')}`,
+    cancelButtonText: `<span style="color:white">${translateInterface('cancel')}</span>`,
+    confirmButtonText: `<span style="color:white">${translateInterface('revoke')}</span>`,
+    confirmButtonColor: "#b92858ff",
+    cancelButtonColor: "#FF4C51",
+    customClass: {
+      confirmButton: 'swal2-confirm-white',
+      cancelButton: 'swal2-cancel-white',
+    },
   })
-  
+
   if (!confirmed) return
-  
+
   try {
     await revokePermissions({
       user_id: props.userInfo.id,
@@ -342,20 +532,26 @@ const removePermission = async (permission: string) => {
 
 const assignAllPermissions = async () => {
   if (!props.userInfo) return
-  
+
   const confirmed = await confirmAction({
-    title: 'Assigner toutes les permissions',
-    text: 'Êtes-vous sûr de vouloir assigner toutes les permissions disponibles ?',
-    confirmButtonText: 'Assigner',
-    cancelButtonText: 'Annuler'
+    title: translateInterface('confirm_title'),
+    text: translateInterface('confirm_assign_all_permissions'),
+    cancelButtonText: `<span style="color:white">${translateInterface('cancel')}</span>`,
+    confirmButtonText: `<span style="color:white">${translateInterface('assign')}</span>`,
+    confirmButtonColor: "#b92858ff",
+    cancelButtonColor: "#FF4C51",
+    customClass: {
+      confirmButton: 'swal2-confirm-white',
+      cancelButton: 'swal2-cancel-white',
+    },
   })
-  
+
   if (!confirmed) return
-  
+
   try {
     await assignPermissions({
       user_id: props.userInfo.id,
-      permissions: permissions.value
+      permissions: Array.isArray(permissions.value) ? permissions.value : []
     })
   } catch (error) {
     console.error('Erreur lors de l\'assignation de toutes les permissions:', error)
@@ -364,7 +560,7 @@ const assignAllPermissions = async () => {
 
 const assignManagerPermissions = async () => {
   if (!props.userInfo) return
-  
+
   const managerPermissions = [
     PermissionEnum.CAN_VIEW_USER,
     PermissionEnum.CAN_CREATE_USER,
@@ -391,46 +587,97 @@ const assignManagerPermissions = async () => {
     PermissionEnum.CAN_CHANGE_RECLAMATION_STATUS,
     PermissionEnum.CAN_VIEW_PAYMENT,
   ]
-  
+
   const confirmed = await confirmAction({
-    title: 'Assigner les permissions Manager',
-    text: 'Êtes-vous sûr de vouloir assigner les permissions de Manager ?',
-    confirmButtonText: 'Assigner',
-    cancelButtonText: 'Annuler'
+    title: translateInterface('confirm_title'),
+    text: translateInterface('confirm_assign_manager_permissions'),
+    cancelButtonText: `<span style="color:white">${translateInterface('cancel')}</span>`,
+    confirmButtonText: `<span style="color:white">${translateInterface('assign')}</span>`,
+    confirmButtonColor: "#b92858ff",
+    cancelButtonColor: "#FF4C51",
+    customClass: {
+      confirmButton: 'swal2-confirm-white',
+      cancelButton: 'swal2-cancel-white',
+    },
   })
-  
+
   if (!confirmed) return
-  
+
   try {
     await assignPermissions({
       user_id: props.userInfo.id,
       permissions: managerPermissions
     })
   } catch (error) {
-    console.error('Erreur lors de l\'assignation des permissions Manager:', error)
+    console.error('Erreur lors de l\'assignation des permissions Gestionnaire:', error)
+  }
+}
+
+const assignViewerPermissions = async () => {
+  if (!props.userInfo) return
+
+  const viewerPermissions = [
+    PermissionEnum.CAN_VIEW_USER,
+    PermissionEnum.CAN_VIEW_ROLE,
+    PermissionEnum.CAN_VIEW_BLOG,
+    PermissionEnum.CAN_VIEW_JOB_OFFER,
+    PermissionEnum.CAN_VIEW_JOB_APPLICATION,
+    PermissionEnum.CAN_VIEW_TRAINING,
+    PermissionEnum.CAN_VIEW_STUDENT_APPLICATION,
+    PermissionEnum.CAN_VIEW_RECLAMATION,
+    PermissionEnum.CAN_VIEW_PAYMENT,
+  ]
+
+  const confirmed = await confirmAction({
+    title: translateInterface('confirm_title'),
+    text: translateInterface('confirm_assign_viewer_permissions'),
+    cancelButtonText: `<span style="color:white">${translateInterface('cancel')}</span>`,
+    confirmButtonText: `<span style="color:white">${translateInterface('assign')}</span>`,
+    confirmButtonColor: "#b92858ff",
+    cancelButtonColor: "#FF4C51",
+    customClass: {
+      confirmButton: 'swal2-confirm-white',
+      cancelButton: 'swal2-cancel-white',
+    },
+  })
+
+  if (!confirmed) return
+
+  try {
+    await assignPermissions({
+      user_id: props.userInfo.id,
+      permissions: viewerPermissions
+    })
+  } catch (error) {
+    console.error('Erreur lors de l\'assignation des permissions Consultation:', error)
   }
 }
 
 const clearAllPermissions = async () => {
   if (!props.userInfo) return
-  
+
   const confirmed = await confirmAction({
-    title: 'Révoquer toutes les permissions',
-    text: 'Êtes-vous sûr de vouloir révoquer toutes les permissions et rôles ? Cette action est irréversible.',
-    confirmButtonText: 'Révoquer tout',
-    cancelButtonText: 'Annuler',
-    type: 'warning'
+    title: translateInterface('confirm_title'),
+    text: translateInterface('confirm_revoke_all'),
+    cancelButtonText: `<span style="color:white">${translateInterface('cancel')}</span>`,
+    confirmButtonText: `<span style="color:white">${translateInterface('revoke_all_permissions')}</span>`,
+    confirmButtonColor: "#b92858ff",
+    cancelButtonColor: "#FF4C51",
+    customClass: {
+      confirmButton: 'swal2-confirm-white',
+      cancelButton: 'swal2-cancel-white',
+    },
   })
-  
+
   if (!confirmed) return
-  
+
   try {
     // Révoquer toutes les permissions
     await revokePermissions({
       user_id: props.userInfo.id,
       permissions: userPermissionsList.value
     })
-    
+
     // Révoquer tous les rôles
     for (const role of userRoles.value) {
       await revokeRole({
@@ -443,18 +690,104 @@ const clearAllPermissions = async () => {
   }
 }
 
+// Fonction de test pour diagnostiquer le problème
+const testAssignRole = async () => {
+  if (!props.userInfo) {
+    return
+  }
+
+  // Test avec le premier rôle disponible
+  if (Array.isArray(roles.value) && roles.value.length > 0) {
+    const firstRole = roles.value[0]
+
+    try {
+      await assignRole({
+        user_id: props.userInfo.id,
+        role_id: firstRole.id
+      })
+    } catch (error) {
+      console.error('❌ Test échoué:', error)
+    }
+  }
+}
+
+// Fonction de test pour les traductions
+const testTranslations = () => {
+  // Test des traductions de rôles
+  if (Array.isArray(roles.value)) {
+    roles.value.forEach(role => {
+      translateRole(role.name)
+    })
+  }
+
+  // Test des traductions de permissions
+  if (Array.isArray(permissions.value)) {
+    permissions.value.forEach(permission => {
+      translatePermission(permission)
+    })
+  }
+
+  // Test des permissions utilisateur
+  userPermissionsList.value.forEach(permission => {
+    translatePermission(permission)
+  })
+
+  // Test des rôles utilisateur
+  userRoles.value.forEach(role => {
+    translateRole(role.name)
+  })
+}
+
+// Fonction pour réinitialiser les filtres
+const clearFilters = () => {
+  permissionFilter.value = ''
+  permissionSearch.value = ''
+}
+
 // Watchers
 watch(() => props.userInfo, (newUserInfo) => {
   if (newUserInfo) {
     loadUserPermissions(newUserInfo.id)
+    loadUserRole(newUserInfo.id)
   }
 }, { immediate: true })
+
+// Réinitialiser les filtres quand le dialog se ferme
+watch(showPermissionDialog, (isOpen) => {
+  if (!isOpen) {
+    permissionFilter.value = ''
+    permissionSearch.value = ''
+  }
+})
 
 // Lifecycle
 onMounted(async () => {
   await Promise.all([
     loadRoles(),
-    loadPermissions()
+    loadPermissions(),
+    loadMyRole()
   ])
 })
 </script>
+
+<style scoped>
+.role-permission-manager {
+  max-width: 100%;
+}
+
+.v-chip {
+  margin: 2px;
+}
+
+.v-card {
+  border-radius: 12px;
+}
+
+.v-card-title {
+  padding: 16px 20px;
+}
+
+.v-card-text {
+  padding: 16px 20px;
+}
+</style>

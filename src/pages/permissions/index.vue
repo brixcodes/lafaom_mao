@@ -38,13 +38,13 @@ import PermissionList from '@/components/Permission/PermissionList.vue'
 import UserPermissionManager from '@/components/Permission/UserPermissionManager.vue'
 import UserRoleManager from '@/components/Permission/UserRoleManager.vue'
 import PermissionDebugger from '@/components/Permission/PermissionDebugger.vue'
-import { userService } from '@/services/api/user'
+import { usersService } from '@/services/api/users'
 
 const selectedUserId = ref<string>('')
 const userOptions = ref<{ label: string; value: string }[]>([])
 
 const fetchUsers = async () => {
-  const res = await userService.getUsers()
+  const res = await usersService.getUsers()
   userOptions.value = (res.data || []).map(u => ({ label: `Utilisateur : --> ${u.last_name} ${u.first_name} `, value: u.id }))
 }
 onMounted(fetchUsers)

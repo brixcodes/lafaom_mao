@@ -184,7 +184,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { organizationCenterService } from '@/services/api/organizationCenters'
+import { organizationCentersService } from '@/services/api/organization-centers'
 import type { OrganizationCenter, OrganizationCenterFilter } from '@/types/organizationCenters'
 import { OrganizationStatusEnum, OrganizationTypeEnum } from '@/types/organizationCenters'
 import { usePermissions } from '@/composables/usePermissions'
@@ -518,7 +518,7 @@ const sortOptions = [
 const loadAllCenters = async () => {
   try {
     isInitialLoading.value = true
-    const response = await organizationCenterService.listOrganizationCenters({ page: 1, page_size: 1000, order_by: 'created_at', asc: 'desc' })
+    const response = await organizationCentersService.listOrganizationCenters({ page: 1, page_size: 1000, order_by: 'created_at', asc: 'desc' })
     allCenters.value = [...response.data]
   } catch (err) {
     console.error('Erreur lors du chargement des centres:', err)
@@ -550,7 +550,7 @@ const confirmDelete = async (center: OrganizationCenter) => {
 
   try {
     isDeleting.value = true
-    await organizationCenterService.deleteOrganizationCenter(center.id)
+    await organizationCentersService.deleteOrganizationCenter(center.id)
     allCenters.value = allCenters.value.filter(c => c.id !== center.id)
     showToast({ message: 'Centre supprimé avec succès', type: 'success' })
   } catch (err) {
@@ -579,7 +579,7 @@ const toggleStatus = async (center: OrganizationCenter) => {
   if (!confirmed) return
 
   try {
-    await organizationCenterService.updateOrganizationCenterStatus(center.id, { status: newStatus })
+    await organizationCentersService.updateOrganizationCenterStatus(center.id, { status: newStatus })
     center.status = newStatus
     showToast({ message: 'Statut mis à jour avec succès', type: 'success' })
   } catch (err) {

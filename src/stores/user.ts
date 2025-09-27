@@ -1,7 +1,7 @@
 // Store Pinia pour les utilisateurs
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { userService } from '@/services/api/user'
+import { usersService } from '@/services/api/users'
 import type {
   CreateUserInput,
   UpdateUserInput,
@@ -38,7 +38,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       error.value = null
-      const response: UsersPageOutSuccess = await userService.getUsers(filter)
+      const response: UsersPageOutSuccess = await usersService.getUsers(filter)
       users.value = response.data
       pagination.value = {
         page: response.page,
@@ -58,7 +58,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       error.value = null
-      const response: UserOutSuccess = await userService.createUser(userData)
+      const response: UserOutSuccess = await usersService.createUser(userData)
       users.value.unshift(response.data)
       return response
     } catch (err: any) {
@@ -73,7 +73,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       error.value = null
-      const response: UserOutSuccess = await userService.updateUser(userId, userData)
+      const response: UserOutSuccess = await usersService.updateUser(userId, userData)
       const index = users.value.findIndex(user => user.id === userId)
       if (index !== -1) {
         users.value[index] = response.data
@@ -91,7 +91,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       error.value = null
-      await userService.deleteUser(userId)
+      await usersService.deleteUser(userId)
       users.value = users.value.filter(user => user.id !== userId)
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur lors de la suppression de l\'utilisateur'
@@ -105,7 +105,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       error.value = null
-      const response: PermissionListOutSuccess = await userService.assignPermissions(data)
+      const response: PermissionListOutSuccess = await usersService.assignPermissions(data)
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur lors de l\'attribution des permissions'
@@ -119,7 +119,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       error.value = null
-      const response: PermissionListOutSuccess = await userService.revokePermissions(data)
+      const response: PermissionListOutSuccess = await usersService.revokePermissions(data)
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur lors de la révocation des permissions'
@@ -133,7 +133,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       error.value = null
-      const response: PermissionListOutSuccess = await userService.assignRole(data)
+      const response: PermissionListOutSuccess = await usersService.assignRole(data)
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur lors de l\'attribution du rôle'
@@ -147,7 +147,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       error.value = null
-      const response: PermissionListOutSuccess = await userService.revokeRole(data)
+      const response: PermissionListOutSuccess = await usersService.revokeRole(data)
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur lors de la révocation du rôle'
@@ -161,7 +161,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       error.value = null
-      const response: PermissionListOutSuccess = await userService.getUserPermissions()
+      const response: PermissionListOutSuccess = await usersService.getUserPermissions()
       permissions.value = response.data
       return response
     } catch (err: any) {
@@ -176,7 +176,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       error.value = null
-      const response: UserOutSuccess = await userService.getUserById(userId)
+      const response: UserOutSuccess = await usersService.getUserById(userId)
       currentUser.value = response.data
       return response
     } catch (err: any) {
@@ -191,7 +191,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       error.value = null
-      const response: BaseOutSuccess = await userService.setupUsers()
+      const response: BaseOutSuccess = await usersService.setupUsers()
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur lors de l\'initialisation des utilisateurs'

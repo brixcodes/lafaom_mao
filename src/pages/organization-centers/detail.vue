@@ -255,7 +255,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { organizationCenterService } from '@/services/api/organizationCenters'
+import { organizationCentersService } from '@/services/api/organization-centers'
 import type { OrganizationCenter } from '@/types/organizationCenters'
 import { OrganizationStatusEnum, OrganizationTypeEnum } from '@/types/organizationCenters'
 import { usePermissions } from '@/composables/usePermissions'
@@ -340,7 +340,7 @@ const toggleStatus = async () => {
   if (!confirmed) return
 
   try {
-    await organizationCenterService.updateOrganizationCenterStatus(center.value.id, { status: newStatus })
+    await organizationCentersService.updateOrganizationCenterStatus(center.value.id, { status: newStatus })
     center.value.status = newStatus
     showToast({ message: 'Statut mis à jour avec succès', type: 'success' })
   } catch (error) {
@@ -368,7 +368,7 @@ const confirmDelete = async () => {
 
   isDeleting.value = true
   try {
-    await organizationCenterService.deleteOrganizationCenter(center.value.id)
+    await organizationCentersService.deleteOrganizationCenter(center.value.id)
     showToast({ message: 'Centre supprimé avec succès', type: 'success' })
     router.push({ name: 'organization-centers-index' })
   } catch (error) {
@@ -382,7 +382,7 @@ const loadCenter = async () => {
   try {
     isLoading.value = true
     const centerId = route.params.id as string
-    const response = await organizationCenterService.getOrganizationCenter(parseInt(centerId))
+    const response = await organizationCentersService.getOrganizationCenter(parseInt(centerId))
     center.value = response.data
   } catch (err) {
     console.error('Erreur lors du chargement du centre:', err)

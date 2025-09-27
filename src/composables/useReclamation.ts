@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { reclamationService } from '@/services/api/reclamation'
+import { reclamationsService } from '@/services/api/reclamations'
 import { showToast } from '@/components/toast/toastManager'
 import type {
   Reclamation,
@@ -129,7 +129,7 @@ const loadReclamations = async (reset = false) => {
     }
 
     console.log('🔍 Chargement des réclamations avec params:', params)
-    const response = await reclamationService.getReclamations(params)
+    const response = await reclamationsService.getReclamations(params)
     console.log('📋 Réponse API réclamations:', response)
     
     reclamations.value = reset ? response.data : [...reclamations.value, ...response.data]
@@ -161,7 +161,7 @@ const loadMyReclamations = async (reset = false) => {
     }
 
     console.log('🔍 Chargement de mes réclamations avec params:', params)
-    const response = await reclamationService.getMyReclamations(params)
+    const response = await reclamationsService.getMyReclamations(params)
     console.log('📋 Réponse API mes réclamations:', response)
     
     reclamations.value = reset ? response.data : [...reclamations.value, ...response.data]
@@ -178,7 +178,7 @@ const loadMyReclamations = async (reset = false) => {
 
 const loadReclamationTypes = async () => {
   try {
-    const response = await reclamationService.getActiveReclamationTypes()
+    const response = await reclamationsService.getActiveReclamationTypes()
     reclamationTypes.value = response.data
   } catch (err: any) {
     console.error('Erreur lors du chargement des types de réclamation:', err)
@@ -189,7 +189,7 @@ const loadReclamationTypes = async () => {
 const createReclamation = async (data: ReclamationCreateInput) => {
   try {
     isLoading.value = true
-    const response = await reclamationService.createMyReclamation(data)
+    const response = await reclamationsService.createMyReclamation(data)
     
     return response.data
   } catch (err: any) {
@@ -203,7 +203,7 @@ const createReclamation = async (data: ReclamationCreateInput) => {
 const getReclamation = async (id: number) => {
   try {
     isLoading.value = true
-    const response = await reclamationService.getReclamation(id)
+    const response = await reclamationsService.getReclamation(id)
     currentReclamation.value = response.data
     return response.data
   } catch (err: any) {
@@ -220,7 +220,7 @@ const updateReclamationStatus = async (id: number, status: ReclamationStatusEnum
     console.log('🔄 Mise à jour du statut de la réclamation:', { id, status })
     isLoading.value = true
     
-    const response = await reclamationService.updateReclamationStatus(id, { status })
+    const response = await reclamationsService.updateReclamationStatus(id, { status })
     console.log('✅ Réponse de mise à jour du statut:', response)
     
     showToast({
@@ -252,7 +252,7 @@ const updateReclamationStatus = async (id: number, status: ReclamationStatusEnum
   const updateReclamation = async (id: number, data: ReclamationCreateInput) => {
     try {
       isLoading.value = true
-      const response = await reclamationService.updateReclamation(id, data)
+      const response = await reclamationsService.updateReclamation(id, data)
       
       showToast({
         message: 'Réclamation mise à jour avec succès',
@@ -276,7 +276,7 @@ const updateReclamationStatus = async (id: number, status: ReclamationStatusEnum
   const deleteReclamation = async (id: number) => {
     try {
       isLoading.value = true
-      const response = await reclamationService.deleteReclamation(id)
+      const response = await reclamationsService.deleteReclamation(id)
       
       showToast({
         message: 'Réclamation supprimée avec succès',
@@ -339,7 +339,7 @@ const getPriorityConfig = (priority: ReclamationPriorityEnum) => {
 // Reclamation types management
 const createReclamationType = async (data: ReclamationTypeCreateInput) => {
   try {
-    const response = await reclamationService.createReclamationType(data)
+    const response = await reclamationsService.createReclamationType(data)
     
     showToast({
       message: 'Type de réclamation créé avec succès',
@@ -360,7 +360,7 @@ const createReclamationType = async (data: ReclamationTypeCreateInput) => {
 
 const updateReclamationType = async (id: number, data: ReclamationTypeUpdateInput) => {
   try {
-    const response = await reclamationService.updateReclamationType(id, data)
+    const response = await reclamationsService.updateReclamationType(id, data)
     
     showToast({
       message: 'Type de réclamation mis à jour avec succès',
@@ -382,7 +382,7 @@ const updateReclamationType = async (id: number, data: ReclamationTypeUpdateInpu
 const getReclamationType = async (id: number) => {
   try {
     isLoading.value = true
-    const response = await reclamationService.getReclamationType(id)
+    const response = await reclamationsService.getReclamationType(id)
     return response.data
   } catch (err: any) {
     console.error('Erreur lors du chargement du type de réclamation:', err)
@@ -395,7 +395,7 @@ const getReclamationType = async (id: number) => {
 
 const deleteReclamationType = async (id: number) => {
   try {
-    await reclamationService.deleteReclamationType(id)
+    await reclamationsService.deleteReclamationType(id)
     
     // Recharger les types
     await loadReclamationTypes()

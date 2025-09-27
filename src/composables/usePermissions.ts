@@ -1,6 +1,6 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { permissionService } from '@/services/api/permissions'
+import { rolesPermissionsService } from '@/services/api/roles-permissions'
 // import { usePermissionEvents } from '@/utils/permissionEvents'
 import { 
   PermissionEnum, 
@@ -33,15 +33,12 @@ export const usePermissions = () => {
       error.value = null
       
       // Essayer de récupérer les permissions depuis l'API
-      const response = await permissionService.getMyPermissions()
+      const response = await rolesPermissionsService.getMyPermissions()
       
       if (response.success && response.data && response.data.length > 0) {
         // Utiliser les permissions de l'API
         userPermissions.value = response.data.map(p => p.permission)
-        console.log('✅ Permissions chargées depuis l\'API:', userPermissions.value)
-        
         // Permissions mises à jour avec succès
-        console.log('✅ Permissions mises à jour:', userPermissions.value.length, 'permissions')
       } else {
         // Fallback sur les permissions basées sur le rôle
         userPermissions.value = getFallbackPermissions()

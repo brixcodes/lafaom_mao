@@ -174,7 +174,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { trainingService } from '@/services/api/training'
-import { organizationCenterService } from '@/services/api/organizationCenters'
+import { organizationCentersService } from '@/services/api/organization-centers'
 import type { TrainingSessionCreateInput } from '@/types/training'
 import { TrainingSessionStatusEnum } from '@/types/training'
 import { showToast } from '@/components/toast/toastManager'
@@ -356,7 +356,7 @@ const onTrainingSearch = (search: string) => {
 const fetchCenters = async (search = '') => {
   try {
     isLoadingCenters.value = true
-    const response = await organizationCenterService.getActiveOrganizationCenters({
+    const response = await organizationCentersService.getActiveOrganizationCenters({
       page: 1,
       page_size: 100,
       search: search || undefined

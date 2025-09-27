@@ -9,12 +9,12 @@
         </p>
       </div>
       <div class="d-flex gap-3">
-        <VBtn color="primary" @click="refreshData" :loading="isLoading">
+        <VBtn @click="refreshData" :loading="isLoading">
           <VIcon icon="ri-refresh-line" class="me-2" />
           Actualiser
         </VBtn>
 
-        <VBtn color="primary" to="/users/create">
+        <VBtn to="/users/create">
           <VIcon icon="ri-add-line" class="me-2" />
           Nouvel utilisateur
         </VBtn>
@@ -44,18 +44,18 @@
     <!-- Tableau des utilisateurs -->
     <VCard>
       <VCardTitle class="d-flex align-center justify-space-between">
-        <span>Liste des utilisateurs ({{ totalUsers }})</span>
+        <span>Liste des utilisateurs ({{ filteredUsers.length }})</span>
         <VProgressCircular v-if="isLoading" size="20" indeterminate />
       </VCardTitle>
 
-      <VDataTable :headers="headers" :items="users" :loading="isLoading" :items-per-page="pageSize" :page="currentPage"
+      <VDataTable :headers="headers" :items="filteredUsers" :loading="isLoading" :items-per-page="pageSize" :page="currentPage"
         @update:page="changePage" @update:items-per-page="changePageSize" class="elevation-1">
         <!-- Avatar et nom -->
         <template #item.user="{ item }">
           <div class="d-flex align-center">
             <VAvatar size="32" class="me-3">
               <VImg v-if="item.picture" :src="item.picture" />
-              <VIcon v-else icon="ri-user-line" />
+              <VIcon v-else size="22" icon="ri-account-circle-line" />
             </VAvatar>
             <div>
               <div class="font-weight-medium">{{ item.first_name }} {{ item.last_name }}</div>
@@ -66,16 +66,16 @@
 
         <!-- Type d'utilisateur -->
         <template #item.user_type="{ item }">
-          <VChip :color="getUserTypeColor(item.user_type)" variant="tonal">
-            {{ item.user_type }}
-          </VChip>
+          <span class="font-weight-medium">
+            {{ getUserTypeLabel(item.user_type) }}
+          </span>
         </template>
 
         <!-- Statut -->
         <template #item.status="{ item }">
-          <VChip :color="getStatusColor(item.status)" variant="tonal">
-            {{ item.status }}
-          </VChip>
+          <span :class="`font-weight-medium`">
+            {{ getStatusLabel(item.status) }}
+          </span>
         </template>
 
         <!-- Date de création -->
@@ -86,10 +86,13 @@
         <template #item.actions="{ item }">
           <div class="d-flex gap-2">
             <VBtn icon="ri-eye-line" size="small" variant="text" :to="`/users/${item.id}`"
-              title="Modifier l'utilisateur" />
+              title="Voir les détails" />
 
             <VBtn icon="ri-edit-line" size="small" variant="text" :to="`/users/${item.id}/edit`"
               title="Modifier l'utilisateur" />
+
+            <VBtn icon="ri-shield-user-line" size="small" variant="text" color="primary" @click="goToRoleManagement(item)"
+              title="Gérer les rôles et permissions" />
 
             <VBtn icon="ri-delete-bin-line" size="small" variant="text" color="error" @click="deleteUser(item)"
               title="Supprimer l'utilisateur" />
@@ -135,7 +138,6 @@ const {
   totalPages,
   loadUsers,
   deleteUser: deleteUserAPI,
-  searchUsers,
   changePage,
   changePageSize
 } = useUsers()
@@ -146,6 +148,39 @@ const { cacheStats } = useRolePermissionOptimization()
 const searchQuery = ref('')
 const selectedUserType = ref('')
 const selectedStatus = ref('')
+
+// Filtrage côté client comme les catégories
+const filteredUsers = computed(() => {
+  if (!searchQuery.value && !selectedUserType.value && !selectedStatus.value) {
+    return users.value
+  }
+
+  return users.value.filter(user => {
+    // Recherche textuelle
+    if (searchQuery.value) {
+      const query = searchQuery.value.toLowerCase()
+      const matchesSearch = 
+        user.first_name?.toLowerCase().includes(query) ||
+        user.last_name?.toLowerCase().includes(query) ||
+        user.email?.toLowerCase().includes(query) ||
+        (user as any).mobile_number?.toLowerCase().includes(query)
+      
+      if (!matchesSearch) return false
+    }
+
+    // Filtre par type d'utilisateur
+    if (selectedUserType.value && user.user_type !== selectedUserType.value) {
+      return false
+    }
+
+    // Filtre par statut
+    if (selectedStatus.value && user.status !== selectedStatus.value) {
+      return false
+    }
+
+    return true
+  })
+})
 
 // Computed
 const isDevelopment = computed(() => import.meta.env.DEV)
@@ -160,18 +195,18 @@ const headers = [
 
 const userTypeOptions = [
   { title: 'Tous', value: '' },
-  { title: 'Admin', value: 'admin' },
-  { title: 'Staff', value: 'staff' },
-  { title: 'Teacher', value: 'teacher' },
-  { title: 'Student', value: 'student' }
+  { title: 'administrateur', value: 'admin' },
+  { title: 'personnel', value: 'staff' },
+  { title: 'formateur', value: 'teacher' },
+  { title: 'étudiant', value: 'student' }
 ]
 
 const statusOptions = [
-  { title: 'Tous', value: '' },
-  { title: 'Actif', value: 'active' },
-  { title: 'Inactif', value: 'inactive' },
-  { title: 'Bloqué', value: 'blocked' },
-  { title: 'Supprimé', value: 'deleted' }
+  { title: 'tous', value: '' },
+  { title: 'actif', value: 'active' },
+  { title: 'inactif', value: 'inactive' },
+  { title: 'bloqué', value: 'blocked' },
+  { title: 'supprimé', value: 'deleted' }
 ]
 
 const monitoringStats = computed(() => ({
@@ -205,24 +240,42 @@ const getStatusColor = (status: string): string => {
   return colors[status] || 'default'
 }
 
+const getUserTypeLabel = (userType: string): string => {
+  const labels: Record<string, string> = {
+    admin: 'administrateur',
+    staff: 'personnel',
+    teacher: 'formateur',
+    student: 'étudiant'
+  }
+  return labels[userType] || userType
+}
+
+const getStatusLabel = (status: string): string => {
+  const labels: Record<string, string> = {
+    active: 'actif',
+    inactive: 'inactif',
+    blocked: 'bloqué',
+    deleted: 'supprimé'
+  }
+  return labels[status] || status
+}
+
 const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString('fr-FR')
 }
 
-const handleSearch = async () => {
-  await searchUsers(searchQuery.value)
+const handleSearch = () => {
+  // Le filtrage se fait automatiquement via la computed property
 }
 
-const handleFilter = async () => {
-  // Implémenter le filtrage côté serveur si nécessaire
-  await loadUsers(currentPage.value, pageSize.value, searchQuery.value)
+const handleFilter = () => {
+  // Le filtrage se fait automatiquement via la computed property
 }
 
 const clearFilters = () => {
   searchQuery.value = ''
   selectedUserType.value = ''
   selectedStatus.value = ''
-  loadUsers(1, pageSize.value)
 }
 
 const selectUserForRoleManagement = (user: any) => {
@@ -233,7 +286,7 @@ const selectUserForRoleManagement = (user: any) => {
 const deleteUser = async (user: any) => {
   const confirmed = await confirmAction({
     title: 'Êtes-vous sûr ?',
-    text: `Êtes-vous sûr de vouloir supprimer cet utilisateur ?`,
+    html: `Souhaitez-vous réellement supprimer l'utilisateur <b>${user.first_name} ${user.last_name}</b> ?`,
     confirmButtonText: '<span style="color:white">Supprimer</span>',
     cancelButtonText: '<span style="color:white">Annuler</span>',
     confirmButtonColor: '#3085d6',
@@ -248,24 +301,27 @@ const deleteUser = async (user: any) => {
 
   try {
     await deleteUserAPI(user.id)
-    showToast({
-      message: 'Utilisateur supprimé avec succès',
-      type: 'success'
-    })
   } catch (error) {
-    console.error('Erreur lors de la suppression:', error)
+    // L'erreur est déjà gérée dans le composable useUsers
   }
 }
 
-const refreshData = async () => {
-  await loadUsers(currentPage.value, pageSize.value, searchQuery.value)
+const goToRoleManagement = (user: any) => {
+  // Stocker l'utilisateur sélectionné pour la page de gestion des rôles
+  sessionStorage.setItem('selectedUserForRoleManagement', JSON.stringify(user))
+  router.push({ path: '/users/role-permissions' })
 }
 
+const refreshData = async () => {
+  await loadUsers(currentPage.value, pageSize.value)
+}
 
 // Lifecycle
 onMounted(async () => {
   await loadUsers()
 })
+
+// Plus besoin de onUnmounted car on n'utilise plus de timeout
 </script>
 
 <style scoped>

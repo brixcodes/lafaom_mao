@@ -1,7 +1,15 @@
-// Export de tous les stores Pinia
+// Export all stores
 export { useAuthStore } from './auth'
 export { useUserStore } from './user'
-export { useBlogStore } from './blog'
 export { useDashboardStore } from './dashboard'
+export { useBlogStore } from './blog'
+export { useJobOffersStore } from './jobOffers'
+export { useJobApplicationsStore } from './jobApplications'
 export { useTrainingStore } from './training'
-export { usePaymentStore } from './payments'
+export { useStudentApplicationsStore } from './studentApplications'
+export { usePaymentsStore } from './payments'
+export { useOrganizationCentersStore } from './organizationCenters'
+export { useReclamationsStore } from './reclamations'
+export { useRolesPermissionsStore } from './roles-permissions'
+export { useSystemStore } from './system'
+export { usePermissionStore } from './permission'

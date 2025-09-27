@@ -244,8 +244,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { trainingService } from '@/services/api/training'
-import { organizationCenterService } from '@/services/api/organizationCenters'
-import { studentApplicationService } from '@/services/api/student-application'
+import { organizationCentersService } from '@/services/api/organization-centers'
+import { studentApplicationsService } from '@/services/api/student-applications'
 import type { TrainingSession } from '@/types/training'
 import { TrainingSessionStatusEnum } from '@/types/training'
 import { showToast } from '@/components/toast/toastManager'
@@ -400,7 +400,7 @@ const fetchTrainings = async () => {
 
 const fetchCenters = async () => {
   try {
-    const response = await organizationCenterService.listOrganizationCenters({ page: 1, page_size: 1000 })
+    const response = await organizationCentersService.listOrganizationCenters({ page: 1, page_size: 1000 })
     centers.value = response.data.map((c: any) => ({ id: c.id, name: c.name }))
   } catch (error) {
     console.error('Erreur lors du chargement des centres:', error)
@@ -490,14 +490,14 @@ const handlePayment = async () => {
     
     // 1. D'abord créer la candidature
     console.log('Création de la candidature:', pendingRegistrationData.value)
-    const applicationResponse = await studentApplicationService.createStudentApplication(pendingRegistrationData.value)
+    const applicationResponse = await studentApplicationsService.createStudentApplication(pendingRegistrationData.value)
     
     console.log('Candidature créée:', applicationResponse)
     console.log('Structure de la réponse:', JSON.stringify(applicationResponse, null, 2))
     
     // 2. Récupérer les informations complètes de la candidature créée
     console.log('Récupération des informations de la candidature créée...')
-    const fullApplication = await studentApplicationService.getStudentApplication(applicationResponse.data.id)
+    const fullApplication = await studentApplicationsService.getStudentApplication(applicationResponse.data.id)
     console.log('Candidature complète récupérée:', fullApplication)
     
     // 3. Initier le paiement avec l'ID de la candidature (contournement CORS)
@@ -508,7 +508,7 @@ const handlePayment = async () => {
     console.log('Montant des frais d\'inscription:', session.value?.registration_fee)
     console.log('Utilisation de l\'endpoint submit avec l\'ID de candidature dans le body:', applicationId)
     
-    const paymentResponse = await studentApplicationService.submitApplicationWithPayment(applicationId)
+    const paymentResponse = await studentApplicationsService.submitApplicationWithPayment(applicationId)
     
     console.log('Réponse du paiement:', paymentResponse)
     

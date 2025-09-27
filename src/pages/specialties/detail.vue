@@ -216,28 +216,28 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useSpecialtyStore } from '@/stores/specialties'
+import { useTrainingStore } from '@/stores/training'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'
 import type { Specialty } from '@/types/specialties'
 
 const router = useRouter()
 const route = useRoute()
-const specialtyStore = useSpecialtyStore()
+const trainingStore = useSpecialtyStore()
 
 // State
 const error = ref('')
 const currentSpecialty = ref<Specialty | null>(null)
 
 // Computed
-const isLoading = computed(() => specialtyStore.isLoading)
+const isLoading = computed(() => trainingStore.isLoading)
 const specialtyId = computed(() => route.params.id as string)
 
 // Methods
 const loadSpecialty = async () => {
   try {
     const id = parseInt(specialtyId.value)
-    currentSpecialty.value = await specialtyStore.fetchSpecialty(id)
+    currentSpecialty.value = await trainingStore.fetchSpecialty(id)
   } catch (err: any) {
     console.error('Erreur lors du chargement de la spécialité:', err)
     error.value = 'Erreur lors du chargement de la spécialité'
@@ -263,7 +263,7 @@ const confirmDelete = async () => {
   if (confirmed) {
     try {
       const id = parseInt(specialtyId.value)
-      await specialtyStore.deleteSpecialty(id)
+      await trainingStore.deleteSpecialty(id)
       showToast({ message: 'Spécialité supprimée avec succès', type: 'success' })
       router.push({ name: 'specialties-index' })
     } catch (err: any) {

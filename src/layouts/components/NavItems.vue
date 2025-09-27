@@ -25,16 +25,16 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       title: 'Utilisateurs',
       to: '/users',
     }" />
-
+<!-- 
     <VerticalNavLink :item="{
       title: 'Permissions',
       to: '/permissions',
-    }" />
+    }" /> -->
 
-    <!-- <VerticalNavLink :item="{
+    <VerticalNavLink :item="{
       title: 'Rôles & Permissions',
       to: '/users/role-permissions',
-    }" /> -->
+    }" />
   </VerticalNavGroup>
 
   <!-- Blog -->

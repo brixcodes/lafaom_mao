@@ -1,340 +1,348 @@
 import { apiService } from './base'
 
-// Types pour les formations
-export interface Training {
-  id: number
+// ===== INTERFACES TRAINING =====
+
+export interface TrainingCreateInput {
   title: string
-  description: string
-  type: string
+  status?: string
+  duration?: number
+  duration_unit?: string
+  specialty_id: number
+  info_sheet?: string
+  training_type: string
+  presentation?: string
+  benefits?: BenefitInput[]
+  strengths?: StrengthInput[]
+  target_skills?: string
+  program?: string
+  target_audience?: string
+  prerequisites?: string
+  enrollment?: string
+}
+
+export interface TrainingUpdateInput {
+  title?: string
+  status?: string
+  duration?: number
+  duration_unit?: string
+  specialty_id?: number
+  info_sheet?: string
+  training_type?: string
+  presentation?: string
+  benefits?: BenefitInput[]
+  strengths?: StrengthInput[]
+  target_skills?: string
+  program?: string
+  target_audience?: string
+  prerequisites?: string
+  enrollment?: string
+}
+
+export interface BenefitInput {
+  image: string
+  content: string
+  url: string
+}
+
+export interface StrengthInput {
+  image: string
+  content: string
+}
+
+export interface TrainingOut {
+  id: string
+  title: string
   status: string
   duration: number
+  duration_unit: string
+  specialty_id: number
+  info_sheet?: string
+  training_type: string
+  presentation: string
+  benefits?: BenefitInput[]
+  strengths?: StrengthInput[]
+  target_skills: string
+  program: string
+  target_audience: string
+  prerequisites?: string
+  enrollment: string
   created_at: string
   updated_at: string
 }
 
-export interface TrainingSession {
-  id: number
-  training_id: number
+export interface TrainingOutSuccess {
+  success: boolean
+  message: string
+  data: TrainingOut
+}
+
+export interface TrainingsPageOutSuccess {
+  data: TrainingOut[]
+  page: number
+  number: number
+  total_number: number
+}
+
+// ===== INTERFACES TRAINING SESSIONS =====
+
+export interface TrainingSessionCreateInput {
+  training_id: string
+  center_id?: number
   start_date: string
   end_date: string
+  registration_deadline: string
+  available_slots: number
   status: string
-  max_participants: number
-  current_participants: number
-  created_at: string
+  registration_fee: number
+  training_fee: number
+  currency?: string
 }
 
-export interface StudentApplication {
-  id: number
-  application_number: string
-  training_id: number
-  user_id: number
+export interface TrainingSessionUpdateInput {
+  center_id?: number
+  start_date?: string
+  end_date?: string
+  registration_deadline?: string
+  available_slots?: number
+  status?: string
+  registration_fee?: number
+  training_fee?: number
+  currency?: string
+}
+
+export interface TrainingSessionOut {
+  id: string
+  training_id: string
+  center_id?: number
+  start_date?: string
+  end_date?: string
+  registration_deadline: string
+  available_slots?: number
   status: string
+  registration_fee?: number
+  training_fee?: number
+  currency: string
+  moodle_course_id?: number
   created_at: string
   updated_at: string
-  attachments?: StudentAttachment[]
 }
 
-export interface StudentAttachment {
-  id: number
-  application_id: number
-  file_name: string
-  file_path: string
-  file_type: string
-  created_at: string
+export interface TrainingSessionOutSuccess {
+  success: boolean
+  message: string
+  data: TrainingSessionOut
 }
 
-export interface Specialty {
+export interface TrainingSessionsPageOutSuccess {
+  data: TrainingSessionOut[]
+  page: number
+  number: number
+  total_number: number
+}
+
+// ===== INTERFACES SPECIALTIES =====
+
+export interface SpecialtyCreateInput {
+  name: string
+  description?: string
+}
+
+export interface SpecialtyUpdateInput {
+  name: string
+  description?: string
+}
+
+export interface SpecialtyOut {
   id: number
   name: string
   description: string
-  is_active: boolean
-  created_at: string
-}
-
-export interface Reclamation {
-  id: number
-  user_id: number
-  application_id?: number
-  type_id: number
-  subject: string
-  description: string
-  status: string
-  priority: string
   created_at: string
   updated_at: string
 }
 
-export interface ReclamationType {
-  id: number
-  name: string
-  description: string
-  is_active: boolean
-  created_at: string
+export interface SpecialtyOutSuccess {
+  success: boolean
+  message: string
+  data: SpecialtyOut
 }
 
-export interface TrainingFilter {
-  page?: number
-  limit?: number
-  search?: string
-  type?: string
-  status?: string
+export interface SpecialtyListOutSuccess {
+  success: boolean
+  message: string
+  data: SpecialtyOut[]
 }
 
-export interface StudentApplicationFilter {
-  page?: number
-  limit?: number
-  search?: string
-  status?: string
-  training_id?: number
+export interface SpecialtiesPageOutSuccess {
+  data: SpecialtyOut[]
+  page: number
+  number: number
+  total_number: number
 }
 
-export interface CreateTrainingRequest {
-  title: string
-  description: string
-  type: string
-  duration: number
-}
-
-export interface CreateTrainingSessionRequest {
-  training_id: number
-  start_date: string
-  end_date: string
-  max_participants: number
-}
-
-export interface CreateStudentApplicationRequest {
-  training_id: number
-  attachments?: File[]
-}
-
-export interface CreateReclamationRequest {
-  application_id?: number
-  type_id: number
-  subject: string
-  description: string
-  priority: string
-}
+// ===== SERVICE TRAINING =====
 
 class TrainingService {
-  // === FORMATIONS ===
-  async getTrainings(filters: TrainingFilter = {}): Promise<any> {
-    return await apiService.get('/trainings', filters)
+  // === TRAININGS ===
+
+  /**
+   * Récupérer la liste des formations avec filtres
+   */
+  async getTrainings(filters: {
+    page?: number
+    page_size?: number
+    search?: string
+    status?: string
+    specialty_id?: number
+    order_by?: 'created_at' | 'title'
+    asc?: 'asc' | 'desc'
+  } = {}): Promise<TrainingsPageOutSuccess> {
+    const response = await apiService.get('/trainings', { params: filters })
+    return response as TrainingsPageOutSuccess
   }
 
-  // Alias pour compatibilité
-  async listTrainings(filters: TrainingFilter = {}): Promise<any> {
-    return await this.getTrainings(filters)
+  /**
+   * Créer une nouvelle formation
+   */
+  async createTraining(data: TrainingCreateInput): Promise<TrainingOutSuccess> {
+    const response = await apiService.post('/trainings', data)
+    return response as TrainingOutSuccess
   }
 
-  async getTrainingById(trainingId: number): Promise<Training> {
-    return await apiService.get(`/trainings/${trainingId}`)
+  /**
+   * Récupérer une formation par ID
+   */
+  async getTrainingById(trainingId: string): Promise<TrainingOutSuccess> {
+    const response = await apiService.get(`/trainings/${trainingId}`)
+    return response as TrainingOutSuccess
   }
 
-  // Alias pour compatibilité
-  async getTraining(trainingId: number): Promise<Training> {
-    return await this.getTrainingById(trainingId)
+  /**
+   * Mettre à jour une formation
+   */
+  async updateTraining(trainingId: string, data: TrainingUpdateInput): Promise<TrainingOutSuccess> {
+    const response = await apiService.put(`/trainings/${trainingId}`, data)
+    return response as TrainingOutSuccess
   }
 
-  async createTraining(trainingData: CreateTrainingRequest): Promise<Training> {
-    return await apiService.post('/trainings', trainingData)
+  /**
+   * Supprimer une formation
+   */
+  async deleteTraining(trainingId: string): Promise<TrainingOutSuccess> {
+    const response = await apiService.delete(`/trainings/${trainingId}`)
+    return response as TrainingOutSuccess
   }
 
-  async updateTraining(trainingId: number, trainingData: Partial<CreateTrainingRequest>): Promise<Training> {
-    return await apiService.put(`/trainings/${trainingId}`, trainingData) as Training
+  // === TRAINING SESSIONS ===
+
+  /**
+   * Récupérer la liste des sessions de formation avec filtres
+   */
+  async getTrainingSessions(filters: {
+    page?: number
+    page_size?: number
+    training_id?: string
+    center_id?: number
+    status?: string
+    order_by?: 'created_at' | 'registration_deadline' | 'start_date'
+    asc?: 'asc' | 'desc'
+  } = {}): Promise<TrainingSessionsPageOutSuccess> {
+    const response = await apiService.get('/training-sessions', { params: filters })
+    return response as TrainingSessionsPageOutSuccess
   }
 
-  async deleteTraining(trainingId: number): Promise<void> {
-    return await apiService.delete(`/trainings/${trainingId}`)
+  /**
+   * Créer une nouvelle session de formation
+   */
+  async createTrainingSession(data: TrainingSessionCreateInput): Promise<TrainingSessionOutSuccess> {
+    const response = await apiService.post('/training-sessions', data)
+    return response as TrainingSessionOutSuccess
   }
 
-  // === SESSIONS DE FORMATION ===
-  async getTrainingSessions(filters: any = {}): Promise<any> {
-    return await apiService.get('/training-sessions', filters)
-  }
-
-  // Alias pour compatibilité
-  async listTrainingSessions(filters: any = {}): Promise<any> {
-    return await this.getTrainingSessions(filters)
-  }
-
-  async getTrainingSessionById(sessionId: number): Promise<TrainingSession> {
-    return await apiService.get(`/training-sessions/${sessionId}`)
-  }
-
-  // Alias pour compatibilité
-  async getTrainingSession(sessionId: number): Promise<TrainingSession> {
-    return await this.getTrainingSessionById(sessionId)
-  }
-
-  async createTrainingSession(sessionData: CreateTrainingSessionRequest): Promise<TrainingSession> {
-    return await apiService.post('/training-sessions', sessionData)
-  }
-
-  async updateTrainingSession(sessionId: number, sessionData: Partial<CreateTrainingSessionRequest>): Promise<TrainingSession> {
-    return await apiService.put(`/training-sessions/${sessionId}`, sessionData) as TrainingSession
-  }
-
-  async deleteTrainingSession(sessionId: number): Promise<void> {
-    return await apiService.delete(`/training-sessions/${sessionId}`)
-  }
-
-  async getSessionMembers(sessionId: number): Promise<any[]> {
+  /**
+   * Récupérer les membres d'une session de formation
+   */
+  async getTrainingSessionMembers(sessionId: string): Promise<any> {
     return await apiService.get(`/training-sessions/${sessionId}/members`)
   }
 
-  // === CANDIDATURES ÉTUDIANTES ===
-  async getStudentApplications(filters: StudentApplicationFilter = {}): Promise<any> {
-    return await apiService.get('/student-applications', filters)
+  /**
+   * Récupérer une session de formation par ID
+   */
+  async getTrainingSessionById(sessionId: string): Promise<TrainingSessionOutSuccess> {
+    const response = await apiService.get(`/training-sessions/${sessionId}`)
+    return response as TrainingSessionOutSuccess
   }
 
-  async getStudentApplicationById(applicationId: number): Promise<StudentApplication> {
-    return await apiService.get(`/student-applications/${applicationId}`)
+  /**
+   * Mettre à jour une session de formation
+   */
+  async updateTrainingSession(sessionId: string, data: TrainingSessionUpdateInput): Promise<TrainingSessionOutSuccess> {
+    const response = await apiService.put(`/training-sessions/${sessionId}`, data)
+    return response as TrainingSessionOutSuccess
   }
 
-  // Alias pour compatibilité
-  async getStudentApplication(applicationId: number): Promise<StudentApplication> {
-    return await this.getStudentApplicationById(applicationId)
+  /**
+   * Supprimer une session de formation
+   */
+  async deleteTrainingSession(sessionId: string): Promise<TrainingSessionOutSuccess> {
+    const response = await apiService.delete(`/training-sessions/${sessionId}`)
+    return response as TrainingSessionOutSuccess
   }
 
-  async changeApplicationStatus(applicationId: number, status: string): Promise<StudentApplication> {
-    return await apiService.post(`/student-applications/${applicationId}/status`, { status })
+  // === SPECIALTIES ===
+
+  /**
+   * Récupérer la liste des spécialités avec filtres
+   */
+  async getSpecialties(filters: {
+    page?: number
+    page_size?: number
+    search?: string
+    order_by?: 'created_at' | 'name'
+    asc?: 'asc' | 'desc'
+  } = {}): Promise<SpecialtiesPageOutSuccess> {
+    const response = await apiService.get('/specialties', { params: filters })
+    return response as SpecialtiesPageOutSuccess
   }
 
-  async getApplicationAttachments(applicationId: number): Promise<StudentAttachment[]> {
-    return await apiService.get(`/student-applications/${applicationId}/attachments`)
+  /**
+   * Créer une nouvelle spécialité
+   */
+  async createSpecialty(data: SpecialtyCreateInput): Promise<SpecialtyOutSuccess> {
+    const response = await apiService.post('/specialties', data)
+    return response as SpecialtyOutSuccess
   }
 
-  // === MES CANDIDATURES ===
-  async createStudentApplication(applicationData: CreateStudentApplicationRequest): Promise<StudentApplication> {
-    return await apiService.post('/student-applications', applicationData)
+  /**
+   * Récupérer une spécialité par ID
+   */
+  async getSpecialtyById(specialtyId: number): Promise<SpecialtyOutSuccess> {
+    const response = await apiService.get(`/specialties/${specialtyId}`)
+    return response as SpecialtyOutSuccess
   }
 
-  async getMyStudentApplications(filters: StudentApplicationFilter = {}): Promise<any> {
-    return await apiService.get('/my-student-applications', filters)
+  /**
+   * Mettre à jour une spécialité
+   */
+  async updateSpecialty(specialtyId: number, data: SpecialtyUpdateInput): Promise<SpecialtyOutSuccess> {
+    const response = await apiService.put(`/specialties/${specialtyId}`, data)
+    return response as SpecialtyOutSuccess
   }
 
-  async getMyStudentApplicationById(applicationId: number): Promise<StudentApplication> {
-    return await apiService.get(`/my-student-applications/${applicationId}`)
+  /**
+   * Supprimer une spécialité
+   */
+  async deleteSpecialty(specialtyId: number): Promise<SpecialtyOutSuccess> {
+    const response = await apiService.delete(`/specialties/${specialtyId}`)
+    return response as SpecialtyOutSuccess
   }
 
-  async updateMyStudentApplication(applicationId: number, applicationData: Partial<CreateStudentApplicationRequest>): Promise<StudentApplication> {
-    return await apiService.put(`/my-student-applications/${applicationId}`, applicationData) as StudentApplication
-  }
-
-  async deleteMyStudentApplication(applicationId: number): Promise<void> {
-    return await apiService.delete(`/my-student-applications/${applicationId}`)
-  }
-
-  async getMyApplicationAttachments(applicationId: number): Promise<StudentAttachment[]> {
-    return await apiService.get(`/my-student-applications/${applicationId}/attachments`)
-  }
-
-  async addApplicationAttachment(applicationId: number, file: File): Promise<StudentAttachment> {
-    const formData = new FormData()
-    formData.append('file', file)
-    return await apiService.post(`/my-student-applications/${applicationId}/attachments`, formData)
-  }
-
-  async deleteApplicationAttachment(attachmentId: number): Promise<void> {
-    return await apiService.delete(`/my-student-attachments/${attachmentId}`)
-  }
-
-  async submitStudentApplication(applicationId: number): Promise<any> {
-    return await apiService.post(`/my-student-applications/${applicationId}/submit`)
-  }
-
-  async payTrainingFee(paymentData: any): Promise<any> {
-    return await apiService.post('/my-student-applications/pay-training-fee', paymentData)
-  }
-
-  // === SPÉCIALITÉS ===
-  async getSpecialties(filters: any = {}): Promise<any> {
-    return await apiService.get('/specialties', filters)
-  }
-
-  // Alias pour compatibilité
-  async listSpecialties(filters: any = {}): Promise<any> {
-    return await this.getSpecialties(filters)
-  }
-
-  async getSpecialtyById(specialtyId: number): Promise<Specialty> {
-    return await apiService.get(`/specialties/${specialtyId}`)
-  }
-
-  // Alias pour compatibilité
-  async getSpecialty(specialtyId: number): Promise<Specialty> {
-    return await this.getSpecialtyById(specialtyId)
-  }
-
-  async createSpecialty(specialtyData: Partial<Specialty>): Promise<Specialty> {
-    return await apiService.post('/specialties', specialtyData)
-  }
-
-  async updateSpecialty(specialtyId: number, specialtyData: Partial<Specialty>): Promise<Specialty> {
-    return await apiService.put(`/specialties/${specialtyId}`, specialtyData) as Specialty
-  }
-
-  async deleteSpecialty(specialtyId: number): Promise<void> {
-    return await apiService.delete(`/specialties/${specialtyId}`)
-  }
-
-  async getActiveSpecialties(): Promise<Specialty[]> {
-    return await apiService.get('/specialties/active/all')
-  }
-
-  // === RÉCLAMATIONS ===
-  async createReclamation(reclamationData: CreateReclamationRequest): Promise<Reclamation> {
-    return await apiService.post('/my-reclamations', reclamationData)
-  }
-
-  async getMyReclamations(filters: any = {}): Promise<any> {
-    return await apiService.get('/my-reclamations', filters)
-  }
-
-  async getMyReclamationById(reclamationId: number): Promise<Reclamation> {
-    return await apiService.get(`/my-reclamations/${reclamationId}`)
-  }
-
-  async updateMyReclamation(reclamationId: number, reclamationData: Partial<CreateReclamationRequest>): Promise<Reclamation> {
-    return await apiService.put(`/my-reclamations/${reclamationId}`, reclamationData) as Reclamation
-  }
-
-  async deleteMyReclamation(reclamationId: number): Promise<void> {
-    return await apiService.delete(`/my-reclamations/${reclamationId}`)
-  }
-
-  // === ADMIN RÉCLAMATIONS ===
-  async getAllReclamations(filters: any = {}): Promise<any> {
-    return await apiService.get('/reclamations', filters)
-  }
-
-  async getReclamationById(reclamationId: number): Promise<Reclamation> {
-    return await apiService.get(`/reclamations/${reclamationId}`)
-  }
-
-  async updateReclamationStatus(reclamationId: number, status: string): Promise<Reclamation> {
-    return await apiService.put(`/reclamations/${reclamationId}/status`, { status }) as Reclamation
-  }
-
-  // === TYPES DE RÉCLAMATIONS ===
-  async getActiveReclamationTypes(): Promise<ReclamationType[]> {
-    return await apiService.get('/reclamation-types/active/all')
-  }
-
-  async createReclamationType(typeData: Partial<ReclamationType>): Promise<ReclamationType> {
-    return await apiService.post('/reclamation-types', typeData)
-  }
-
-  async getReclamationTypeById(typeId: number): Promise<ReclamationType> {
-    return await apiService.get(`/reclamation-types/${typeId}`)
-  }
-
-  async updateReclamationType(typeId: number, typeData: Partial<ReclamationType>): Promise<ReclamationType> {
-    return await apiService.put(`/reclamation-types/${typeId}`, typeData) as ReclamationType
-  }
-
-  async deleteReclamationType(typeId: number): Promise<void> {
-    return await apiService.delete(`/reclamation-types/${typeId}`)
+  /**
+   * Récupérer toutes les spécialités actives
+   */
+  async getActiveSpecialties(): Promise<SpecialtyListOutSuccess> {
+    const response = await apiService.get('/specialties/active/all')
+    return response as SpecialtyListOutSuccess
   }
 }
 

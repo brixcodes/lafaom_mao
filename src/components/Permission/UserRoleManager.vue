@@ -117,7 +117,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { permissionService } from '@/services/api/permissions'
+import { rolesPermissionsService } from '@/services/api/roles-permissions'
 import type { AssignRoleInput } from '@/types/permissions'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'
@@ -168,7 +168,7 @@ const availableRolesForAssignment = computed(() => {
 // Methods
 const fetchRoles = async () => {
   try {
-    const response = await permissionService.getRoles()
+    const response = await rolesPermissionsService.getRoles()
     console.log('🗓️ Réponse rôles brute:', response)
     
     // Extraire les données selon la structure de la réponse API
@@ -207,7 +207,7 @@ const fetchUserPermissions = async () => {
     // Sauvegarder les permissions précédentes pour comparaison
     const previousPermissions = JSON.stringify(userPermissions.value)
     
-    const response = await permissionService.getUserPermissions(props.userId)
+    const response = await rolesPermissionsService.getUserPermissions(props.userId)
     
     console.log('🗓️ Réponse permissions brute:', response)
     
@@ -276,7 +276,7 @@ const assignRole = async (role: Role) => {
       const currentRole = userRoles.value[0]
       console.log('♾️ Révocation de l\'ancien rôle:', currentRole.name)
       
-      const revokeResponse = await permissionService.revokeRole({ user_id: props.userId, role_id: currentRole.id })
+      const revokeResponse = await rolesPermissionsService.revokeRole({ user_id: props.userId, role_id: currentRole.id })
       console.log('✅ Révocation terminée:', revokeResponse)
       
       showToast({ message: `Rôle "${currentRole.name}" révoqué`, type: 'info' })
@@ -287,7 +287,7 @@ const assignRole = async (role: Role) => {
     
     // Assigner le nouveau rôle
     console.log('🎆 Assignation du nouveau rôle:', role.name)
-    const assignResponse = await permissionService.assignRole({ user_id: props.userId, role_id: role.id })
+    const assignResponse = await rolesPermissionsService.assignRole({ user_id: props.userId, role_id: role.id })
     console.log('✅ Assignation terminée:', assignResponse)
     
     // Attendre un peu avant de rafraîchir
@@ -325,7 +325,7 @@ const revokeRole = async (role: Role) => {
     console.log('🎯 Début révocation rôle:', { userId: props.userId, roleId: role.id, roleName: role.name })
     
     // Révoquer le rôle
-    const revokeResponse = await permissionService.revokeRole({ user_id: props.userId, role_id: role.id })
+    const revokeResponse = await rolesPermissionsService.revokeRole({ user_id: props.userId, role_id: role.id })
     console.log('✅ Révocation API terminée:', revokeResponse)
     
     // Mettre à jour immédiatement les permissions localement pour un feedback rapide

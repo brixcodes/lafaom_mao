@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { userService } from '@/services/api/user'
+import { usersService } from '@/services/api/users'
 import { showToast } from '@/components/toast/toastManager'
 
 export interface User {
@@ -27,15 +27,17 @@ export const useUsers = () => {
   const totalPages = computed(() => Math.ceil(totalUsers.value / pageSize.value))
 
   // Charger la liste des utilisateurs
-  const loadUsers = async (page = 1, size = 20, search = '') => {
+  const loadUsers = async (page = 1, size = 20, search = '', userType = '', status = '') => {
     try {
       isLoading.value = true
       error.value = null
       
-      const response = await userService.getUsers({
+      const response = await usersService.getUsers({
         page,
         limit: size,
-        search
+        search,
+        user_type: userType || undefined,
+        status: status || undefined
       })
       
       users.value = response.data || []
@@ -66,7 +68,7 @@ export const useUsers = () => {
         throw new Error('ID utilisateur invalide')
       }
       
-      const response = await userService.getUser(userId)
+      const response = await usersService.getUser(userId)
       return response.data
     } catch (err: any) {
       console.error('Erreur lors du chargement de l\'utilisateur:', err)
@@ -87,7 +89,7 @@ export const useUsers = () => {
       isLoading.value = true
       error.value = null
       
-      const response = await userService.createUser(userData)
+      const response = await usersService.createUser(userData)
       
       showToast({
         message: 'Utilisateur créé avec succès',
@@ -122,13 +124,7 @@ export const useUsers = () => {
       }
       
       // Les IDs sont des UUIDs (strings) dans le backend
-      const response = await userService.updateUser(userId, userData)
-      
-      showToast({
-        message: 'Utilisateur mis à jour avec succès',
-        type: 'success'
-      })
-      
+      const response = await usersService.updateUser(userId, userData)
       // Recharger la liste
       await loadUsers(currentPage.value, pageSize.value)
       
@@ -157,7 +153,7 @@ export const useUsers = () => {
       }
       
       // Les IDs sont des UUIDs (strings) dans le backend
-      const response = await userService.deleteUser(userId)
+      const response = await usersService.deleteUser(userId)
       
       showToast({
         message: 'Utilisateur supprimé avec succès',
@@ -169,12 +165,18 @@ export const useUsers = () => {
       
       return response
     } catch (err: any) {
-      console.error('Erreur lors de la suppression de l\'utilisateur:', err)
-      error.value = 'Erreur lors de la suppression de l\'utilisateur'
-      showToast({
-        message: err.response?.data?.message || 'Erreur lors de la suppression de l\'utilisateur',
-        type: 'error'
-      })
+      // Gestion spécifique de l'erreur de suppression d'administrateur
+      if (err.response?.status === 400 && err.response?.data?.error_code === 'can_not_delete_super_admin') {
+        showToast({
+          message: 'Impossible de supprimer les administrateurs',
+          type: 'error'
+        })
+      } else {
+        showToast({
+          message: 'Erreur lors de la suppression de l\'utilisateur',
+          type: 'error'
+        })
+      }
       throw err
     } finally {
       isLoading.value = false
@@ -184,6 +186,11 @@ export const useUsers = () => {
   // Rechercher des utilisateurs
   const searchUsers = async (searchTerm: string) => {
     await loadUsers(1, pageSize.value, searchTerm)
+  }
+
+  // Filtrer les utilisateurs
+  const filterUsers = async (userType = '', status = '', search = '') => {
+    await loadUsers(1, pageSize.value, search, userType, status)
   }
 
   // Changer de page
@@ -215,6 +222,7 @@ export const useUsers = () => {
     updateUser,
     deleteUser,
     searchUsers,
+    filterUsers,
     changePage,
     changePageSize,
   }

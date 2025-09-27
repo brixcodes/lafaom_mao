@@ -14,25 +14,6 @@
           </p>
         </div>
       </div>
-
-      <!-- Partie droite : boutons d'action -->
-      <div v-if="user">
-        <VBtn v-if="canUpdateUsers" color="primary" variant="outlined" @click="goToEdit" class="action-btn mx-1"
-          prepend-icon="ri-edit-line">
-          Modifier
-        </VBtn>
-        <VBtn v-if="canGiveRoles" color="info" variant="outlined" @click="goToRoleManagement" class="action-btn mx-1"
-          prepend-icon="ri-user-settings-line">
-          Rôles
-        </VBtn>
-        <VBtn v-if="canDeleteUsers" color="error" @click="confirmDelete" class="action-btn"
-          prepend-icon="ri-delete-bin-line">
-          Supprimer
-        </VBtn>
-        <VBtn color="primary" @click="goToIndex" class="action-btn ml-2" prepend-icon="ri-list-line">
-          Liste
-        </VBtn>
-      </div>
     </div>
 
     <!-- État de chargement -->
@@ -47,250 +28,208 @@
     </VAlert>
 
     <VFadeTransition>
-      <VRow v-if="user">
-        <VCol cols="12">
-          <!-- En-tête avec design moderne -->
-          <VSlideYTransition>
-            <VCard class="mb-6 user-header-card overflow-hidden" elevation="3">
-              <div class="user-header-overlay">
-                <div class="user-header-content">
-                  <div class="d-flex align-center mb-4 animate-company">
-                    <VAvatar size="48" class="mr-3 border-white">
-                      <VImg v-if="user.picture" :src="user.picture" />
-                      <VIcon v-else color="white" size="24">ri-user-line</VIcon>
-                    </VAvatar>
-                    <div>
-                      <div class="text-white font-weight-medium">Utilisateur</div>
-                      <div class="text-caption text-white">
-                        ID: {{ user.id }}
+      <div v-if="user">
+        <VRow>
+          <VCol cols="12">
+            <!-- En-tête avec design moderne -->
+            <VSlideYTransition>
+              <VCard class="mb-6 user-header-card overflow-hidden" elevation="3">
+                <div class="user-header-overlay">
+                  <div class="user-header-content">
+                    <div class="d-flex align-center mb-4 animate-company">
+                      <VAvatar size="48" class="mr-3 border-white">
+                        <VImg v-if="user.picture" :src="user.picture" />
+                        <VIcon v-else color="white" size="24">ri-user-line</VIcon>
+                      </VAvatar>
+                      <div>
+                        <div class="text-white font-weight-medium">Utilisateur</div>
+                        <div class="text-caption text-white">
+                          ID: {{ user.id }}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <h1 class="text-h3 font-weight-bold text-white mb-4 animate-title">
-                    {{ user.first_name }} {{ user.last_name }}
-                  </h1>
+                    <h1 class="text-h3 font-weight-bold text-white mb-4 animate-title">
+                      {{ user.first_name }} {{ user.last_name }}
+                    </h1>
 
-                  <div class="d-flex flex-wrap gap-3 mb-4">
-                    <div class="d-flex align-center text-white">
-                      <VIcon size="small" class="mr-2">ri-mail-line</VIcon>
-                      <span>{{ user.email }}</span>
+                    <div class="d-flex flex-wrap gap-3 mb-4">
+                      <div class="d-flex align-center text-white">
+                        <VIcon size="small" class="mr-2">ri-mail-line</VIcon>
+                        <span>{{ user.email }}</span>
+                      </div>
+                      <div class="d-flex align-center text-white">
+                        <VIcon size="small" class="mr-2">ri-calendar-line</VIcon>
+                        <span>Créé le {{ formatDate(user.created_at) }}</span>
+                      </div>
                     </div>
-                    <div class="d-flex align-center text-white">
-                      <VIcon size="small" class="mr-2">ri-calendar-line</VIcon>
-                      <span>Créé le {{ formatDate(user.created_at) }}</span>
-                    </div>
-                  </div>
 
-                  <VSlideXTransition group>
-                    <VChip key="user-type" :color="getUserTypeColor(user.user_type)" variant="elevated" size="small"
-                      class="mr-2 mb-2 animate-tag">
-                      {{ getUserTypeLabel(user.user_type) }}
-                    </VChip>
-                    <VChip key="status" :color="getStatusColor(user.status)" variant="elevated" size="small"
-                      class="mr-2 mb-2 animate-tag">
-                      {{ getStatusLabel(user.status) }}
-                    </VChip>
-                    <VChip key="two-factor" v-if="user.two_factor_enabled" color="success" variant="elevated"
-                      size="small" class="mr-2 mb-2 animate-tag">
-                      2FA Activé
-                    </VChip>
-                  </VSlideXTransition>
+                    <VSlideXTransition group>
+                      <VChip key="user-type" :color="getUserTypeColor(user.user_type)" variant="elevated" size="small"
+                        class="mr-2 mb-2 animate-tag">
+                        {{ getUserTypeLabel(user.user_type) }}
+                      </VChip>
+                      <VChip key="status" :color="getStatusColor(user.status)" variant="elevated" size="small"
+                        class="mr-2 mb-2 animate-tag">
+                        {{ getStatusLabel(user.status) }}
+                      </VChip>
+                      <VChip key="two-factor" v-if="user.two_factor_enabled" color="success" variant="elevated"
+                        size="small" class="mr-2 mb-2 animate-tag">
+                        2FA Activé
+                      </VChip>
+                    </VSlideXTransition>
+                  </div>
                 </div>
-              </div>
-            </VCard>
-          </VSlideYTransition>
+              </VCard>
+            </VSlideYTransition>
 
-          <!-- Contenu principal -->
-          <VRow>
-            <VCol cols="12" md="8">
-              <!-- Informations personnelles -->
-              <VSlideYTransition>
-                <VCard class="mb-6 animate-card" elevation="1">
-                  <VCardTitle class="d-flex align-center">
-                    <VIcon color="primary" class="mr-2">ri-user-line</VIcon>
-                    <span class="text-h6">Informations personnelles</span>
-                  </VCardTitle>
-                  <VDivider />
-                  <VCardText class="py-4 user-content">
+            <!-- Contenu principal -->
+            <VRow>
+              <VCol cols="12" md="12">
+                <!-- Informations personnelles -->
+                <VSlideXReverseTransition>
+                  <VCard class="mb-6 animate-card" elevation="1">
+                    <VCardTitle class="d-flex align-center">
+                      <VIcon color="primary" class="mr-2">ri-information-line</VIcon>
+                      <span class="text-h6">Informations de l'utilisateur</span>
+                    </VCardTitle>
+                    <VDivider />
                     <VRow>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <h4 class="text-h6 mb-2">Prénom</h4>
-                          <p class="text-body-1 font-weight-medium">{{ user.first_name }}</p>
-                        </div>
+                      <VCol cols="12" md="4">
+                        <VList lines="two" density="comfortable">
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-user-line</VIcon>
+                            </template>
+                            <VListItemTitle>Nom complet</VListItemTitle>
+                            <VListItemSubtitle>{{ user.first_name }} {{ user.last_name }}</VListItemSubtitle>
+                          </VListItem>
+
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-mail-line</VIcon>
+                            </template>
+                            <VListItemTitle>Email</VListItemTitle>
+                            <VListItemSubtitle>{{ user.email }}</VListItemSubtitle>
+                          </VListItem>
+
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-shield-user-line</VIcon>
+                            </template>
+                            <VListItemTitle>Type d'utilisateur</VListItemTitle>
+                            <VListItemSubtitle>{{ getUserTypeLabel(user.user_type) }}</VListItemSubtitle>
+                          </VListItem>
+
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-checkbox-circle-line</VIcon>
+                            </template>
+                            <VListItemTitle>Statut</VListItemTitle>
+                            <VListItemSubtitle>{{ getStatusLabel(user.status) }}</VListItemSubtitle>
+                          </VListItem>
+                        </VList>
                       </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <h4 class="text-h6 mb-2">Nom</h4>
-                          <p class="text-body-1 font-weight-medium">{{ user.last_name }}</p>
-                        </div>
+
+
+                      <VCol cols="12" md="4">
+                        <VList lines="two" density="comfortable">
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-translate-2</VIcon>
+                            </template>
+                            <VListItemTitle>Langue</VListItemTitle>
+                            <VListItemSubtitle>{{ getLanguageLabel(user.lang) }}</VListItemSubtitle>
+                          </VListItem>
+
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-cellphone-line</VIcon>
+                            </template>
+                            <VListItemTitle>Téléphone mobile</VListItemTitle>
+                            <VListItemSubtitle>{{ user.mobile_number || 'Non défini' }}</VListItemSubtitle>
+                          </VListItem>
+
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-shield-user-line</VIcon>
+                            </template>
+                            <VListItemTitle>Téléphone fixe</VListItemTitle>
+                            <VListItemSubtitle>{{ user.fix_number || 'Non défini' }}</VListItemSubtitle>
+                          </VListItem>
+
+
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-account-pin-circle-line</VIcon>
+                            </template>
+                            <VListItemTitle>Pays Résidence</VListItemTitle>
+                            <VListItemSubtitle>{{ getCountryLabel(user.country_code) }}</VListItemSubtitle>
+                          </VListItem>
+                        </VList>
                       </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <h4 class="text-h6 mb-2">Email</h4>
-                          <p class="text-body-1 font-weight-medium">{{ user.email }}</p>
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <h4 class="text-h6 mb-2">Type d'utilisateur</h4>
-                          <VChip :color="getUserTypeColor(user.user_type)" size="small" variant="elevated">
-                            {{ getUserTypeLabel(user.user_type) }}
-                          </VChip>
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <h4 class="text-h6 mb-2">Statut</h4>
-                          <VChip :color="getStatusColor(user.status)" size="small" variant="elevated">
-                            {{ getStatusLabel(user.status) }}
-                          </VChip>
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <h4 class="text-h6 mb-2">Langue</h4>
-                          <p class="text-body-1 font-weight-medium">{{ user.lang || 'Français' }}</p>
-                        </div>
+
+
+                      <VCol cols="12" md="4">
+                        <VList lines="two" density="comfortable">
+
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-edit-line</VIcon>
+                            </template>
+                            <VListItemTitle>Dernière modification</VListItemTitle>
+                            <VListItemSubtitle>{{ formatDate(user.created_at) }}</VListItemSubtitle>
+                          </VListItem>
+
+                          <VListItem v-if="user.two_factor_enabled">
+                            <template #prepend>
+                              <VIcon color="success">ri-shield-check-line</VIcon>
+                            </template>
+                            <VListItemTitle>Authentification à deux facteurs</VListItemTitle>
+                            <VListItemSubtitle>Activée</VListItemSubtitle>
+                          </VListItem>
+
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-checkbox-circle-line</VIcon>
+                            </template>
+                            <VListItemTitle>Statut</VListItemTitle>
+                            <VListItemSubtitle>{{ getStatusLabel(user.status) }}</VListItemSubtitle>
+                          </VListItem>
+
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-calendar-todo-line</VIcon>
+                            </template>
+                            <VListItemTitle>Date de création</VListItemTitle>
+                            <VListItemSubtitle>{{ formatDate(user.created_at) }}</VListItemSubtitle>
+                          </VListItem>
+
+                          <VListItem v-if="user.two_factor_enabled">
+                            <template #prepend>
+                              <VIcon color="success">ri-shield-check-line</VIcon>
+                            </template>
+                            <VListItemTitle>Authentification à deux facteurs</VListItemTitle>
+                            <VListItemSubtitle>Activée</VListItemSubtitle>
+                          </VListItem>
+
+                          <VListItem>
+                            <template #prepend>
+                              <VIcon color="primary">ri-flag-line</VIcon>
+                            </template>
+                            <VListItemTitle>Civilité</VListItemTitle>
+                            <VListItemSubtitle>{{ getCivilityLabel(user.civility) }}</VListItemSubtitle>
+                          </VListItem>
+                        </VList>
                       </VCol>
                     </VRow>
-                  </VCardText>
-                </VCard>
-              </VSlideYTransition>
-
-              <!-- Informations de contact -->
-              <VSlideYTransition>
-                <VCard class="mb-6 animate-card" elevation="1">
-                  <VCardTitle class="d-flex align-center">
-                    <VIcon color="primary" class="mr-2">ri-phone-line</VIcon>
-                    <span class="text-h6">Informations de contact</span>
-                  </VCardTitle>
-                  <VDivider />
-                  <VCardText class="py-4 user-content">
-                    <VRow>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <h4 class="text-h6 mb-2">Téléphone mobile</h4>
-                          <p class="text-body-1 font-weight-medium">{{ user.mobile_number || 'Non renseigné' }}</p>
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <h4 class="text-h6 mb-2">Téléphone fixe</h4>
-                          <p class="text-body-1 font-weight-medium">{{ user.fix_number || 'Non renseigné' }}</p>
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <h4 class="text-h6 mb-2">Code pays</h4>
-                          <p class="text-body-1 font-weight-medium">{{ user.country_code || 'Non renseigné' }}</p>
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <h4 class="text-h6 mb-2">Civilité</h4>
-                          <p class="text-body-1 font-weight-medium">{{ user.civility || 'Non renseigné' }}</p>
-                        </div>
-                      </VCol>
-                    </VRow>
-                  </VCardText>
-                </VCard>
-              </VSlideYTransition>
-            </VCol>
-
-            <!-- Sidebar avec informations et actions -->
-            <VCol cols="12" md="4">
-              <VSlideXReverseTransition>
-                <VCard class="mb-6 animate-card" elevation="1">
-                  <VCardTitle class="d-flex align-center">
-                    <VIcon color="primary" class="mr-2">ri-information-line</VIcon>
-                    <span class="text-h6">Informations de l'utilisateur</span>
-                  </VCardTitle>
-                  <VDivider />
-                  <VList lines="two" density="comfortable">
-                    <VListItem>
-                      <template #prepend>
-                        <VIcon color="primary">ri-user-line</VIcon>
-                      </template>
-                      <VListItemTitle>Nom complet</VListItemTitle>
-                      <VListItemSubtitle>{{ user.first_name }} {{ user.last_name }}</VListItemSubtitle>
-                    </VListItem>
-
-                    <VListItem>
-                      <template #prepend>
-                        <VIcon color="primary">ri-mail-line</VIcon>
-                      </template>
-                      <VListItemTitle>Email</VListItemTitle>
-                      <VListItemSubtitle>{{ user.email }}</VListItemSubtitle>
-                    </VListItem>
-
-                    <VListItem>
-                      <template #prepend>
-                        <VIcon color="primary">ri-shield-user-line</VIcon>
-                      </template>
-                      <VListItemTitle>Type d'utilisateur</VListItemTitle>
-                      <VListItemSubtitle>{{ getUserTypeLabel(user.user_type) }}</VListItemSubtitle>
-                    </VListItem>
-
-                    <VListItem>
-                      <template #prepend>
-                        <VIcon color="primary">ri-checkbox-circle-line</VIcon>
-                      </template>
-                      <VListItemTitle>Statut</VListItemTitle>
-                      <VListItemSubtitle>{{ getStatusLabel(user.status) }}</VListItemSubtitle>
-                    </VListItem>
-
-                    <VListItem>
-                      <template #prepend>
-                        <VIcon color="primary">ri-calendar-todo-line</VIcon>
-                      </template>
-                      <VListItemTitle>Date de création</VListItemTitle>
-                      <VListItemSubtitle>{{ formatDate(user.created_at) }}</VListItemSubtitle>
-                    </VListItem>
-
-                    <VListItem>
-                      <template #prepend>
-                        <VIcon color="primary">ri-edit-line</VIcon>
-                      </template>
-                      <VListItemTitle>Dernière modification</VListItemTitle>
-                      <VListItemSubtitle>{{ formatDate(user.updated_at) }}</VListItemSubtitle>
-                    </VListItem>
-
-                    <VListItem v-if="user.two_factor_enabled">
-                      <template #prepend>
-                        <VIcon color="success">ri-shield-check-line</VIcon>
-                      </template>
-                      <VListItemTitle>Authentification à deux facteurs</VListItemTitle>
-                      <VListItemSubtitle>Activée</VListItemSubtitle>
-                    </VListItem>
-                  </VList>
-
-                  <!-- Actions -->
-                  <VDivider />
-                  <VCardText class="pa-4">
-                    <div class="text-subtitle-2 mb-3">Actions disponibles</div>
-                    <div class="d-flex flex-column gap-2">
-                      <VBtn v-if="canUpdateUsers" color="primary" variant="outlined" prepend-icon="ri-edit-line"
-                        @click="goToEdit" block>
-                        Modifier l'utilisateur
-                      </VBtn>
-                      <VBtn v-if="canGiveRoles" color="info" variant="outlined" prepend-icon="ri-user-settings-line"
-                        @click="goToRoleManagement" block>
-                        Gérer les rôles
-                      </VBtn>
-                      <VBtn v-if="canDeleteUsers" color="error" variant="outlined" prepend-icon="ri-delete-bin-line"
-                        @click="confirmDelete" block>
-                        Supprimer l'utilisateur
-                      </VBtn>
-                    </div>
-                  </VCardText>
-                </VCard>
-              </VSlideXReverseTransition>
-            </VCol>
-          </VRow>
-        </VCol>
-      </VRow>
+                  </VCard>
+                </VSlideXReverseTransition>
+              </VCol>
+            </VRow>
+          </VCol>
+        </VRow>
+      </div>
     </VFadeTransition>
 
     <!-- Utilisateur non trouvé -->
@@ -361,12 +300,12 @@ const confirmDelete = async () => {
 
   if (confirmed) {
     try {
-      // TODO: Implémenter la suppression
-      showToast({ message: 'Utilisateur supprimé avec succès', type: 'success' })
+      // Utiliser le composable useUsers pour la suppression
+      const { deleteUser } = useUsers()
+      await deleteUser(user.value.id)
       router.push({ name: 'users-index' })
     } catch (err: any) {
-      console.error('Erreur lors de la suppression:', err)
-      showToast({ message: 'Erreur lors de la suppression', type: 'error' })
+      // L'erreur est déjà gérée dans le composable useUsers
     }
   }
 }
@@ -433,6 +372,231 @@ const getStatusLabel = (status: string): string => {
   return labels[status] || status
 }
 
+
+
+const getLanguageLabel = (lang: string): string => {
+  const labels: Record<string, string> = {
+    fr: 'Français',
+    en: 'English',
+    es: 'Español',
+    de: 'Deutsch',
+    it: 'Italiano',
+    pt: 'Português',
+    ar: 'العربية',
+    zh: '中文',
+    ja: '日本語',
+    ko: '한국어'
+  }
+  return labels[lang] || lang || 'Français'
+}
+
+const getCountryLabel = (countryCode: string): string => {
+  const countries: Record<string, string> = {
+    'AF': 'Afghanistan',
+    'ZA': 'Afrique du Sud',
+    'AL': 'Albanie',
+    'DZ': 'Algérie',
+    'DE': 'Allemagne',
+    'AD': 'Andorre',
+    'AO': 'Angola',
+    'AG': 'Antigua-et-Barbuda',
+    'SA': 'Arabie saoudite',
+    'AR': 'Argentine',
+    'AM': 'Arménie',
+    'AU': 'Australie',
+    'AT': 'Autriche',
+    'AZ': 'Azerbaïdjan',
+    'BS': 'Bahamas',
+    'BH': 'Bahreïn',
+    'BD': 'Bangladesh',
+    'BB': 'Barbade',
+    'BY': 'Belarus',
+    'BE': 'Belgique',
+    'BZ': 'Belize',
+    'BJ': 'Bénin',
+    'BT': 'Bhoutan',
+    'BO': 'Bolivie',
+    'BA': 'Bosnie-Herzégovine',
+    'BW': 'Botswana',
+    'BR': 'Brésil',
+    'BN': 'Brunei',
+    'BG': 'Bulgarie',
+    'BF': 'Burkina Faso',
+    'BI': 'Burundi',
+    'KH': 'Cambodge',
+    'CM': 'Cameroun',
+    'CA': 'Canada',
+    'CV': 'Cap-Vert',
+    'CF': 'République centrafricaine',
+    'CL': 'Chili',
+    'CN': 'Chine',
+    'CY': 'Chypre',
+    'CO': 'Colombie',
+    'KM': 'Comores',
+    'CG': 'République du Congo',
+    'CD': 'République démocratique du Congo',
+    'KP': 'Corée du Nord',
+    'KR': 'Corée du Sud',
+    'CR': 'Costa Rica',
+    'CI': 'Côte d\'Ivoire',
+    'HR': 'Croatie',
+    'CU': 'Cuba',
+    'DK': 'Danemark',
+    'DJ': 'Djibouti',
+    'DM': 'Dominique',
+    'EG': 'Égypte',
+    'AE': 'Émirats arabes unis',
+    'EC': 'Équateur',
+    'ER': 'Érythrée',
+    'ES': 'Espagne',
+    'EE': 'Estonie',
+    'US': 'États-Unis',
+    'ET': 'Éthiopie',
+    'FJ': 'Fidji',
+    'FI': 'Finlande',
+    'FR': 'France',
+    'GA': 'Gabon',
+    'GM': 'Gambie',
+    'GE': 'Géorgie',
+    'GH': 'Ghana',
+    'GR': 'Grèce',
+    'GD': 'Grenade',
+    'GT': 'Guatemala',
+    'GN': 'Guinée',
+    'GW': 'Guinée-Bissau',
+    'GQ': 'Guinée équatoriale',
+    'GY': 'Guyana',
+    'HT': 'Haïti',
+    'HN': 'Honduras',
+    'HU': 'Hongrie',
+    'MH': 'Îles Marshall',
+    'SB': 'Îles Salomon',
+    'IN': 'Inde',
+    'ID': 'Indonésie',
+    'IR': 'Iran',
+    'IQ': 'Irak',
+    'IE': 'Irlande',
+    'IS': 'Islande',
+    'IL': 'Israël',
+    'IT': 'Italie',
+    'JM': 'Jamaïque',
+    'JP': 'Japon',
+    'JO': 'Jordanie',
+    'KZ': 'Kazakhstan',
+    'KE': 'Kenya',
+    'KG': 'Kirghizistan',
+    'KI': 'Kiribati',
+    'KW': 'Koweït',
+    'LA': 'Laos',
+    'LS': 'Lesotho',
+    'LV': 'Lettonie',
+    'LB': 'Liban',
+    'LR': 'Libéria',
+    'LY': 'Libye',
+    'LI': 'Liechtenstein',
+    'LT': 'Lituanie',
+    'LU': 'Luxembourg',
+    'MK': 'Macédoine du Nord',
+    'MG': 'Madagascar',
+    'MY': 'Malaisie',
+    'MW': 'Malawi',
+    'MV': 'Maldives',
+    'ML': 'Mali',
+    'MT': 'Malte',
+    'MA': 'Maroc',
+    'MU': 'Maurice',
+    'MR': 'Mauritanie',
+    'MX': 'Mexique',
+    'FM': 'Micronésie',
+    'MD': 'Moldavie',
+    'MC': 'Monaco',
+    'MN': 'Mongolie',
+    'ME': 'Monténégro',
+    'MZ': 'Mozambique',
+    'MM': 'Myanmar',
+    'NA': 'Namibie',
+    'NR': 'Nauru',
+    'NP': 'Népal',
+    'NI': 'Nicaragua',
+    'NE': 'Niger',
+    'NG': 'Nigeria',
+    'NO': 'Norvège',
+    'NZ': 'Nouvelle-Zélande',
+    'OM': 'Oman',
+    'UG': 'Ouganda',
+    'UZ': 'Ouzbékistan',
+    'PK': 'Pakistan',
+    'PW': 'Palaos',
+    'PA': 'Panama',
+    'PG': 'Papouasie-Nouvelle-Guinée',
+    'PY': 'Paraguay',
+    'NL': 'Pays-Bas',
+    'PE': 'Pérou',
+    'PH': 'Philippines',
+    'PL': 'Pologne',
+    'PT': 'Portugal',
+    'QA': 'Qatar',
+    'RO': 'Roumanie',
+    'GB': 'Royaume-Uni',
+    'RU': 'Russie',
+    'RW': 'Rwanda',
+    'KN': 'Saint-Christophe-et-Niévès',
+    'SM': 'Saint-Marin',
+    'VC': 'Saint-Vincent-et-les-Grenadines',
+    'LC': 'Sainte-Lucie',
+    'WS': 'Samoa',
+    'ST': 'Sao Tomé-et-Principe',
+    'SN': 'Sénégal',
+    'RS': 'Serbie',
+    'SC': 'Seychelles',
+    'SL': 'Sierra Leone',
+    'SG': 'Singapour',
+    'SK': 'Slovaquie',
+    'SI': 'Slovénie',
+    'SO': 'Somalie',
+    'SD': 'Soudan',
+    'SS': 'Soudan du Sud',
+    'LK': 'Sri Lanka',
+    'SE': 'Suède',
+    'CH': 'Suisse',
+    'SR': 'Suriname',
+    'SZ': 'Eswatini',
+    'SY': 'Syrie',
+    'TJ': 'Tadjikistan',
+    'TZ': 'Tanzanie',
+    'TD': 'Tchad',
+    'CZ': 'Tchéquie',
+    'TH': 'Thaïlande',
+    'TL': 'Timor oriental',
+    'TG': 'Togo',
+    'TO': 'Tonga',
+    'TT': 'Trinité-et-Tobago',
+    'TN': 'Tunisie',
+    'TM': 'Turkménistan',
+    'TR': 'Turquie',
+    'TV': 'Tuvalu',
+    'UA': 'Ukraine',
+    'UY': 'Uruguay',
+    'VU': 'Vanuatu',
+    'VA': 'Vatican',
+    'VE': 'Venezuela',
+    'VN': 'Viêt Nam',
+    'YE': 'Yémen',
+    'ZM': 'Zambie',
+    'ZW': 'Zimbabwe'
+  }
+  return countries[countryCode] || countryCode || 'Non défini'
+}
+
+const getCivilityLabel = (civility: string): string => {
+  const civilities: Record<string, string> = {
+    'Mr': 'Monsieur',
+    'Mme': 'Madame',
+    'Mlle': 'Mademoiselle'
+  }
+  return civilities[civility] || civility || 'Non défini'
+}
+
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('fr-FR', {
     year: 'numeric',
@@ -470,7 +634,7 @@ onMounted(() => {
 .user-header-overlay {
   position: relative;
   min-height: 300px;
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #585859 0%, #c2b7b7 100%);
   background-size: cover;
   background-position: center;
   display: flex;

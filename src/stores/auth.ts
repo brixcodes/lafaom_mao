@@ -89,8 +89,8 @@ export const useAuthStore = defineStore('auth', () => {
       error.value = null
       
       // Utiliser le service user pour créer l'utilisateur
-      const { userService } = await import('@/services/api/user')
-      const response = await userService.createUser(userData)
+      const { usersService } = await import('@/services/api/users')
+      const response = await usersService.createUser(userData)
       
       return response
     } catch (err: any) {

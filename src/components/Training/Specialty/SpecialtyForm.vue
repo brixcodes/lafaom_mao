@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useSpecialtyStore } from '@/stores/specialty'
+import { useTrainingStore } from '@/stores/training'
 import { confirmAction } from '@/utils/confirm'
 import { showToast } from '@/components/toast/toastManager'
 
 const props = defineProps<{ specialtyId?: number }>()
-const specialtyStore = useSpecialtyStore()
+const trainingStore = useSpecialtyStore()
 const router = useRouter()
 const route = useRoute()
 
@@ -33,7 +33,7 @@ onMounted(async () => {
   const id = props.specialtyId ?? (route.params.id ? Number(route.params.id) : undefined)
   if (id) {
     try {
-      const specialty = await specialtyStore.getSpecialtyById(id)
+      const specialty = await trainingStore.getSpecialtyById(id)
       form.value = {
         name: specialty.name,
         description: specialty.description || '',
@@ -45,7 +45,7 @@ onMounted(async () => {
   }
 })
 
-const isLoading = computed(() => specialtyStore.isLoading)
+const isLoading = computed(() => trainingStore.isLoading)
 
 const handleSubmit = async () => {
   // On valide le formulaire
@@ -73,10 +73,10 @@ const handleSubmit = async () => {
   try {
     const id = props.specialtyId ?? (route.params.id ? Number(route.params.id) : undefined)
     if (id) {
-      await specialtyStore.updateSpecialty(id, form.value)
+      await trainingStore.updateSpecialty(id, form.value)
       showToast({ message: 'Spécialité modifiée avec succès', type: 'success' })
     } else {
-      await specialtyStore.createSpecialty(form.value)
+      await trainingStore.createSpecialty(form.value)
       showToast({ message: 'Spécialité créée avec succès', type: 'success' })
     }
     router.push({ name: 'training-specialties-index' })

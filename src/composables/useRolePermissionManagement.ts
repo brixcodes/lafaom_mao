@@ -1,16 +1,18 @@
 import { ref, computed } from 'vue'
-import { permissionService } from '@/services/api/permissions'
+import { rolesPermissionsService } from '@/services/api/roles-permissions'
 import { useAuthStore } from '@/stores/auth'
 import { showToast } from '@/components/toast/toastManager'
 import { PermissionEnum, RoleEnum, type AssignPermissionsInput, type AssignRoleInput, type RoleOut, type PermissionOut } from '@/types/permissions'
 
 export const useRolePermissionManagement = () => {
   const authStore = useAuthStore()
-  
+
   // States
   const roles = ref<RoleOut[]>([])
   const permissions = ref<string[]>([])
   const userPermissions = ref<PermissionOut[]>([])
+  const userRole = ref<RoleOut | null>(null)
+  const myRole = ref<RoleOut | null>(null)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -23,11 +25,12 @@ export const useRolePermissionManagement = () => {
     try {
       isLoading.value = true
       error.value = null
-      const response = await permissionService.getRoles()
-      roles.value = response
+      const response = await rolesPermissionsService.getRoles()
+      roles.value = response.data || []
     } catch (err: any) {
       console.error('Erreur lors du chargement des rôles:', err)
       error.value = 'Erreur lors du chargement des rôles'
+      roles.value = [] // S'assurer que c'est un tableau
       showToast({
         message: 'Erreur lors du chargement des rôles',
         type: 'error'
@@ -42,11 +45,12 @@ export const useRolePermissionManagement = () => {
     try {
       isLoading.value = true
       error.value = null
-      const response = await permissionService.getPermissions()
-      permissions.value = response
+      const response = await rolesPermissionsService.getPermissions()
+      permissions.value = response.data || []
     } catch (err: any) {
       console.error('Erreur lors du chargement des permissions:', err)
       error.value = 'Erreur lors du chargement des permissions'
+      permissions.value = [] // S'assurer que c'est un tableau
       showToast({
         message: 'Erreur lors du chargement des permissions',
         type: 'error'
@@ -61,10 +65,18 @@ export const useRolePermissionManagement = () => {
     try {
       isLoading.value = true
       error.value = null
-      const response = await permissionService.getUserPermissions(userId)
+      const response = await rolesPermissionsService.getUserPermissions(userId)
       userPermissions.value = response.data || []
     } catch (err: any) {
       console.error('Erreur lors du chargement des permissions utilisateur:', err)
+      
+      // Si c'est une erreur 403, ne pas afficher de toast d'erreur
+      if (err.response?.status === 403) {
+        console.warn('Accès refusé pour les permissions utilisateur - permissions insuffisantes')
+        userPermissions.value = [] // Initialiser avec un tableau vide
+        return
+      }
+      
       error.value = 'Erreur lors du chargement des permissions utilisateur'
       showToast({
         message: 'Erreur lors du chargement des permissions utilisateur',
@@ -75,25 +87,78 @@ export const useRolePermissionManagement = () => {
     }
   }
 
+  // Charger le rôle d'un utilisateur
+  const loadUserRole = async (userId: string) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      const response = await rolesPermissionsService.getUserRole(userId)
+      userRole.value = response.data || null
+    } catch (err: any) {
+      console.error('Erreur lors du chargement du rôle utilisateur:', err)
+      // Si l'erreur est "Role not found", c'est normal, l'utilisateur n'a pas de rôle
+      if (err.response?.data?.error_code === 'role_not_found') {
+        userRole.value = null
+        error.value = null // Pas d'erreur, juste pas de rôle
+      } else if (err.response?.status === 403) {
+        console.warn('Accès refusé pour le rôle utilisateur - permissions insuffisantes')
+        userRole.value = null
+        error.value = null // Pas d'erreur, juste permissions insuffisantes
+      } else {
+        error.value = 'Erreur lors du chargement du rôle utilisateur'
+        showToast({
+          message: 'Erreur lors du chargement du rôle utilisateur',
+          type: 'error'
+        })
+      }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Charger le rôle de l'utilisateur connecté
+  const loadMyRole = async () => {
+    try {
+      isLoading.value = true
+      error.value = null
+      const response = await rolesPermissionsService.getMyRole()
+      myRole.value = response.data || null
+    } catch (err: any) {
+      console.error('Erreur lors du chargement de mon rôle:', err)
+      // Si l'erreur est "Role not found", c'est normal, l'utilisateur n'a pas de rôle
+      if (err.response?.data?.error_code === 'role_not_found') {
+        myRole.value = null
+        error.value = null // Pas d'erreur, juste pas de rôle
+      } else {
+        error.value = 'Erreur lors du chargement de mon rôle'
+        showToast({
+          message: 'Erreur lors du chargement de mon rôle',
+          type: 'error'
+        })
+      }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // Assigner des permissions à un utilisateur
   const assignPermissions = async (data: AssignPermissionsInput) => {
     try {
       isLoading.value = true
       error.value = null
-      
-      const response = await permissionService.assignPermissions(data)
-      
+
+      const response = await rolesPermissionsService.assignPermissions(data)
+
       showToast({
         message: 'Permissions assignées avec succès',
         type: 'success'
       })
-      
+
       // Recharger les permissions de l'utilisateur
       await loadUserPermissions(data.user_id)
-      
+
       return response
     } catch (err: any) {
-      console.error('Erreur lors de l\'assignation des permissions:', err)
       error.value = 'Erreur lors de l\'assignation des permissions'
       showToast({
         message: err.response?.data?.message || 'Erreur lors de l\'assignation des permissions',
@@ -110,17 +175,17 @@ export const useRolePermissionManagement = () => {
     try {
       isLoading.value = true
       error.value = null
-      
-      const response = await permissionService.revokePermissions(data)
-      
+
+      const response = await rolesPermissionsService.revokePermissions(data)
+
       showToast({
         message: 'Permissions révoquées avec succès',
         type: 'success'
       })
-      
+
       // Recharger les permissions de l'utilisateur
       await loadUserPermissions(data.user_id)
-      
+
       return response
     } catch (err: any) {
       console.error('Erreur lors de la révocation des permissions:', err)
@@ -140,20 +205,28 @@ export const useRolePermissionManagement = () => {
     try {
       isLoading.value = true
       error.value = null
-      
-      const response = await permissionService.assignRole(data)
-      
+
+      const response = await rolesPermissionsService.assignRole(data)
+
       showToast({
         message: 'Rôle assigné avec succès',
         type: 'success'
       })
-      
-      // Recharger les permissions de l'utilisateur
-      await loadUserPermissions(data.user_id)
-      
+
+      // Recharger les permissions et le rôle de l'utilisateur
+      // Ne pas échouer si on n'a pas les permissions pour recharger
+      try {
+        await Promise.all([
+          loadUserPermissions(data.user_id),
+          loadUserRole(data.user_id)
+        ])
+      } catch (reloadErr: any) {
+        console.warn('Impossible de recharger les données après assignation:', reloadErr)
+        // Ne pas propager l'erreur, l'opération principale a réussi
+      }
+
       return response
     } catch (err: any) {
-      console.error('Erreur lors de l\'assignation du rôle:', err)
       error.value = 'Erreur lors de l\'assignation du rôle'
       showToast({
         message: err.response?.data?.message || 'Erreur lors de l\'assignation du rôle',
@@ -170,17 +243,26 @@ export const useRolePermissionManagement = () => {
     try {
       isLoading.value = true
       error.value = null
-      
-      const response = await permissionService.revokeRole(data)
-      
+
+      const response = await rolesPermissionsService.revokeRole(data)
+
       showToast({
         message: 'Rôle révoqué avec succès',
         type: 'success'
       })
-      
-      // Recharger les permissions de l'utilisateur
-      await loadUserPermissions(data.user_id)
-      
+
+      // Recharger les permissions et le rôle de l'utilisateur
+      // Ne pas échouer si on n'a pas les permissions pour recharger
+      try {
+        await Promise.all([
+          loadUserPermissions(data.user_id),
+          loadUserRole(data.user_id)
+        ])
+      } catch (reloadErr: any) {
+        console.warn('Impossible de recharger les données après révocation:', reloadErr)
+        // Ne pas propager l'erreur, l'opération principale a réussi
+      }
+
       return response
     } catch (err: any) {
       console.error('Erreur lors de la révocation du rôle:', err)
@@ -207,16 +289,18 @@ export const useRolePermissionManagement = () => {
 
   // Obtenir les permissions d'un utilisateur
   const getUserPermissions = (userId: string): string[] => {
-    return userPermissions.value
+    const permissions = userPermissions.value
       .filter(p => p.user_id === userId)
       .map(p => p.permission)
+    return permissions
   }
 
   // Obtenir les rôles d'un utilisateur
   const getUserRoles = (userId: string): number[] => {
-    return userPermissions.value
+    const roles = userPermissions.value
       .filter(p => p.user_id === userId && p.role_id !== null)
       .map(p => p.role_id!)
+    return roles
   }
 
   return {
@@ -224,17 +308,21 @@ export const useRolePermissionManagement = () => {
     roles,
     permissions,
     userPermissions,
+    userRole,
+    myRole,
     isLoading,
     error,
-    
+
     // Computed
     canManageRoles,
     canManagePermissions,
-    
+
     // Methods
     loadRoles,
     loadPermissions,
     loadUserPermissions,
+    loadUserRole,
+    loadMyRole,
     assignPermissions,
     revokePermissions,
     assignRole,

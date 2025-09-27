@@ -224,7 +224,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { organizationCenterService } from '@/services/api/organizationCenters'
+import { organizationCentersService } from '@/services/api/organization-centers'
 import type { OrganizationCenter, OrganizationCenterUpdateInput } from '@/types/organizationCenters'
 import { OrganizationStatusEnum, OrganizationTypeEnum } from '@/types/organizationCenters'
 import { showToast } from '@/components/toast/toastManager'
@@ -494,7 +494,7 @@ const handleSubmit = async () => {
 
   isSaving.value = true
   try {
-    await organizationCenterService.updateOrganizationCenter(currentCenter.value.id, center.value)
+    await organizationCentersService.updateOrganizationCenter(currentCenter.value.id, center.value)
     showToast({ message: 'Centre d\'organisation modifié avec succès', type: 'success' })
     
     // Rediriger vers la liste après succès
@@ -511,7 +511,7 @@ const loadCenter = async () => {
   try {
     isLoading.value = true
     const centerId = route.params.id as string
-    const response = await organizationCenterService.getOrganizationCenter(parseInt(centerId))
+    const response = await organizationCentersService.getOrganizationCenter(parseInt(centerId))
     currentCenter.value = response.data
     
     // Populate form with current center data

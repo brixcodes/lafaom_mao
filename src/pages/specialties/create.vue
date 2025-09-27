@@ -56,13 +56,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSpecialtyStore } from '@/stores/specialties'
+import { useTrainingStore } from '@/stores/training'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'
 import type { SpecialtyCreateInput } from '@/types/specialties'
 
 const router = useRouter()
-const specialtyStore = useSpecialtyStore()
+const trainingStore = useSpecialtyStore()
 
 // Form ref
 const formRef = ref()
@@ -99,7 +99,7 @@ const handleSubmit = async () => {
 
   isSaving.value = true
   try {
-    await specialtyStore.createSpecialty(specialty.value)
+    await trainingStore.createSpecialty(specialty.value)
     showToast({ message: 'Spécialité créée avec succès', type: 'success' })
     router.push({ name: 'specialties-index' })
   } catch (err: any) {

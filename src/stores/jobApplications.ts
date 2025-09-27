@@ -1,7 +1,7 @@
 // Store Pinia pour les candidatures (Job Applications)
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { jobApplicationsService } from '@/services/api/jobApplications'
+import { jobApplicationsService } from '@/services/api/job-offers'
 import type {
   JobApplicationOut,
   JobApplicationCreateInput,

@@ -1,93 +1,218 @@
 import { apiService } from './base'
-import type {
-  Reclamation,
-  ReclamationCreateInput,
-  ReclamationUpdateInput,
-  ReclamationAdminUpdateInput,
-  ReclamationFilter,
-  ReclamationOutSuccess,
-  ReclamationListOutSuccess,
-  ReclamationPageOutSuccess,
-  ReclamationType,
-  ReclamationTypeListOutSuccess,
-} from '@/types/reclamations'
 
-export class ReclamationService {
-  // ===========================================
-  // RECLAMATION CRUD
-  // ===========================================
+// ===== INTERFACES RECLAMATIONS =====
 
-  async getReclamations(filters: ReclamationFilter): Promise<ReclamationPageOutSuccess> {
-    return apiService.get('/reclamations', { params: filters })
+export interface ReclamationCreateInput {
+  application_number: string
+  subject: string
+  reclamation_type: number
+  priority?: string
+  description: string
+}
+
+export interface ReclamationAdminUpdateInput {
+  status?: string
+}
+
+export interface ReclamationOut {
+  id: number
+  admin_id?: string
+  reclamation_number: string
+  application_number: string
+  subject: string
+  reclamation_type: number
+  priority: string
+  status: string
+  description: string
+  closure_date?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ReclamationFullOut extends ReclamationOut {
+  admin_name?: string
+  reclamation_type_name?: string
+}
+
+export interface ReclamationOutSuccess {
+  success: boolean
+  message: string
+  data: ReclamationFullOut
+}
+
+export interface ReclamationsPageOutSuccess {
+  data: ReclamationOut[]
+  page: number
+  number: number
+  total_number: number
+}
+
+// ===== INTERFACES RECLAMATION TYPES =====
+
+export interface ReclamationTypeCreateInput {
+  name: string
+  description?: string
+}
+
+export interface ReclamationTypeUpdateInput {
+  name?: string
+  description?: string
+}
+
+export interface ReclamationTypeOut {
+  id: number
+  name: string
+  description?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ReclamationTypeOutSuccess {
+  success: boolean
+  message: string
+  data: ReclamationTypeOut
+}
+
+export interface ReclamationTypeListOutSuccess {
+  success: boolean
+  message: string
+  data: ReclamationTypeOut[]
+}
+
+// ===== SERVICE RECLAMATIONS =====
+
+class ReclamationsService {
+  // === MY RECLAMATIONS ===
+
+  /**
+   * Récupérer mes réclamations avec filtres
+   */
+  async getMyReclamations(filters: {
+    page?: number
+    page_size?: number
+    search?: string
+    status?: string
+    priority?: string
+    reclamation_type?: number
+    admin_id?: string
+    application_number?: string
+    order_by?: 'created_at' | 'subject' | 'priority'
+    asc?: 'asc' | 'desc'
+  } = {}): Promise<ReclamationsPageOutSuccess> {
+    const response = await apiService.get('/my-reclamations', { params: filters })
+    return response as ReclamationsPageOutSuccess
   }
 
-  async getReclamation(reclamationId: number): Promise<ReclamationOutSuccess> {
-    return apiService.get(`/reclamations/${reclamationId}`)
-  }
-
-  async createReclamation(data: ReclamationCreateInput): Promise<ReclamationOutSuccess> {
-    return apiService.post('/reclamations', data) as Promise<ReclamationOutSuccess>
-  }
-
-  async updateReclamation(reclamationId: number, data: ReclamationUpdateInput): Promise<ReclamationOutSuccess> {
-    return apiService.put(`/reclamations/${reclamationId}`, data) as Promise<ReclamationOutSuccess>
-  }
-
-  async deleteReclamation(reclamationId: number): Promise<ReclamationOutSuccess> {
-    return apiService.delete(`/reclamations/${reclamationId}`) as Promise<ReclamationOutSuccess>
-  }
-
-  // ===========================================
-  // ADMIN OPERATIONS
-  // ===========================================
-
-  async getAllReclamationsAdmin(filters: ReclamationFilter): Promise<ReclamationPageOutSuccess> {
-    return apiService.get('/reclamations/admin', { params: filters })
-  }
-
-  async updateReclamationStatus(reclamationId: number, data: ReclamationAdminUpdateInput): Promise<ReclamationOutSuccess> {
-    return apiService.put(`/reclamations/${reclamationId}/status`, data)
-  }
-
-  // ===========================================
-  // USER OPERATIONS
-  // ===========================================
-
-  async getMyReclamations(filters: ReclamationFilter): Promise<ReclamationPageOutSuccess> {
-    return apiService.get('/my-reclamations', { params: filters })
-  }
-
-  async getMyReclamation(reclamationId: number): Promise<ReclamationOutSuccess> {
-    return apiService.get(`/my-reclamations/${reclamationId}`)
-  }
-
+  /**
+   * Créer une nouvelle réclamation
+   */
   async createMyReclamation(data: ReclamationCreateInput): Promise<ReclamationOutSuccess> {
-    return apiService.post('/my-reclamations', data)
+    const response = await apiService.post('/my-reclamations', data)
+    return response as ReclamationOutSuccess
   }
 
-  // ===========================================
-  // RECLAMATION TYPES
-  // ===========================================
+  /**
+   * Récupérer ma réclamation par ID
+   */
+  async getMyReclamationById(reclamationId: number): Promise<ReclamationOutSuccess> {
+    const response = await apiService.get(`/my-reclamations/${reclamationId}`)
+    return response as ReclamationOutSuccess
+  }
 
+  /**
+   * Mettre à jour ma réclamation
+   */
+  async updateMyReclamation(reclamationId: number, data: ReclamationCreateInput): Promise<ReclamationOutSuccess> {
+    const response = await apiService.put(`/my-reclamations/${reclamationId}`, data)
+    return response as ReclamationOutSuccess
+  }
+
+  /**
+   * Supprimer ma réclamation
+   */
+  async deleteMyReclamation(reclamationId: number): Promise<ReclamationOutSuccess> {
+    const response = await apiService.delete(`/my-reclamations/${reclamationId}`)
+    return response as ReclamationOutSuccess
+  }
+
+  // === ADMIN RECLAMATIONS ===
+
+  /**
+   * Récupérer toutes les réclamations (admin) avec filtres
+   */
+  async getAllReclamations(filters: {
+    page?: number
+    page_size?: number
+    search?: string
+    status?: string
+    priority?: string
+    reclamation_type?: number
+    admin_id?: string
+    application_number?: string
+    order_by?: 'created_at' | 'subject' | 'priority'
+    asc?: 'asc' | 'desc'
+  } = {}): Promise<ReclamationsPageOutSuccess> {
+    const response = await apiService.get('/reclamations', { params: filters })
+    return response as ReclamationsPageOutSuccess
+  }
+
+  /**
+   * Récupérer une réclamation par ID (admin)
+   */
+  async getReclamationById(reclamationId: number): Promise<ReclamationOutSuccess> {
+    const response = await apiService.get(`/reclamations/${reclamationId}`)
+    return response as ReclamationOutSuccess
+  }
+
+  /**
+   * Mettre à jour le statut d'une réclamation (admin)
+   */
+  async updateReclamationStatus(reclamationId: number, data: ReclamationAdminUpdateInput): Promise<ReclamationOutSuccess> {
+    const response = await apiService.put(`/reclamations/${reclamationId}/status`, data)
+    return response as ReclamationOutSuccess
+  }
+
+  // === RECLAMATION TYPES ===
+
+  /**
+   * Récupérer tous les types de réclamation actifs
+   */
   async getActiveReclamationTypes(): Promise<ReclamationTypeListOutSuccess> {
-    return apiService.get('/reclamation-types/active/all')
+    const response = await apiService.get('/reclamation-types/active/all')
+    return response as ReclamationTypeListOutSuccess
   }
 
-  async createReclamationType(data: any): Promise<any> {
-    return apiService.post('/reclamation-types', data)
+  /**
+   * Créer un nouveau type de réclamation
+   */
+  async createReclamationType(data: ReclamationTypeCreateInput): Promise<ReclamationTypeOutSuccess> {
+    const response = await apiService.post('/reclamation-types', data)
+    return response as ReclamationTypeOutSuccess
   }
 
-  async getReclamationType(typeId: number): Promise<any> {
-    return apiService.get(`/reclamation-types/${typeId}`)
+  /**
+   * Récupérer un type de réclamation par ID
+   */
+  async getReclamationTypeById(typeId: number): Promise<ReclamationTypeOutSuccess> {
+    const response = await apiService.get(`/reclamation-types/${typeId}`)
+    return response as ReclamationTypeOutSuccess
   }
 
-  async updateReclamationType(typeId: number, data: any): Promise<any> {
-    return apiService.put(`/reclamation-types/${typeId}`, data)
+  /**
+   * Mettre à jour un type de réclamation
+   */
+  async updateReclamationType(typeId: number, data: ReclamationTypeUpdateInput): Promise<ReclamationTypeOutSuccess> {
+    const response = await apiService.put(`/reclamation-types/${typeId}`, data)
+    return response as ReclamationTypeOutSuccess
   }
 
-  async deleteReclamationType(typeId: number): Promise<any> {
-    return apiService.delete(`/reclamation-types/${typeId}`)
+  /**
+   * Supprimer un type de réclamation
+   */
+  async deleteReclamationType(typeId: number): Promise<ReclamationTypeOutSuccess> {
+    const response = await apiService.delete(`/reclamation-types/${typeId}`)
+    return response as ReclamationTypeOutSuccess
   }
 }
 
-export const reclamationService = new ReclamationService()
+export const reclamationsService = new ReclamationsService()

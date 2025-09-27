@@ -1,435 +1,423 @@
+// Store Pinia pour les formations et spécialités
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { type Training, type TrainingSession, type StudentApplication, type TrainingCreateInput, type TrainingUpdateInput, type TrainingSessionCreateInput, type TrainingSessionUpdateInput, type StudentApplicationCreateInput, type StudentApplicationUpdateInput, type TrainingFilter, type SessionFilter, type ApplicationFilter, type TrainingOutSuccess, type TrainingListOutSuccess, type TrainingSessionOutSuccess, type TrainingSessionListOutSuccess, type StudentApplicationOutSuccess, type StudentApplicationListOutSuccess } from '@/types/training'
-import * as trainingService from '@/services/training'
+import { trainingService } from '@/services/api/training'
+import type {
+  Training,
+  TrainingSession,
+  Specialty,
+  TrainingCreateInput,
+  TrainingUpdateInput,
+  TrainingSessionCreateInput,
+  TrainingSessionUpdateInput,
+  SpecialtyCreateInput,
+  SpecialtyUpdateInput,
+  TrainingFilter,
+  SessionFilter,
+  SpecialtyFilter,
+  TrainingOutSuccess,
+  TrainingListOutSuccess,
+  TrainingSessionOutSuccess,
+  TrainingSessionListOutSuccess,
+  SpecialtyOutSuccess,
+  SpecialtyListOutSuccess,
+} from '@/types/training'
 
 export const useTrainingStore = defineStore('training', () => {
   // === STATE ===
+  
+  // Formations
   const trainings = ref<Training[]>([])
   const currentTraining = ref<Training | null>(null)
-  const trainingSessions = ref<TrainingSession[]>([])
-  const currentSession = ref<TrainingSession | null>(null)
-  const applications = ref<StudentApplication[]>([])
-  const currentApplication = ref<StudentApplication | null>(null)
+  const trainingFilters = ref<TrainingFilter>({})
   
+  // Sessions de formation
+  const sessions = ref<TrainingSession[]>([])
+  const currentSession = ref<TrainingSession | null>(null)
+  const sessionFilters = ref<SessionFilter>({})
+  
+  // Spécialités
+  const specialties = ref<Specialty[]>([])
+  const currentSpecialty = ref<Specialty | null>(null)
+  const specialtyFilters = ref<SpecialtyFilter>({})
+  
+  // État général
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  
-  // Pagination
-  const trainingsPagination = ref({
-    page: 1,
-    pageSize: 20,
-    total: 0
-  })
-  
-  const sessionsPagination = ref({
-    page: 1,
-    pageSize: 20,
-    total: 0
-  })
-  
-  const applicationsPagination = ref({
-    page: 1,
-    pageSize: 20,
-    total: 0
-  })
+  const currentPage = ref(1)
+  const totalPages = ref(1)
+  const totalCount = ref(0)
 
   // === GETTERS ===
+  
   const hasTrainings = computed(() => trainings.value.length > 0)
-  const hasSessions = computed(() => trainingSessions.value.length > 0)
-  const hasApplications = computed(() => applications.value.length > 0)
+  const hasSessions = computed(() => sessions.value.length > 0)
+  const hasSpecialties = computed(() => specialties.value.length > 0)
   
-  const activeTrainings = computed(() => {
-    return trainings.value.filter(training => training.status === 'ACTIVE')
-  })
+  const activeTrainings = computed(() => 
+    trainings.value.filter(t => t.status === 'ACTIVE')
+  )
   
-  const openSessions = computed(() => {
-    return trainingSessions.value.filter(session => 
-      session.status === 'OPEN_FOR_REGISTRATION'
-    )
-  })
+  const activeSessions = computed(() => 
+    sessions.value.filter(s => s.status === 'OPEN_FOR_REGISTRATION')
+  )
   
-  const applicationStats = computed(() => {
-    return {
-      total: applications.value.length,
-      received: applications.value.filter(app => app.status === 'RECEIVED').length,
-      approved: applications.value.filter(app => app.status === 'APPROVED').length,
-      refused: applications.value.filter(app => app.status === 'REFUSED').length
-    }
-  })
+  const upcomingSessions = computed(() => 
+    sessions.value.filter(s => new Date(s.start_date) > new Date())
+  )
 
-  // === ACTIONS ===
+  // === ACTIONS FORMATIONS ===
   
-  // Training Actions
-  const fetchTrainings = async (filter?: TrainingFilter) => {
+  const loadTrainings = async (filters?: TrainingFilter) => {
     try {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.getTrainings(filter)
-      trainings.value = response.data
-      trainingsPagination.value.total = response.total
+      if (filters) {
+        trainingFilters.value = filters
+      }
       
-      return response
+      const response = await trainingService.getTrainings(trainingFilters.value)
+      trainings.value = response.data || []
+      totalCount.value = response.total || 0
+      totalPages.value = response.total_pages || 1
+      
     } catch (err: any) {
-      error.value = err.message || 'Error fetching trainings'
-      throw err
+      error.value = err.message || 'Erreur lors du chargement des formations'
+      console.error('Error loading trainings:', err)
     } finally {
       isLoading.value = false
     }
   }
-
-  const getTrainingById = async (id: string) => {
+  
+  const getTraining = async (id: string) => {
     try {
       isLoading.value = true
       error.value = null
       
       const response = await trainingService.getTraining(id)
       currentTraining.value = response.data
-      
       return response
+      
     } catch (err: any) {
-      error.value = err.message || 'Error fetching training'
+      error.value = err.message || 'Erreur lors du chargement de la formation'
+      console.error('Error loading training:', err)
       throw err
     } finally {
       isLoading.value = false
     }
   }
-
+  
   const createTraining = async (data: TrainingCreateInput) => {
     try {
       isLoading.value = true
       error.value = null
       
       const response = await trainingService.createTraining(data)
-      trainings.value.unshift(response.data)
-      
+      await loadTrainings() // Recharger la liste
       return response
+      
     } catch (err: any) {
-      error.value = err.message || 'Error creating training'
+      error.value = err.message || 'Erreur lors de la création de la formation'
+      console.error('Error creating training:', err)
       throw err
     } finally {
       isLoading.value = false
     }
   }
-
+  
   const updateTraining = async (id: string, data: TrainingUpdateInput) => {
     try {
       isLoading.value = true
       error.value = null
       
       const response = await trainingService.updateTraining(id, data)
-      
-      // Update in list if present
-      const index = trainings.value.findIndex(t => t.id === id)
-      if (index !== -1) {
-        trainings.value[index] = response.data
-      }
-      
-      // Update current if it's the same
-      if (currentTraining.value?.id === id) {
-        currentTraining.value = response.data
-      }
-      
+      await loadTrainings() // Recharger la liste
       return response
+      
     } catch (err: any) {
-      error.value = err.message || 'Error updating training'
+      error.value = err.message || 'Erreur lors de la mise à jour de la formation'
+      console.error('Error updating training:', err)
       throw err
     } finally {
       isLoading.value = false
     }
   }
-
+  
   const deleteTraining = async (id: string) => {
     try {
       isLoading.value = true
       error.value = null
       
-      await trainingService.deleteTraining(id)
-      trainings.value = trainings.value.filter(t => t.id !== id)
-      
-      if (currentTraining.value?.id === id) {
-        currentTraining.value = null
-      }
+      const response = await trainingService.deleteTraining(id)
+      await loadTrainings() // Recharger la liste
+      return response
       
     } catch (err: any) {
-      error.value = err.message || 'Error deleting training'
+      error.value = err.message || 'Erreur lors de la suppression de la formation'
+      console.error('Error deleting training:', err)
       throw err
     } finally {
       isLoading.value = false
     }
   }
 
-  // Session Actions
-  const fetchSessions = async (filter?: SessionFilter) => {
+  // === ACTIONS SESSIONS ===
+  
+  const loadSessions = async (filters?: SessionFilter) => {
     try {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.getSessions(filter)
-      trainingSessions.value = response.data
-      sessionsPagination.value.total = response.total
+      if (filters) {
+        sessionFilters.value = filters
+      }
       
-      return response
+      const response = await trainingService.getSessions(sessionFilters.value)
+      sessions.value = response.data || []
+      
     } catch (err: any) {
-      error.value = err.message || 'Error fetching sessions'
-      throw err
+      error.value = err.message || 'Erreur lors du chargement des sessions'
+      console.error('Error loading sessions:', err)
     } finally {
       isLoading.value = false
     }
   }
-
-  const getSessionById = async (id: string) => {
+  
+  const getSession = async (id: string) => {
     try {
       isLoading.value = true
       error.value = null
       
       const response = await trainingService.getSession(id)
       currentSession.value = response.data
-      
       return response
+      
     } catch (err: any) {
-      error.value = err.message || 'Error fetching session'
+      error.value = err.message || 'Erreur lors du chargement de la session'
+      console.error('Error loading session:', err)
       throw err
     } finally {
       isLoading.value = false
     }
   }
-
+  
   const createSession = async (data: TrainingSessionCreateInput) => {
     try {
       isLoading.value = true
       error.value = null
       
       const response = await trainingService.createSession(data)
-      trainingSessions.value.unshift(response.data)
-      
+      await loadSessions() // Recharger la liste
       return response
+      
     } catch (err: any) {
-      error.value = err.message || 'Error creating session'
+      error.value = err.message || 'Erreur lors de la création de la session'
+      console.error('Error creating session:', err)
       throw err
     } finally {
       isLoading.value = false
     }
   }
-
+  
   const updateSession = async (id: string, data: TrainingSessionUpdateInput) => {
     try {
       isLoading.value = true
       error.value = null
       
       const response = await trainingService.updateSession(id, data)
-      
-      const index = trainingSessions.value.findIndex(s => s.id === id)
-      if (index !== -1) {
-        trainingSessions.value[index] = response.data
-      }
-      
-      if (currentSession.value?.id === id) {
-        currentSession.value = response.data
-      }
-      
+      await loadSessions() // Recharger la liste
       return response
+      
     } catch (err: any) {
-      error.value = err.message || 'Error updating session'
+      error.value = err.message || 'Erreur lors de la mise à jour de la session'
+      console.error('Error updating session:', err)
       throw err
     } finally {
       isLoading.value = false
     }
   }
-
+  
   const deleteSession = async (id: string) => {
     try {
       isLoading.value = true
       error.value = null
       
-      await trainingService.deleteSession(id)
-      trainingSessions.value = trainingSessions.value.filter(s => s.id !== id)
+      const response = await trainingService.deleteSession(id)
+      await loadSessions() // Recharger la liste
+      return response
       
-      if (currentSession.value?.id === id) {
-        currentSession.value = null
+    } catch (err: any) {
+      error.value = err.message || 'Erreur lors de la suppression de la session'
+      console.error('Error deleting session:', err)
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // === ACTIONS SPÉCIALITÉS ===
+  
+  const loadSpecialties = async (filters?: SpecialtyFilter) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      
+      if (filters) {
+        specialtyFilters.value = filters
       }
       
+      const response = await trainingService.getSpecialties(specialtyFilters.value)
+      specialties.value = response.data || []
+      
     } catch (err: any) {
-      error.value = err.message || 'Error deleting session'
-      throw err
+      error.value = err.message || 'Erreur lors du chargement des spécialités'
+      console.error('Error loading specialties:', err)
     } finally {
       isLoading.value = false
     }
   }
-
-  // Application Actions
-  const fetchApplications = async (filter?: ApplicationFilter) => {
+  
+  const getSpecialty = async (id: number) => {
     try {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.getApplications(filter)
-      applications.value = response.data
-      applicationsPagination.value.total = response.total
-      
+      const response = await trainingService.getSpecialty(id)
+      currentSpecialty.value = response.data
       return response
+      
     } catch (err: any) {
-      error.value = err.message || 'Error fetching applications'
+      error.value = err.message || 'Erreur lors du chargement de la spécialité'
+      console.error('Error loading specialty:', err)
       throw err
     } finally {
       isLoading.value = false
     }
   }
-
-  const getApplicationById = async (id: number) => {
+  
+  const createSpecialty = async (data: SpecialtyCreateInput) => {
     try {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.getApplication(id)
-      currentApplication.value = response.data
-      
+      const response = await trainingService.createSpecialty(data)
+      await loadSpecialties() // Recharger la liste
       return response
+      
     } catch (err: any) {
-      error.value = err.message || 'Error fetching application'
+      error.value = err.message || 'Erreur lors de la création de la spécialité'
+      console.error('Error creating specialty:', err)
       throw err
     } finally {
       isLoading.value = false
     }
   }
-
-  const createApplication = async (data: StudentApplicationCreateInput) => {
+  
+  const updateSpecialty = async (id: number, data: SpecialtyUpdateInput) => {
     try {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.createApplication(data)
-      applications.value.unshift(response.data)
-      
+      const response = await trainingService.updateSpecialty(id, data)
+      await loadSpecialties() // Recharger la liste
       return response
+      
     } catch (err: any) {
-      error.value = err.message || 'Error creating application'
+      error.value = err.message || 'Erreur lors de la mise à jour de la spécialité'
+      console.error('Error updating specialty:', err)
       throw err
     } finally {
       isLoading.value = false
     }
   }
-
-  const updateApplication = async (id: number, data: StudentApplicationUpdateInput) => {
+  
+  const deleteSpecialty = async (id: number) => {
     try {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.updateApplication(id, data)
-      
-      const index = applications.value.findIndex(a => a.id === id)
-      if (index !== -1) {
-        applications.value[index] = response.data
-      }
-      
-      if (currentApplication.value?.id === id) {
-        currentApplication.value = response.data
-      }
-      
+      const response = await trainingService.deleteSpecialty(id)
+      await loadSpecialties() // Recharger la liste
       return response
+      
     } catch (err: any) {
-      error.value = err.message || 'Error updating application'
+      error.value = err.message || 'Erreur lors de la suppression de la spécialité'
+      console.error('Error deleting specialty:', err)
       throw err
     } finally {
       isLoading.value = false
     }
   }
 
-  const deleteApplication = async (id: number) => {
-    try {
-      isLoading.value = true
-      error.value = null
-      
-      await trainingService.deleteApplication(id)
-      applications.value = applications.value.filter(a => a.id !== id)
-      
-      if (currentApplication.value?.id === id) {
-        currentApplication.value = null
-      }
-      
-    } catch (err: any) {
-      error.value = err.message || 'Error deleting application'
-      throw err
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  // Utility Actions
-  const searchTrainings = async (query: string, filters?: Partial<TrainingFilter>) => {
-    return await fetchTrainings({
-      search: query,
-      ...filters,
-      page: filters?.page || 1,
-      page_size: filters?.page_size || 20
-    })
-  }
-
+  // === ACTIONS UTILITAIRES ===
+  
   const clearError = () => {
     error.value = null
   }
-
-  const clearData = () => {
+  
+  const resetState = () => {
     trainings.value = []
+    sessions.value = []
+    specialties.value = []
     currentTraining.value = null
-    trainingSessions.value = []
     currentSession.value = null
-    applications.value = []
-    currentApplication.value = null
+    currentSpecialty.value = null
+    isLoading.value = false
     error.value = null
-    
-    trainingsPagination.value = { page: 1, pageSize: 20, total: 0 }
-    sessionsPagination.value = { page: 1, pageSize: 20, total: 0 }
-    applicationsPagination.value = { page: 1, pageSize: 20, total: 0 }
+    currentPage.value = 1
+    totalPages.value = 1
+    totalCount.value = 0
   }
 
   return {
     // State
     trainings,
+    sessions,
+    specialties,
     currentTraining,
-    trainingSessions,
     currentSession,
-    applications,
-    currentApplication,
+    currentSpecialty,
+    trainingFilters,
+    sessionFilters,
+    specialtyFilters,
     isLoading,
     error,
-    trainingsPagination,
-    sessionsPagination,
-    applicationsPagination,
-    
+    currentPage,
+    totalPages,
+    totalCount,
+
     // Getters
     hasTrainings,
     hasSessions,
-    hasApplications,
+    hasSpecialties,
     activeTrainings,
-    openSessions,
-    applicationStats,
-    
-    // Training Actions
-    fetchTrainings,
-    getTrainingById,
+    activeSessions,
+    upcomingSessions,
+
+    // Actions Formations
+    loadTrainings,
+    getTraining,
     createTraining,
     updateTraining,
     deleteTraining,
-    searchTrainings,
-    
-    // Session Actions
-    fetchSessions,
-    getSessionById,
+
+    // Actions Sessions
+    loadSessions,
+    getSession,
     createSession,
     updateSession,
     deleteSession,
-    
-    // Application Actions
-    fetchApplications,
-    getApplicationById,
-    createApplication,
-    updateApplication,
-    deleteApplication,
-    
-    // Utility Actions
+
+    // Actions Spécialités
+    loadSpecialties,
+    getSpecialty,
+    createSpecialty,
+    updateSpecialty,
+    deleteSpecialty,
+
+    // Actions Utilitaires
     clearError,
-    clearData,
+    resetState,
   }
 })

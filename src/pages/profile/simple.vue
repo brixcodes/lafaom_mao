@@ -482,7 +482,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { userService } from '@/services/api/user'
+import { usersService } from '@/services/api/users'
 import { authService } from '@/services/api/auth'
 import { showToast } from '@/components/toast/toastManager'
 
@@ -695,7 +695,7 @@ const updateProfessionalInfo = async () => {
   try {
     loading.value = true
     // API call to update professional information
-    // await userService.updateProfessionalInfo(user.value.id, editableProfile.value)
+    // await usersService.updateProfessionalInfo(user.value.id, editableProfile.value)
     console.log('Mise à jour des informations professionnelles:', editableProfile.value)
     editMode.value = false
   } catch (error) {

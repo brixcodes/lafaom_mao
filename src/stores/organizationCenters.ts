@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { organizationCenterService } from '@/services/api/organizationCenters'
+import { organizationCentersService } from '@/services/api/organization-centers'
 import type { 
   OrganizationCenter, 
   OrganizationCenterCreateInput, 
@@ -67,7 +67,7 @@ export const useOrganizationCentersStore = defineStore('organizationCenters', ()
       error.value = ''
       
       const mergedFilters = { ...filters.value, ...newFilters }
-      const response = await organizationCenterService.listOrganizationCenters(mergedFilters)
+      const response = await organizationCentersService.listOrganizationCenters(mergedFilters)
       
       centers.value = response.data
       filters.value = mergedFilters
@@ -85,7 +85,7 @@ export const useOrganizationCentersStore = defineStore('organizationCenters', ()
       isLoading.value = true
       error.value = ''
       
-      const response = await organizationCenterService.getOrganizationCenter(id)
+      const response = await organizationCentersService.getOrganizationCenter(id)
       currentCenter.value = response.data
       
       return response.data
@@ -103,7 +103,7 @@ export const useOrganizationCentersStore = defineStore('organizationCenters', ()
       isLoading.value = true
       error.value = ''
       
-      const response = await organizationCenterService.createOrganizationCenter(centerData)
+      const response = await organizationCentersService.createOrganizationCenter(centerData)
       centers.value.unshift(response.data)
       
       return response.data
@@ -121,7 +121,7 @@ export const useOrganizationCentersStore = defineStore('organizationCenters', ()
       isLoading.value = true
       error.value = ''
       
-      const response = await organizationCenterService.updateOrganizationCenter(id, centerData)
+      const response = await organizationCentersService.updateOrganizationCenter(id, centerData)
       
       // Update in local state
       const index = centers.value.findIndex(center => center.id === id)
@@ -148,7 +148,7 @@ export const useOrganizationCentersStore = defineStore('organizationCenters', ()
       isLoading.value = true
       error.value = ''
       
-      const response = await organizationCenterService.updateOrganizationCenterStatus(id, { status })
+      const response = await organizationCentersService.updateOrganizationCenterStatus(id, { status })
       
       // Update in local state
       const index = centers.value.findIndex(center => center.id === id)
@@ -175,7 +175,7 @@ export const useOrganizationCentersStore = defineStore('organizationCenters', ()
       isLoading.value = true
       error.value = ''
       
-      await organizationCenterService.deleteOrganizationCenter(id)
+      await organizationCentersService.deleteOrganizationCenter(id)
       
       // Remove from local state
       centers.value = centers.value.filter(center => center.id !== id)
@@ -213,7 +213,7 @@ export const useOrganizationCentersStore = defineStore('organizationCenters', ()
       isLoading.value = true
       error.value = ''
       
-      const response = await organizationCenterService.getOrganizationCentersByLocation(countryCode, city)
+      const response = await organizationCentersService.getOrganizationCentersByLocation(countryCode, city)
       return response.data
     } catch (err) {
       console.error('Erreur lors du chargement des centres par localisation:', err)
