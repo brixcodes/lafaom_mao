@@ -17,6 +17,7 @@ import { validateEmail, validateMinLength, validateRequired } from '@/utils/vali
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const formRef = ref()
 const form = ref({
   email: route.query.email ? String(route.query.email) : '',
   code: '',
@@ -45,21 +46,51 @@ const validate = () => {
 }
 
 const onSubmit = async () => {
+  console.log('🔄 Tentative de réinitialisation du mot de passe...')
+  console.log('🔄 Fonction onSubmit appelée !')
+  
+  // Validation du formulaire Vuetify
+  const { valid } = await formRef.value.validate()
+  if (!valid) {
+    console.log('❌ Formulaire invalide')
+    showToast({ message: 'Veuillez corriger les erreurs du formulaire', type: 'error' })
+    return
+  }
+  
+  // Validation personnalisée
   const validationError = validate()
   if (validationError) {
+    console.log('❌ Erreur de validation:', validationError)
     showToast({ message: validationError, type: 'error' })
     return
   }
+  
+  console.log('📧 Données du formulaire:', {
+    email: form.value.email,
+    code: form.value.code,
+    password: '***'
+  })
+  
   try {
+    console.log('🔄 Appel de validateForgottenPassword...')
     await authStore.validateForgottenPassword(
       form.value.email,
       form.value.code,
       form.value.password
     )
+    console.log('✅ Réinitialisation réussie')
     showToast({ message: 'Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.', type: 'success' })
     router.push('/login')
   } catch (err: any) {
-    showToast({ message: authStore.error || 'Erreur lors de la réinitialisation.', type: 'error' })
+    console.error('❌ Erreur lors de la réinitialisation:', err)
+    console.error('❌ Détails de l\'erreur:', {
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status
+    })
+    
+    const errorMessage = err.response?.data?.message || authStore.error || 'Erreur lors de la réinitialisation.'
+    showToast({ message: errorMessage, type: 'error' })
   }
 }
 </script>
@@ -74,11 +105,11 @@ const onSubmit = async () => {
           <h2 class="font-weight-medium text-2xl">LAFAOM-MAO</h2>
         </RouterLink>
       </VCardItem>
-      <VCardText class="pt-2">
+      <VCardText class="pt-2 text-center">
         <p class="mb-0">Saisissez le code reçu et votre nouveau mot de passe.</p>
       </VCardText>
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm ref="formRef" @submit.prevent="onSubmit">
           <VRow>
             <VCol cols="12">
               <VTextField
@@ -87,6 +118,8 @@ const onSubmit = async () => {
                 type="email"
                 :disabled="loading"
                 prepend-inner-icon="ri-mail-line"
+                :rules="[v => !!v || 'Email requis']"
+                required
               />
             </VCol>
             <VCol cols="12">
@@ -96,6 +129,8 @@ const onSubmit = async () => {
                 maxlength="6"
                 :disabled="loading"
                 prepend-inner-icon="ri-shield-keyhole-line"
+                :rules="[v => !!v || 'Code requis', v => v.length === 6 || 'Code doit contenir 6 chiffres']"
+                required
               />
             </VCol>
             <VCol cols="12">
@@ -105,10 +140,20 @@ const onSubmit = async () => {
                 type="password"
                 :disabled="loading"
                 prepend-inner-icon="ri-lock-password-line"
+                :rules="[v => !!v || 'Mot de passe requis', v => v.length >= 8 || 'Minimum 8 caractères']"
+                required
               />
             </VCol>
             <VCol cols="12">
-              <VBtn block type="submit" :loading="loading">Réinitialiser</VBtn>
+              <VBtn 
+                block 
+                type="submit" 
+                :loading="loading"
+                :disabled="loading"
+                color="primary"
+              >
+                {{ loading ? 'Réinitialisation...' : 'Réinitialiser' }}
+              </VBtn>
             </VCol>
             <VCol cols="12" class="text-center mt-2">
               <RouterLink to="/login" class="text-primary">

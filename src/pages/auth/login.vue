@@ -61,12 +61,12 @@ const onSubmit = async () => {
       email: form.value.email,
       password: form.value.password,
     })
-    
+
     console.log('[Login Page] Login result:', result)
-    
+
     if (result.success) {
       showToast({ message: 'Connexion réussie.', type: 'success' })
-      
+
       // Redirection basée sur le rôle de l'utilisateur
       const redirectPath = getRedirectPathAfterLogin()
       console.log('[Login Page] Redirecting to:', redirectPath)
@@ -94,7 +94,7 @@ const onSubmit = async () => {
         </RouterLink>
       </VCardItem>
 
-      
+
       <VCardText class="pt-2 text-center">
         <p class="mb-0">Institution de formation et d'intervention sociale en milieu carcéral</p>
       </VCardText>
@@ -131,13 +131,18 @@ const onSubmit = async () => {
               <VBtn block type="submit" :loading="loading" :disabled="loading">
                 Connexion
               </VBtn>
+              <VCol cols="12" class="text-center mt-2">
+                <RouterLink to="/login" class="text-primary">
+                  Revenir au siteweb
+                </RouterLink>
+              </VCol>
 
             </VCol>
           </VRow>
         </VForm>
       </VCardText>
     </VCard>
-<!-- 
+    <!-- 
     <VImg class="auth-footer-start-tree d-none d-md-block" :src="authV1Tree" :width="250" />
     <VImg :src="authV1Tree2" class="auth-footer-end-tree d-none d-md-block" :width="350" /> -->
     <!-- bg img -->

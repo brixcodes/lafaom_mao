@@ -195,6 +195,14 @@ class AuthService {
   async getJwks(): Promise<any> {
     return await apiService.get('/auth/jwks.json')
   }
+
+  /**
+   * Valider le code de mot de passe oublié
+   */
+  async validateForgottenCode(data: { email: string; code: string; password: string }): Promise<any> {
+    const response = await apiService.post('/auth/validate-forgotten-code', data)
+    return response
+  }
 }
 
 export const authService = new AuthService()
