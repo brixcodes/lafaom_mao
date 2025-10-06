@@ -54,6 +54,15 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 5000,
+    rollupOptions: {
+      output: {
+        // Ensure proper chunking for better caching
+        manualChunks: {
+          vendor: ['vue', 'vue-router', 'pinia'],
+          vuetify: ['vuetify'],
+        },
+      },
+    },
   },
   optimizeDeps: {
     exclude: ['vuetify'],
