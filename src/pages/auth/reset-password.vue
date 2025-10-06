@@ -126,10 +126,10 @@ const onSubmit = async () => {
               <VTextField
                 v-model="form.code"
                 label="Code reçu par email"
-                maxlength="6"
+                maxlength="5"
                 :disabled="loading"
                 prepend-inner-icon="ri-shield-keyhole-line"
-                :rules="[v => !!v || 'Code requis', v => v.length === 6 || 'Code doit contenir 6 chiffres']"
+                :rules="[v => !!v || 'Code requis', v => v.length === 5 || 'Code doit contenir 5 caractères.']"
                 required
               />
             </VCol>
