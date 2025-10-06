@@ -75,7 +75,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { permissionService } from '@/services/api'
+import { permissionsApiService } from '@/services/api/permissions'
 import { showToast } from '@/components/toast/toastManager'
 import { PermissionEnum } from '@/types/permissions'
 import { confirmAction } from '@/utils/confirm'
@@ -216,7 +216,7 @@ const getPermissionLabel = (permissionKey: string): string => {
 
 const fetchUserPermissions = async () => {
   try {
-    const res = await permissionService.getUserPermissions(props.userId) as { data: Permission[] }
+    const res = await permissionsApiService.getUserPermissions(props.userId) as { data: Permission[] }
     userPermissions.value = res.data || []
     selectedAssignPermissions.value = []
     selectedRevokePermissions.value = []
@@ -252,7 +252,7 @@ const assignPermissions = async () => {
     },
   })
   if (!confirmed) return
-  await permissionService.assignPermissions({ user_id: props.userId, permissions: selectedAssignPermissions.value })
+  await permissionsApiService.assignPermissions({ user_id: props.userId, permissions: selectedAssignPermissions.value })
   showToast({ message: 'Permissions assignées', type: 'success' })
   fetchUserPermissions()
   
@@ -284,7 +284,7 @@ const revokePermissions = async () => {
     },
   })
   if (!confirmed) return
-  await permissionService.revokePermissions({ user_id: props.userId, permissions: selectedRevokePermissions.value })
+  await permissionsApiService.revokePermissions({ user_id: props.userId, permissions: selectedRevokePermissions.value })
   showToast({ message: 'Permissions retirées', type: 'success' })
   fetchUserPermissions()
   

@@ -124,7 +124,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { permissionService } from '@/services/api/permission'
+import { permissionsApiService } from '@/services/api/permissions'
 import { showToast } from '@/components/toast/toastManager'
 
 const testUserId = ref('ce0e94ef-9ec1-474f-a8c5-9b4bdca22e5e') // Pre-rempli avec l'ID des logs
@@ -143,7 +143,7 @@ const loadPermissions = async () => {
     loading.value = true
     console.log('🧪 Test - Chargement des permissions pour:', testUserId.value)
     
-    const response = await permissionService.getUserPermissions(testUserId.value)
+    const response = await permissionsApiService.getUserPermissions(testUserId.value)
     currentPermissions.value = response.data || []
     
     testResults.value.push({
@@ -189,13 +189,13 @@ const testRevokePermission = async () => {
     console.log('🧪 Test - Révocation de la permission:', firstPermission.permission)
     
     // Révoquer la permission
-    await permissionService.revokePermissions(testUserId.value, [firstPermission.permission])
+    await permissionsApiService.revokePermissions(testUserId.value, [firstPermission.permission])
     
     // Attendre un peu
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     // Recharger les permissions
-    const response = await permissionService.getUserPermissions(testUserId.value)
+    const response = await permissionsApiService.getUserPermissions(testUserId.value)
     const afterPermissions = response.data || []
     
     // Comparer
@@ -257,13 +257,13 @@ const testRevokeRole = async () => {
     console.log('🧪 Test - Révocation du rôle ID:', rolePermission.role_id)
     
     // Révoquer le rôle
-    await permissionService.revokeRole(testUserId.value, rolePermission.role_id)
+    await permissionsApiService.revokeRole(testUserId.value, rolePermission.role_id)
     
     // Attendre un peu
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     // Recharger les permissions
-    const response = await permissionService.getUserPermissions(testUserId.value)
+    const response = await permissionsApiService.getUserPermissions(testUserId.value)
     const afterPermissions = response.data || []
     
     // Comparer

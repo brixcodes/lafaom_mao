@@ -10,6 +10,7 @@ export { studentApplicationsService } from './student-applications'
 export { paymentsService } from './payments'
 export { organizationCentersService } from './organization-centers'
 export { reclamationsService } from './reclamations'
+export { permissionsService } from './permissions'
 export { systemService } from './system'
 
 // Export base API service
