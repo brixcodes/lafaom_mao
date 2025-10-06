@@ -213,11 +213,7 @@ class BlogService {
     if (data.tags) formData.append('tags', JSON.stringify(data.tags))
     formData.append('category_id', data.category_id.toString())
 
-    const response = await apiService.post('/blog/posts', formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    })
+    const response = await apiService.postFormData('/blog/posts', formData)
     return response as PostOutSuccess
   }
 
@@ -240,20 +236,24 @@ class BlogService {
   /**
    * Mettre à jour un article
    */
-  async updatePost(postId: number, data: PostUpdateInput): Promise<PostOutSuccess> {
-    const formData = new FormData()
-    if (data.author_name) formData.append('author_name', data.author_name)
-    if (data.title) formData.append('title', data.title)
-    if (data.cover_image) formData.append('cover_image', data.cover_image)
-    if (data.summary) formData.append('summary', data.summary)
-    if (data.tags) formData.append('tags', JSON.stringify(data.tags))
-    if (data.category_id) formData.append('category_id', data.category_id.toString())
+  async updatePost(postId: number, data: PostUpdateInput | FormData): Promise<PostOutSuccess> {
+    let formData: FormData
+    
+    if (data instanceof FormData) {
+      // Si c'est déjà un FormData, l'utiliser directement
+      formData = data
+    } else {
+      // Sinon, créer un FormData à partir de l'objet PostUpdateInput
+      formData = new FormData()
+      if (data.author_name) formData.append('author_name', data.author_name)
+      if (data.title) formData.append('title', data.title)
+      if (data.cover_image) formData.append('cover_image', data.cover_image)
+      if (data.summary) formData.append('summary', data.summary)
+      if (data.tags) formData.append('tags', JSON.stringify(data.tags))
+      if (data.category_id) formData.append('category_id', data.category_id.toString())
+    }
 
-    const response = await apiService.put(`/blog/posts/${postId}`, formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    })
+    const response = await apiService.putFormData(`/blog/posts/${postId}`, formData)
     return response as PostOutSuccess
   }
 
@@ -261,16 +261,36 @@ class BlogService {
    * Supprimer un article
    */
   async deletePost(postId: number): Promise<PostOutSuccess> {
-    const response = await apiService.delete(`/blog/posts/${postId}`)
-    return response as PostOutSuccess
+    console.log('[DEBUG] Suppression de l\'article avec ID:', postId)
+    console.log('[DEBUG] URL de suppression:', `/blog/posts/${postId}`)
+    
+    try {
+      const response = await apiService.delete(`/blog/posts/${postId}`)
+      console.log('[DEBUG] Réponse de suppression:', response)
+      console.log('[DEBUG] Données de suppression:', (response as any).data)
+      return (response as any).data as PostOutSuccess
+    } catch (error) {
+      console.error('[DEBUG] Erreur lors de la suppression:', error)
+      throw error
+    }
   }
 
   /**
    * Publier un article
    */
   async publishPost(postId: number): Promise<PostOutSuccess> {
-    const response = await apiService.post(`/blog/posts/${postId}/publish`)
-    return response as PostOutSuccess
+    console.log('[DEBUG] Publication de l\'article avec ID:', postId)
+    console.log('[DEBUG] URL de publication:', `/blog/posts/${postId}/publish`)
+    
+    try {
+      const response = await apiService.post(`/blog/posts/${postId}/publish`)
+      console.log('[DEBUG] Réponse de publication:', response)
+      console.log('[DEBUG] Données de publication:', (response as any).data)
+      return (response as any).data as PostOutSuccess
+    } catch (error) {
+      console.error('[DEBUG] Erreur lors de la publication:', error)
+      throw error
+    }
   }
 
   // === POST SECTIONS ===
@@ -302,11 +322,7 @@ class BlogService {
     formData.append('position', data.position?.toString() || '1')
     formData.append('post_id', data.post_id.toString())
 
-    const response = await apiService.post('/blog/sections', formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    })
+    const response = await apiService.postFormData('/blog/sections', formData)
     return response as PostSectionOutSuccess
   }
 
@@ -321,11 +337,7 @@ class BlogService {
     if (data.position) formData.append('position', data.position.toString())
     if (data.post_id) formData.append('post_id', data.post_id.toString())
 
-    const response = await apiService.put(`/blog/sections/${sectionId}`, formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    })
+    const response = await apiService.putFormData(`/blog/sections/${sectionId}`, formData)
     return response as PostSectionOutSuccess
   }
 
@@ -335,6 +347,42 @@ class BlogService {
   async deleteSection(sectionId: number): Promise<PostSectionOutSuccess> {
     const response = await apiService.delete(`/blog/sections/${sectionId}`)
     return response as PostSectionOutSuccess
+  }
+
+  // === TAGS ===
+
+  /**
+   * Récupérer tous les tags disponibles depuis les posts existants
+   */
+  async getAllTags(): Promise<string[]> {
+    try {
+      // Récupérer tous les posts pour extraire les tags
+      const response = await apiService.get('/blog/posts', { 
+        params: { 
+          page: 1, 
+          page_size: 1000 // Récupérer un grand nombre de posts pour avoir tous les tags
+        } 
+      })
+      
+      const posts = (response as any).data || []
+      const allTags = new Set<string>()
+      
+      // Extraire tous les tags uniques des posts
+      posts.forEach((post: any) => {
+        if (post.tags && Array.isArray(post.tags)) {
+          post.tags.forEach((tag: string) => {
+            if (tag && tag.trim()) {
+              allTags.add(tag.trim())
+            }
+          })
+        }
+      })
+      
+      return Array.from(allTags).sort()
+    } catch (error) {
+      console.error('Erreur lors du chargement des tags:', error)
+      return []
+    }
   }
 }
 

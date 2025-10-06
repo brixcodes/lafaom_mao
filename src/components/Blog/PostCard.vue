@@ -1,6 +1,5 @@
 <template>
-  <VCard class="post-card" :class="{ 'list-view': viewMode === 'list', 'published': isPublished }" elevation="2"
-    @click="goToDetail">
+  <VCard :class="{ 'list-view': viewMode === 'list' }" elevation="2" @click="goToDetail">
     <!-- Image de couverture avec overlays -->
     <div class="image-container">
       <VImg :src="cleanImageUrl(post.cover_image) || placeholderImage" :height="viewMode === 'list' ? 120 : 200" cover
@@ -23,84 +22,22 @@
           <span class="text-body-2 text-medium-emphasis">{{ post.author_name }}</span>
         </div>
 
-        <div class="d-flex align-center">
+        <div class="d-flex align-center mb-1">
           <VIcon size="16" color="medium-emphasis" class="me-1">ri-calendar-line</VIcon>
-          <span class="text-body-2 text-medium-emphasis">{{ formatDate(post.created_at) }}</span>
-          <span v-if="isPublished" class="mx-2 text-medium-emphasis">•</span>
-          <span v-if="isPublished" class="text-body-2 text-success">
-            Publié le {{ formatDate(post.published_at) }}
-          </span>
+          <span class="text-body-2 text-medium-emphasis">Créé le {{ formatDate(post.created_at) }}</span>
+        </div>
+
+        <div v-if="post.published_at" class="d-flex align-center mb-1">
+          <VIcon size="16" color="medium-emphasis" class="me-1">ri-checkbox-circle-line</VIcon>
+          <span class="text-body-2 text-medium-emphasis">Publié le {{ formatDate(post.published_at) }}</span>
+        </div>
+
+        <div v-if="!post.published_at" class="d-flex align-center mb-1">
+          <VIcon size="16" color="medium-emphasis" class="me-1">ri-close-circle-line</VIcon>
+          <span class="text-body-2 text-medium-emphasis">{{ formatDate(post.published_at) }}</span>
         </div>
       </div>
-
-      <!-- Résumé -->
-      <p class="post-summary text-body-2 mb-3" v-if="post.summary">
-        <b>Description : </b>{{ truncateText(post.summary, viewMode === 'list' ? 150 : 35) }}
-      </p>
     </VCardText>
-
-    <!-- Actions -->
-    <VCardActions>
-      <VSpacer />
-      <div class="action-buttons d-flex gap-1">
-        <!-- Voir détails -->
-        <VTooltip text="Ouvrir les détails de l'article">
-          <template v-slot:activator="{ props }">
-            <VBtn v-bind="props" icon="ri-eye-line" color="dark" size="x-small" variant="text"
-              @click.stop="goToDetail" />
-          </template>
-        </VTooltip>
-
-        <!-- Modifier -->
-        <VTooltip text="Modifier cet article">
-          <template v-slot:activator="{ props }">
-            <VBtn v-bind="props" icon="ri-edit-line" size="x-small" variant="text" @click.stop="goToEdit" />
-          </template>
-        </VTooltip>
-
-        <!-- Publier/Dépublier -->
-        <VTooltip :text="isPublished ? 'Déjà publié' : 'Publier cet article'">
-          <template v-slot:activator="{ props }">
-            <VBtn v-bind="props" :icon="isPublished ? 'ri-check-double-line' : 'ri-send-plane-line'" size="x-small"
-              variant="text" :disabled="isPublished" @click.stop="confirmPublish" />
-          </template>
-        </VTooltip>
-
-        <!-- Menu plus d'actions -->
-        <VMenu>
-          <template v-slot:activator="{ props }">
-            <VBtn v-bind="props" icon="ri-more-2-line" size="x-small" variant="text" color="medium-emphasis" />
-          </template>
-
-          <VList density="compact">
-            <VListItem @click="duplicatePost">
-              <template v-slot:prepend>
-                <VIcon size="14">ri-file-copy-line</VIcon>
-              </template>
-              <VListItemTitle>Dupliquer l'article</VListItemTitle>
-            </VListItem>
-
-            <VListItem @click="sharePost">
-              <template v-slot:prepend>
-                <VIcon size="14">ri-share-line</VIcon>
-              </template>
-              <VListItemTitle>Partager l'article</VListItemTitle>
-            </VListItem>
-
-            <VDivider />
-
-            <VListItem @click="confirmDelete" class="text-error">
-              <template v-slot:prepend>
-                <VIcon size="14" color="error">ri-delete-bin-line</VIcon>
-              </template>
-              <VListItemTitle>Supprimer définitivement</VListItemTitle>
-            </VListItem>
-          </VList>
-        </VMenu>
-      </div>
-    </VCardActions>
-
-
     <!-- Indicateur de hover -->
     <div class="hover-indicator" />
   </VCard>
@@ -137,9 +74,6 @@ const emit = defineEmits<Emits>()
 const router = useRouter()
 
 // === COMPUTED ===
-const isPublished = computed(() => {
-  return props.post?.published_at && props.post.published_at !== null
-})
 
 const cleanTags = computed(() => {
   return processTags(props.post?.tags)
@@ -150,22 +84,32 @@ const placeholderImage = computed(() => {
 })
 
 // === METHODS ===
-const cleanImageUrl = (url: string) => {
+const cleanImageUrl = (url: string | null | undefined) => {
   if (!url) return null
-  return url.trim().replace(/^\\s*['"`]\\s*|\\s*['"`]\\s*$/g, '')
+  try {
+    return url.trim().replace(/^\\s*['"`]\\s*|\\s*['"`]\\s*$/g, '')
+  } catch (error) {
+    console.error('Erreur lors du nettoyage de l\'URL:', error)
+    return null
+  }
 }
 
 const formatDate = (dateString: string | null | undefined) => {
-  if (!dateString) return 'Non daté'
+  if (!dateString) return 'Pas encore publié'
 
-  const date = new Date(dateString)
-  if (isNaN(date.getTime())) return 'Date invalide'
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return 'Date invalide'
 
-  return date.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  })
+    return date.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    })
+  } catch (error) {
+    console.error('Erreur lors du formatage de la date:', error)
+    return 'Date invalide'
+  }
 }
 
 // === NAVIGATION ===
@@ -182,36 +126,6 @@ const goToEdit = () => {
 }
 
 // === ACTIONS ===
-const confirmPublish = async () => {
-  if (!props.post?.id || isPublished.value) return
-
-  const confirmed = await confirmAction({
-    title: 'Êtes vous sûres?',
-    text: "Souhaitez-vous réellement publier cet article ? Il sera visible par tous.",
-    cancelButtonText: '<span style="color:white">Annuler</span>',
-    confirmButtonText: '<span style="color:white">Oui, publier</span>',
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    customClass: {
-      confirmButton: 'swal2-confirm-white',
-      cancelButton: 'swal2-cancel-white',
-    },
-  })
-
-  if (!confirmed) return
-
-  try {
-    await blogService.publishPostNoConfirm(props.post.id)
-    showToast({ message: '✅ Article publié avec succès', type: 'success' })
-
-    // Mettre à jour le post localement
-    const updatedPost = { ...props.post, published_at: new Date().toISOString() }
-    emit('update', updatedPost)
-  } catch (error) {
-    console.error('Erreur lors de la publication:', error)
-    showToast({ message: '❌ Erreur lors de la publication', type: 'error' })
-  }
-}
 
 const confirmDelete = async () => {
   if (!props.post?.id) return
@@ -280,13 +194,6 @@ const sharePost = () => {
   opacity: 1;
 }
 
-.post-card.published {
-  border-left: 4px solid rgb(var(--v-theme-success));
-}
-
-.post-card.published:not(.list-view) {
-  border-left: none;
-}
 
 /* Mode liste */
 .post-card.list-view {

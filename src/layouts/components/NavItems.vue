@@ -1,12 +1,46 @@
 <script lang="ts" setup>
+import { computed } from 'vue'
 import VerticalNavSectionTitle from '@/@layouts/components/VerticalNavSectionTitle.vue'
 import VerticalNavGroup from '@layouts/components/VerticalNavGroup.vue'
 import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
+
+import { PermissionEnum } from '@/types/permissions'
+import { useInstantPermissions } from '@/composables/useInstantPermissions'
+const { hasPermission, hasPermissions, hasRole, hasUserType, isUserTypeAdmin, isUserTypeStaff, isUserTypeTeacher, isUserTypeStudent } = useInstantPermissions()
+
+// Computed pour déterminer le niveau d'accès
+const accessLevel = computed(() => {
+  if (isUserTypeAdmin.value) return 'admin'
+  if (isUserTypeStaff.value) return 'staff'
+  if (isUserTypeTeacher.value) return 'teacher'
+  if (isUserTypeStudent.value) return 'student'
+  return 'visitor'
+})
+
+// Computed pour les sections accessibles par type d'utilisateur
+const canAccessAdminSections = computed(() => isUserTypeAdmin.value)
+const canAccessStaffSections = computed(() => isUserTypeAdmin.value || isUserTypeStaff.value)
+const canAccessTeacherSections = computed(() => isUserTypeAdmin.value || isUserTypeStaff.value || isUserTypeTeacher.value)
+const canAccessStudentSections = computed(() => isUserTypeStudent.value)
+
+// Computed pour les sections spécifiques
+const canManageUsers = computed(() => canAccessAdminSections.value && hasPermissions.value([PermissionEnum.CAN_VIEW_USER, PermissionEnum.CAN_VIEW_ROLE]))
+const canManageBlog = computed(() => canAccessStaffSections.value && hasPermissions.value([PermissionEnum.CAN_VIEW_BLOG]))
+const canManageJobs = computed(() => canAccessStaffSections.value && hasPermissions.value([PermissionEnum.CAN_VIEW_JOB_OFFER]))
+const canManageCenters = computed(() => canAccessAdminSections.value && hasPermissions.value([PermissionEnum.CAN_VIEW_ORGANIZATION_CENTER]))
+const canManageSpecialties = computed(() => canAccessAdminSections.value && hasPermissions.value([PermissionEnum.CAN_VIEW_SPECIALTY]))
+const canManageReclamations = computed(() => canAccessStaffSections.value)
+const canViewPayments = computed(() => canAccessStaffSections.value)
+
 </script>
 
+<!-- v-if="canView('user') || canCreate('user') || canUpdate('user') || canDelete('user') || canManagePermissions | -->
+
 <template>
-  <!-- 👉 Dashboard -->
-  <VerticalNavGroup :item="{
+  <!-- ============================================ -->
+  <!-- SECTION 1: DASHBOARD (Accessible à tous) -->
+  <!-- ============================================ -->
+  <VerticalNavGroup v-if="canAccessAdminSections" :item="{
     title: 'Dashboard',
     icon: 'ri-home-smile-line',
   }">
@@ -16,29 +50,56 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
     }" />
   </VerticalNavGroup>
 
-  <!-- Utilisateurs -->
-  <VerticalNavGroup :item="{
+
+  <!-- ============================================ -->
+  <!-- SECTION 2: ADMINISTRATION (Admin uniquement) -->
+  <!-- ============================================ -->
+  <VerticalNavSectionTitle v-if="canAccessAdminSections" :item="{ heading: 'Administration' }" />
+
+  <!-- Gestion des Utilisateurs -->
+  <VerticalNavGroup v-if="canManageUsers" :item="{
     title: 'Utilisateurs',
     icon: 'ri-group-line',
   }">
-    <VerticalNavLink :item="{
-      title: 'Utilisateurs',
+    <VerticalNavLink v-if="hasPermission(PermissionEnum.CAN_VIEW_USER)" :item="{
+      title: 'Liste des utilisateurs',
       to: '/users',
     }" />
-<!-- 
-    <VerticalNavLink :item="{
-      title: 'Permissions',
-      to: '/permissions',
-    }" /> -->
-
-    <VerticalNavLink :item="{
+    <VerticalNavLink v-if="hasPermission(PermissionEnum.CAN_VIEW_ROLE)" :item="{
       title: 'Rôles & Permissions',
       to: '/users/role-permissions',
     }" />
   </VerticalNavGroup>
 
+  <!-- Centres d'Organisation -->
+  <VerticalNavGroup v-if="canManageCenters" :item="{
+    title: 'Centres',
+    icon: 'ri-building-line',
+  }">
+    <VerticalNavLink :item="{
+      title: 'Gestion des centres',
+      to: '/organization-centers',
+    }" />
+  </VerticalNavGroup>
+
+  <!-- Spécialités -->
+  <VerticalNavGroup v-if="canManageSpecialties" :item="{
+    title: 'Spécialités',
+    icon: 'ri-award-line',
+  }">
+    <VerticalNavLink :item="{
+      title: 'Gestion des spécialités',
+      to: '/specialties',
+    }" />
+  </VerticalNavGroup>
+
+  <!-- ============================================ -->
+  <!-- SECTION 3: GESTION (Admin + Staff) -->
+  <!-- ============================================ -->
+  <VerticalNavSectionTitle v-if="canAccessStaffSections" :item="{ heading: 'Gestion' }" />
+
   <!-- Blog -->
-  <VerticalNavGroup :item="{
+  <VerticalNavGroup v-if="canManageBlog" :item="{
     title: 'Blog',
     icon: 'ri-article-line',
   }">
@@ -46,7 +107,6 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
       title: 'Catégories',
       to: '/blog/categories',
     }" />
-
     <VerticalNavLink :item="{
       title: 'Articles',
       to: '/blog/posts',
@@ -54,99 +114,21 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
   </VerticalNavGroup>
 
   <!-- Emploi -->
-  <VerticalNavGroup :item="{
+  <VerticalNavGroup v-if="canManageJobs" :item="{
     title: 'Emploi',
     icon: 'ri-briefcase-line',
   }">
     <VerticalNavLink :item="{
       title: 'Offres d\'emploi',
       to: '/jobs/offers',
-      icon: '',
     }" />
-
-    <VerticalNavLink :item="{
+    <VerticalNavLink v-if="canAccessAdminSections && hasPermissions([PermissionEnum.CAN_VIEW_JOB_APPLICATION])" :item="{
       title: 'Candidatures',
       to: '/jobs/applications',
-      icon: '',
     }" />
-
-    <VerticalNavLink :item="{
-      title: 'Mes candidatures',
-      to: '/jobs/applications/my-applications',
-      icon: '',
-    }" />
-
-    <VerticalNavLink :item="{
+    <VerticalNavLink v-if="canAccessAdminSections && hasPermissions([PermissionEnum.CAN_VIEW_JOB_OFFER])" :item="{
       title: 'Statistiques',
       to: '/jobs/stats',
-      icon: '',
-    }" />
-  </VerticalNavGroup>
-
-  <!-- Centres d'Organisation -->
-  <VerticalNavGroup :item="{
-    title: 'Centres',
-    icon: 'ri-building-line',
-  }">
-    <VerticalNavLink :item="{
-      title: 'centres',
-      to: '/organization-centers',
-      icon: '',
-    }" />
-
-  </VerticalNavGroup>
-
-  <!-- Spécialités -->
-  <VerticalNavGroup :item="{
-    title: 'Spécialités',
-    icon: 'ri-award-line',
-  }">
-    <VerticalNavLink :item="{
-      title: 'spécialités',
-      to: '/specialties',
-      icon: '',
-    }" />
-  </VerticalNavGroup>
-
-  <!-- Candidatures d'Étudiants -->
-  <VerticalNavGroup :item="{
-    title: 'Candidatures',
-    icon: 'ri-file-list-3-line',
-  }">
-    <VerticalNavLink :item="{
-      title: 'candidatures',
-      to: '/student-applications',
-      icon: '',
-    }" />
-
-    <VerticalNavLink :item="{
-      title: 'Mes candidatures',
-      to: '/my-student-applications',
-      icon: '',
-    }" />
-  </VerticalNavGroup>
-
-  <!-- Formations -->
-  <VerticalNavGroup :item="{
-    title: 'Formations',
-    icon: 'ri-graduation-cap-line',
-  }">
-    <VerticalNavLink :item="{
-      title: 'Catalogue',
-      to: '/training/trainings',
-      icon: '',
-    }" />
-
-    <VerticalNavLink :item="{
-      title: 'Sessions',
-      to: '/training/sessions',
-      icon: '',
-    }" />
-
-    <VerticalNavLink :item="{
-      title: 'Spécialités',
-      to: '/training/specialties',
-      icon: '',
     }" />
   </VerticalNavGroup>
 
@@ -155,44 +137,95 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
     title: 'Réclamations',
     icon: 'ri-file-text-line',
   }">
-    <VerticalNavLink :item="{
-      title: 'Toutes les réclamations',
-      to: '/reclamations',
-      icon: '',
-    }" />
-
+    <VerticalNavLink v-if="canAccessAdminSections && hasPermissions([PermissionEnum.CAN_CHANGE_RECLAMATION_STATUS])"
+      :item="{
+        title: 'Toutes les réclamations',
+        to: '/reclamations',
+      }" />
     <VerticalNavLink :item="{
       title: 'Mes réclamations',
       to: '/my-reclamations',
-      icon: '',
     }" />
-
-    <VerticalNavLink :item="{
+    <VerticalNavLink v-if="canAccessAdminSections && hasPermissions([PermissionEnum.CAN_VIEW_RECLAMATION_TYPE])" :item="{
       title: 'Types de réclamation',
       to: '/reclamations/types',
-      icon: '',
     }" />
   </VerticalNavGroup>
 
   <!-- Paiements -->
-  <VerticalNavGroup :item="{
+  <!-- <VerticalNavGroup v-if="canViewPayments" :item="{
     title: 'Paiements',
     icon: 'ri-money-dollar-circle-line',
   }">
     <VerticalNavLink :item="{
       title: 'Liste des paiements',
       to: '/payments',
-      icon: '',
     }" />
+  </VerticalNavGroup> -->
 
+  <!-- ============================================ -->
+  <!-- SECTION 4: FORMATIONS (Tous sauf étudiants) -->
+  <!-- ============================================ -->
+  <VerticalNavSectionTitle v-if="canAccessTeacherSections" :item="{ heading: 'Formations' }" />
+
+  <VerticalNavGroup v-if="canAccessTeacherSections" :item="{
+    title: 'Formations',
+    icon: 'ri-graduation-cap-line',
+  }">
     <VerticalNavLink :item="{
-      title: 'Nouveau paiement',
-      to: '/payments/init',
-      icon: '',
+      title: 'Catalogue',
+      to: '/training/trainings',
+    }" />
+    <VerticalNavLink :item="{
+      title: 'Sessions',
+      to: '/training/sessions',
+    }" />
+    <VerticalNavLink :item="{
+      title: 'Spécialités',
+      to: '/training/specialties',
     }" />
   </VerticalNavGroup>
 
-  <!-- 👉 Profil -->
+  <!-- ============================================ -->
+  <!-- SECTION 5: ÉTUDIANTS (Étudiants uniquement) -->
+  <!-- ============================================ -->
+  <VerticalNavSectionTitle v-if="canAccessStudentSections" :item="{ heading: 'Mes Formations' }" />
+
+  <!-- Candidatures d'Étudiants -->
+  <VerticalNavGroup v-if="canAccessAdminSections || canAccessStudentSections" :item="{
+    title: 'Candidatures',
+    icon: 'ri-file-list-3-line',
+  }">
+    <VerticalNavLink v-if="canAccessAdminSections" :item="{
+      title: 'Toutes les candidatures',
+      to: '/student-applications',
+    }" />
+    <VerticalNavLink v-if="canAccessStudentSections" :item="{
+      title: 'Mes candidatures',
+      to: '/my-student-applications',
+    }" />
+  </VerticalNavGroup>
+
+  <!-- Candidatures d'Emploi -->
+  <!-- <VerticalNavGroup v-if="canAccessStudentSections" :item="{
+    title: 'Emploi',
+    icon: 'ri-briefcase-line',
+  }">
+    <VerticalNavLink :item="{
+      title: 'Offres d\'emploi',
+      to: '/jobs/offers',
+    }" />
+    <VerticalNavLink :item="{
+      title: 'Mes candidatures d\'emploi',
+      to: '/jobs/applications/my-applications',
+    }" />
+  </VerticalNavGroup> -->
+
+  <!-- ============================================ -->
+  <!-- SECTION 6: PROFIL (Accessible à tous) -->
+  <!-- ============================================ -->
+  <VerticalNavSectionTitle :item="{ heading: 'Compte' }" />
+
   <VerticalNavLink :item="{
     title: 'Mon Profil',
     icon: 'ri-user-settings-line',

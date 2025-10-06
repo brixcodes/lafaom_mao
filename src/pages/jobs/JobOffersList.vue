@@ -1,25 +1,22 @@
 <template>
   <div class="job-offers-page">
-      <!-- En-tête -->
-      <div class="d-flex justify-space-between align-center mb-6">
-        <div>
-          <h1 class="text-h4 mb-2">
-            <VIcon icon="ri-briefcase-line" class="me-3" color="primary" />
-            Offres d'emploi
-          </h1>
-          <p class="text-body-1 text-medium-emphasis">
-            Gérez et consultez toutes les offres d'emploi disponibles
-          </p>
-        </div>
-        <!-- Bouton créer - Permission: CAN_CREATE_JOB_OFFER -->
-        <VBtn 
-          prepend-icon="ri-add-line" 
-          color="primary" 
-          :to="{ name: 'job-offers-create' }"
-        >
-          Créer une offre
-        </VBtn>
+    <!-- En-tête -->
+    <div class="d-flex justify-space-between align-center mb-6">
+      <div>
+        <h1 class="text-h4 mb-2">
+          <VIcon icon="ri-briefcase-line" class="me-3" color="primary" />
+          Offres d'emploi
+        </h1>
+        <p class="text-body-1 text-medium-emphasis">
+          Gérez et consultez toutes les offres d'emploi disponibles
+        </p>
       </div>
+      <!-- Bouton créer - Permission: CAN_CREATE_JOB_OFFER -->
+      <VBtn prepend-icon="ri-add-line" color="primary" :to="{ name: 'job-offers-create' }"
+        v-if="hasPermissions([PermissionEnum.CAN_CREATE_JOB_OFFER])">
+        Créer une offre
+      </VBtn>
+    </div>
 
     <!-- Filtres et recherche -->
     <VCard class="mb-6">
@@ -69,7 +66,7 @@
     </div>
 
     <!-- Liste des offres -->
-    <div v-else-if="hasJobOffers">
+    <div v-else-if="hasJobOffers && hasPermissions([PermissionEnum.CAN_VIEW_JOB_OFFER])">
       <VRow>
         <VCol v-for="offer in jobOffers" :key="offer.id" cols="12" sm="6" md="6" lg="4">
           <VCard class="mx-auto my-6">
@@ -84,11 +81,6 @@
 
             <!-- Rating -->
             <VCardText>
-              <VRow class="align-center mb-3">
-                <VRating :model-value="4.5" color="amber" density="compact" size="small" half-increments readonly />
-                <span class="text-grey text-caption ms-2">4.5 (413)</span>
-              </VRow>
-
               <!-- Details -->
               <VRow class="text-body-2 ma-0 pa-0" no-gutters>
                 <VCol cols="12" md="8" class="d-flex align-center mb-2">
@@ -97,12 +89,12 @@
                 </VCol>
 
                 <VCol cols="12" md="4" class="d-flex align-center mb-2">
-                  <VIcon icon="ri-money-euro-circle-line" size="small" class="me-2 text-success" />
+                  <VIcon icon="ri-money-euro-circle-line" size="small" class="me-2 text-primary" />
                   <span>{{ formatSalary(offer.salary || 0, offer.currency || 'EUR') }}</span>
                 </VCol>
 
                 <VCol cols="12" md="12" class="d-flex align-center mb-2">
-                  <VIcon icon="ri-calendar-line" size="small" class="me-2" />
+                  <VIcon icon="ri-calendar-line" color="primary" size="small" class="me-2" />
                   <span class="text-body-2">Expire le {{ formatDate(offer.submission_deadline) }}</span>
                 </VCol>
               </VRow>
@@ -143,16 +135,22 @@
                   </template>
                   <VList>
                     <VListItem prepend-icon="ri-eye-line" title="Voir les détails"
-                      :to="{ name: 'job-offers-detail', params: { id: offer.id } }" />
+                      :to="{ name: 'job-offers-detail', params: { id: offer.id } }" v-if="hasPermissions([PermissionEnum.CAN_VIEW_JOB_OFFER])"/>
+
                     <VListItem prepend-icon="ri-edit-line" title="Modifier"
-                      :to="{ name: 'job-offers-edit', params: { id: offer.id } }" />
+                      :to="{ name: 'job-offers-edit', params: { id: offer.id } }" v-if="hasPermissions([PermissionEnum.CAN_UPDATE_JOB_OFFER])"/>
+
                     <VListItem prepend-icon="ri-booklet-line" title="Candidater"
                       :to="{ name: 'job-offers-apply', params: { id: offer.id } }" />
-                    <VListItem prepend-icon="ri-group-2-line" title="Voir les candidatures"
-                      :to="{ name: 'job-applications', query: { job_offer_id: offer.id } }" />
-                    <VDivider />
-                    <VListItem prepend-icon="ri-delete-bin-line" title="Supprimer" class="text-error"
-                      @click="confirmDelete(offer)" />
+
+                    <VListItem prepend-icon="ri-group-2-line" title="Candidatures"
+                      :to="{ name: 'job-applications', query: { job_offer_id: offer.id } }" v-if="hasPermissions([PermissionEnum.CAN_VIEW_STUDENT_APPLICATION])"/>
+
+                    <span v-if="hasPermissions([PermissionEnum.CAN_DELETE_JOB_OFFER])">
+                      <VDivider />
+                      <VListItem prepend-icon="ri-delete-bin-line" title="Supprimer" class="text-error"
+                        @click="confirmDelete(offer)" />
+                    </span>
                   </VList>
                 </VMenu>
               </VCardActions>
@@ -230,10 +228,10 @@
       </VCard>
     </VDialog>
 
-      <!-- Message d'erreur -->
-      <VAlert v-if="error" type="error" class="mt-4" closable @click:close="clearError">
-        {{ error }}
-      </VAlert>
+    <!-- Message d'erreur -->
+    <VAlert v-if="error" type="error" class="mt-4" closable @click:close="clearError">
+      {{ error }}
+    </VAlert>
   </div>
 </template>
 
@@ -242,6 +240,10 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useJobOffersStore } from '@/stores/jobOffers'
 import { CONTRACT_TYPES } from '@/types/jobOffers'
 import type { JobOfferOut } from '@/types/jobOffers'
+
+import { PermissionEnum } from '@/types/permissions'
+import { useInstantPermissions } from '@/composables/useInstantPermissions'
+const { hasPermission, hasPermissions } = useInstantPermissions()
 
 // Store
 const jobOffersStore = useJobOffersStore()

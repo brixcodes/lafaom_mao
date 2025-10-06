@@ -3,9 +3,6 @@
     <!-- Header avec navigation -->
     <div class="d-flex justify-space-between align-center mb-6">
       <div class="d-flex align-center">
-        <VBtn icon variant="text" class="mr-3" @click="goBack">
-          <VIcon icon="ri-arrow-left-line" color="primary" />
-        </VBtn>
         <div>
           <h1 class="text-h4 font-weight-bold mb-1">Gestion des Rôles et Permissions</h1>
           <p class="text-body-2 text-medium-emphasis mb-0">
@@ -18,26 +15,8 @@
       </VBtn>
     </div>
 
-    <!-- Gestion des rôles et permissions -->
-    <UserRolePermissionManager v-if="selectedUser && (canGivePermissions || canGiveRoles)" :user-info="selectedUser" />
-
-    <!-- Message si aucun utilisateur sélectionné -->
-    <VCard v-else-if="!selectedUser">
-      <VCardText class="text-center py-12">
-        <VIcon icon="ri-user-line" size="64" class="text-medium-emphasis mb-4" />
-        <h3 class="text-h5 mb-3">Aucun utilisateur sélectionné</h3>
-        <p class="text-body-1 text-medium-emphasis mb-4">
-          Veuillez sélectionner un utilisateur pour gérer ses rôles et permissions
-        </p>
-        <VBtn color="primary" @click="showUserSelection = true">
-          <VIcon icon="ri-user-add-line" class="me-2" />
-          Sélectionner un utilisateur
-        </VBtn>
-      </VCardText>
-    </VCard>
-
     <!-- Message de permission insuffisante -->
-    <VCard v-else-if="!canGivePermissions && !canGiveRoles">
+    <VCard v-if="!hasPermissions([PermissionEnum.CAN_GIVE_ROLE, PermissionEnum.CAN_GIVE_PERMISSION])">
       <VCardText class="text-center py-12">
         <VIcon icon="ri-shield-cross-line" size="64" class="text-warning mb-4" />
         <h3 class="text-h5 mb-3">Permission insuffisante</h3>
@@ -47,6 +26,24 @@
         <VBtn color="primary" @click="goBack">
           <VIcon icon="ri-arrow-left-line" class="me-2" />
           Retour
+        </VBtn>
+      </VCardText>
+    </VCard>
+
+    <!-- Gestion des rôles et permissions -->
+    <UserRolePermissionManager v-else-if="selectedUser" :user-info="selectedUser" />
+
+    <!-- Message si aucun utilisateur sélectionné -->
+    <VCard v-else>
+      <VCardText class="text-center py-12">
+        <VIcon icon="ri-user-line" size="64" class="text-medium-emphasis mb-4" />
+        <h3 class="text-h5 mb-3">Aucun utilisateur sélectionné</h3>
+        <p class="text-body-1 text-medium-emphasis mb-4">
+          Veuillez sélectionner un utilisateur pour gérer ses rôles et permissions
+        </p>
+        <VBtn color="primary" @click="showUserSelection = true">
+          <VIcon icon="ri-user-add-line" class="me-2" />
+          Sélectionner un utilisateur
         </VBtn>
       </VCardText>
     </VCard>
@@ -167,15 +164,15 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUsers } from '@/composables/useUsers'
-import { usePermissions } from '@/composables/usePermissions'
+import { useRolePermissionManagement } from '@/composables/useRolePermissionManagement'
 import UserRolePermissionManager from '@/components/User/UserRolePermissionManager.vue'
-import { translateRole, translatePermission } from '@/utils/translations'
-
 const router = useRouter()
 const { users, isLoading, loadUsers } = useUsers()
 
-// Permissions
-const { canGivePermissions, canGiveRoles } = usePermissions()
+
+import { PermissionEnum } from '@/types/permissions'
+import { useInstantPermissions } from '@/composables/useInstantPermissions'
+const { hasPermission, hasPermissions } = useInstantPermissions()
 
 // Local state
 const selectedUserId = ref<string | null>(null)

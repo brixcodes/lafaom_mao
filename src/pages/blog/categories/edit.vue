@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import CategoryForm from '@/components/Blog/CategoryForm.vue'
 import { useRoute, useRouter } from 'vue-router'
-import { blogService } from '@/services/api/blog'
+import { useBlogCategories } from '@/composables/useBlogCategories'
 import { usePermissions } from '@/composables/usePermissions'
 import { confirmAction } from '@/utils/confirm'
 import { showToast } from '@/components/toast/toastManager'
@@ -10,7 +10,9 @@ import { showToast } from '@/components/toast/toastManager'
 const route = useRoute()
 const router = useRouter()
 
-// Permissions
+// Utiliser le composable pour les catégories
+const { updateCategory, getCategoryById, generateSlug } = useBlogCategories()
+
 const { canUpdateBlogs } = usePermissions()
 
 const categoryId = Number(route.params.id)
@@ -20,7 +22,6 @@ const form = ref({
   description: '',
 })
 
-// Vérification des permissions d'accès
 const hasAccess = computed(() => canUpdateBlogs.value)
 
 const goBack = () => {
@@ -30,7 +31,7 @@ const goBack = () => {
 const fetchCategory = async () => {
   isLoading.value = true
   try {
-    const res = await blogService.getCategoryById(categoryId)
+    const res = await getCategoryById(categoryId)
     console.log("nanyang brice : ", res.data)
     if (res && res.data) {
       form.value.title = res.data.title
@@ -53,8 +54,8 @@ const handleSubmit = async (data: any) => {
 
   const confirmed = await confirmAction({
     title: 'Êtes vous sûres?',
-    text: 'Voulez-vous vraiment enregistrer les modifications ?',
-    confirmButtonText: '<span style="color:white">Enregistrer</span>',
+    text: 'Voulez-vous vraiment modifier les informations de cette catégorie ?',
+    confirmButtonText: '<span style="color:white">Modifier</span>',
     cancelButtonText: '<span style="color:white">Annuler</span>',
     confirmButtonColor: '#3085d6',
     cancelButtonColor: '#d33',
@@ -64,55 +65,30 @@ const handleSubmit = async (data: any) => {
     },
   })
   if (!confirmed) return
+
   isLoading.value = true
   try {
-    const res = await blogService.updateCategory(categoryId, data)
-    if (res && (res.success === true || res.message === 'Success')) {
-      showToast({ message: 'Catégorie modifiée avec succès.', type: 'success' })
-      router.push('/blog/categories')
-    } else {
-      showToast({ message: res?.message || 'Erreur lors de la modification.', type: 'error' })
-      console.error('[DEBUG] Erreur API:', res)
+    const formData = {
+      ...data,
+      slug: generateSlug(data.title)
     }
-  } catch (err) {
-    showToast({ message: 'Erreur serveur ou réseau.', type: 'error' })
-    console.error('[DEBUG] Exception API:', err)
+
+    await updateCategory(categoryId, formData)
+    router.push('/blog/categories')
+  } catch (error) {
+    console.error('Erreur lors de la modification:', error)
   } finally {
     isLoading.value = false
   }
 }
 
 onMounted(async () => {
-  // Vérifier les permissions avant de charger les données
-  // if (!hasAccess.value) {
-  //   showToast({
-  //     message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
-  //     type: 'error'
-  //   })
-  //   router.push('/blog/categories')
-  //   return
-  // }
-  
   await fetchCategory()
 })
 </script>
 
 <template>
   <div class="category-edit-page">
-    <!-- Vérification des permissions d'accès -->
-    <!-- <div  class="text-center py-8">
-      <VIcon icon="ri-shield-cross-line" size="64" color="error" />
-      <h3 class="mt-4">Permission insuffisante</h3>
-      <p class="text-medium-emphasis">
-        Vous n'avez pas les permissions nécessaires pour modifier une catégorie.
-      </p>
-      <VBtn color="primary" to="/blog/categories" class="mt-4">
-        <VIcon icon="ri-arrow-left-line" class="me-2" />
-        Retour aux catégories
-      </VBtn>
-    </div> -->
-
-    <!-- Contenu principal -->
     <div>
       <div class="d-flex align-center mb-4">
         <VBtn icon variant="text" class="mr-3" aria-label="Retour" title="Retour" @click="goBack">
@@ -124,17 +100,9 @@ onMounted(async () => {
             changements.</p>
         </div>
       </div>
-      <VCard elevation="2" class="pa-4">
-        <VCardText>
-          <CategoryForm v-model="form" :submit-label="'Modifier'" @submit="handleSubmit" @cancel="goBack" />
-        </VCardText>
-      </VCard>
+      <VContainer>
+        <CategoryForm v-model="form" :submit-label="'Modifier'" @submit="handleSubmit" @cancel="goBack" />
+      </VContainer>
     </div>
   </div>
 </template>
-
-<style scoped>
-.category-edit-page {
-  padding: 2rem;
-}
-</style>

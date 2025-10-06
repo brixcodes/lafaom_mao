@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { apiService } from '@/services/api/base'
+import { useBlogCategories } from '@/composables/useBlogCategories'
 import { usePermissions } from '@/composables/usePermissions'
 import { confirmAction } from '@/utils/confirm'
 import { showToast } from '@/components/toast/toastManager'
@@ -10,6 +10,9 @@ import CategoryForm from '@/components/Blog/CategoryForm.vue'
 import { validateRequired, validateMinLength } from '@/utils/validation'
 
 const router = useRouter()
+
+// Utiliser le composable pour les catégories
+const { createCategory, generateSlug } = useBlogCategories()
 
 // Permissions
 const { canCreateBlogs } = usePermissions()
@@ -84,20 +87,19 @@ const handleSubmit = async (data: any) => {
     },
   })
   if (!confirmed) return
+
   isLoading.value = true
   try {
-    const res = await apiService.postNoConfirm<{ success?: boolean; message?: string }>('/blog/categories', { ...data, slug: form.value.slug })
-    console.log('[DEBUG] Réponse API:', res)
-    if (res && (res.success === true || res.message === 'Success')) {
-      showToast({ message: 'Catégorie créée avec succès.', type: 'success' })
-      router.push('/blog/categories')
-    } else {
-      showToast({ message: res?.message || 'Erreur lors de la création.', type: 'error' })
-      console.error('[DEBUG] Erreur API:', res)
+    // Générer le slug automatiquement
+    const formData = {
+      ...data,
+      slug: generateSlug(data.title)
     }
-  } catch (err) {
-    showToast({ message: 'Erreur serveur ou réseau.', type: 'error' })
-    console.error('[DEBUG] Exception API:', err)
+
+    await createCategory(formData)
+    router.push('/blog/categories')
+  } catch (error) {
+    console.error('Erreur lors de la création:', error)
   } finally {
     isLoading.value = false
   }
@@ -107,18 +109,6 @@ const clearForm = () => {
   form.value = { title: '', description: '', slug: '' }
 }
 
-// Lifecycle
-onMounted(async () => {
-  // Vérifier les permissions avant de charger la page
-  // if (!hasAccess.value) {
-  //   showToast({
-  //     message: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page',
-  //     type: 'error'
-  //   })
-  //   router.push('/blog/categories')
-  //   return
-  // }
-})
 </script>
 
 <template>
@@ -131,16 +121,13 @@ onMounted(async () => {
         </VBtn>
         <div>
           <h1 class="font-weight-bold mb-1">Créer une catégorie</h1>
-          <p class="text-body-2 text-secondary mb-0">Remplissez le formulaire pour ajouter une nouvelle catégorie au blog.
+          <p class="text-body-2 text-secondary mb-0">Remplissez le formulaire pour ajouter une nouvelle catégorie au
+            blog.
           </p>
         </div>
       </div>
       <VContainer>
-        <VCard elevation="2" class="pa-4">
-          <VCardText>
-            <CategoryForm v-model="form" :submit-label="'Enregistrer'" @submit="handleSubmit" @cancel="clearForm" />
-          </VCardText>
-        </VCard>
+        <CategoryForm v-model="form" :submit-label="'Enregistrer'" @submit="handleSubmit" @cancel="clearForm" />
       </VContainer>
     </div>
   </div>

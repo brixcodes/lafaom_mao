@@ -326,7 +326,7 @@ const handleSubmit = async () => {
 const fetchTrainings = async (search = '') => {
   try {
     isLoadingTrainings.value = true
-    const response = await trainingService.listTrainings({
+    const response = await trainingService.getTrainingByIds({
       page: 1,
       page_size: 100,
       search: search || undefined

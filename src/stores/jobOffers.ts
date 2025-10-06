@@ -8,22 +8,16 @@ import type {
   JobOfferUpdateInput,
   JobOfferOutSuccess,
   JobOffersPageOutSuccess,
-  JobOfferFilter,
   JobApplicationOut,
   JobApplicationCreateInput,
   JobApplicationUpdateByCandidateInput,
   JobApplicationOTPRequestInput,
   JobApplicationOutSuccess,
   JobApplicationsPageOutSuccess,
-  JobApplicationFilter,
   UpdateJobOfferStatusInput,
   JobAttachmentOut,
   JobAttachmentListOutSuccess,
-  JobApplicationStatus,
-  JobDashboardStats,
-  JobOfferStats,
-  JobApplicationStats,
-} from '@/types/jobOffers'
+} from '@/types/job-offers'
 import type { BaseOutSuccess } from '@/types'
 
 export const useJobOffersStore = defineStore('jobOffers', () => {
@@ -34,10 +28,7 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
   const currentJobApplication = ref<JobApplicationOut | null>(null)
   const applicationAttachments = ref<JobAttachmentOut[]>([])
   
-  // Statistics state
-  const dashboardStats = ref<JobDashboardStats | null>(null)
-  const offersStats = ref<JobOfferStats | null>(null)
-  const applicationsStats = ref<JobApplicationStats | null>(null)
+  // Statistics state (simplified)
   const statsLoading = ref(false)
   
   const isLoading = ref(false)
@@ -62,34 +53,24 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
   const hasApplications = computed(() => jobApplications.value.length > 0)
   const hasAttachments = computed(() => applicationAttachments.value.length > 0)
   
-  // Statistiques des candidatures (provenant du backend)
+  // Statistiques des candidatures (calculées localement)
   const applicationStats = computed(() => {
-    if (dashboardStats.value?.applications) {
-      return {
-        total: dashboardStats.value.applications.total_applications,
-        pending: dashboardStats.value.applications.pending_applications,
-        accepted: dashboardStats.value.applications.accepted_applications,
-        rejected: dashboardStats.value.applications.rejected_applications,
-      }
-    }
+    const total = jobApplications.value.length
+    const pending = jobApplications.value.filter(app => app.status === 'pending').length
+    const accepted = jobApplications.value.filter(app => app.status === 'accepted').length
+    const rejected = jobApplications.value.filter(app => app.status === 'rejected').length
     
-    return { total: 0, pending: 0, accepted: 0, rejected: 0 }
+    return { total, pending, accepted, rejected }
   })
   
   // Offres actives (non expirées)
   const activeJobOffers = computed(() => {
     const today = new Date()
     return jobOffers.value.filter(offer => {
-      const deadline = new Date(offer.deadline)
+      const deadline = new Date(offer.submission_deadline)
       return deadline >= today
     })
   })
-  
-  // Statistics getters
-  const hasStatsData = computed(() => !!dashboardStats.value)
-  const offersGrowthRate = computed(() => offersStats.value?.offers_growth_rate || 0)
-  const applicationsGrowthRate = computed(() => applicationsStats.value?.applications_growth_rate || 0)
-  const acceptanceRate = computed(() => applicationsStats.value?.acceptance_rate || 0)
 
   // === ACTIONS ===
   
@@ -231,7 +212,7 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
   // ========================
 
   /**
-   * Récupérer les candidatures avec filtres
+   * Récupérer les candidatures avec filtres (pour admins)
    */
   const fetchJobApplications = async (filter?: JobApplicationFilter) => {
     try {
@@ -249,6 +230,31 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur lors du chargement des candidatures'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Récupérer les candidatures de l'utilisateur connecté
+   */
+  const fetchMyJobApplications = async (filter?: JobApplicationFilter) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      
+      const response: JobApplicationsPageOutSuccess = await jobOffersService.getMyJobApplications(filter)
+      jobApplications.value = response.data
+      applicationsPagination.value = {
+        page: response.page,
+        pageSize: response.number,
+        total: response.total_number,
+      }
+      
+      return response
+    } catch (err: any) {
+      error.value = err.response?.data?.message || 'Erreur lors du chargement de vos candidatures'
       throw err
     } finally {
       isLoading.value = false
@@ -276,15 +282,14 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
   }
 
   /**
-   * Créer une nouvelle candidature (fichiers déjà uploadés)
+   * Créer une nouvelle candidature
    */
   const createJobApplication = async (applicationData: JobApplicationCreateInput) => {
     try {
       isLoading.value = true
       error.value = null
       
-      // Envoyer directement les données avec URLs des fichiers
-      const response = await jobOffersService.createJobApplicationWithUrls(applicationData)
+      const response = await jobOffersService.createJobApplication(applicationData)
       
       // La réponse contient job_application et payment
       const jobApplication = response.data.job_application
@@ -307,7 +312,7 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
       isLoading.value = true
       error.value = null
       
-      const response: JobApplicationOutSuccess = await jobOffersService.updateJobApplicationStatus(data)
+      const response: JobApplicationOutSuccess = await jobOffersService.changeJobApplicationStatus(data)
       const index = jobApplications.value.findIndex(app => app.id === data.application_id)
       if (index !== -1) {
         jobApplications.value[index] = response.data
@@ -377,7 +382,7 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
       isLoading.value = true
       error.value = null
       
-      const response: JobAttachmentListOutSuccess = await jobOffersService.getApplicationAttachments(applicationId)
+      const response: JobAttachmentListOutSuccess = await jobOffersService.getJobApplicationAttachments(applicationId)
       applicationAttachments.value = response.data
       
       return response
@@ -519,167 +524,7 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
     }
   }
   
-  // === STATISTICS ACTIONS ===
-  
-  /**
-   * Récupérer toutes les statistiques du dashboard
-   */
-  const fetchDashboardStats = async () => {
-    try {
-      statsLoading.value = true
-      error.value = null
-      
-      const response = await jobOffersService.getDashboardStats()
-      dashboardStats.value = response.data
-      
-      return response
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erreur lors du chargement des statistiques'
-      throw err
-    } finally {
-      statsLoading.value = false
-    }
-  }
-  
-  /**
-   * Récupérer les statistiques des offres
-   */
-  const fetchOffersStats = async () => {
-    try {
-      statsLoading.value = true
-      error.value = null
-      
-      const response = await jobOffersService.getOffersStats()
-      offersStats.value = response.data
-      
-      return response
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erreur lors du chargement des statistiques des offres'
-      throw err
-    } finally {
-      statsLoading.value = false
-    }
-  }
-  
-  /**
-   * Récupérer les statistiques des candidatures
-   */
-  const fetchApplicationsStats = async () => {
-    try {
-      statsLoading.value = true
-      error.value = null
-      
-      const response = await jobOffersService.getApplicationsStats()
-      applicationsStats.value = response.data
-      
-      return response
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erreur lors du chargement des statistiques des candidatures'
-      throw err
-    } finally {
-      statsLoading.value = false
-    }
-  }
-  
-  /**
-   * Récupérer les statistiques par type de contrat
-   */
-  const fetchContractTypesStats = async () => {
-    try {
-      const response = await jobOffersService.getContractTypesStats()
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erreur lors du chargement des statistiques par type de contrat'
-      throw err
-    }
-  }
-  
-  /**
-   * Récupérer les statistiques par localisation
-   */
-  const fetchLocationsStats = async () => {
-    try {
-      const response = await jobOffersService.getLocationsStats()
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erreur lors du chargement des statistiques par localisation'
-      throw err
-    }
-  }
-  
-  /**
-   * Récupérer les statistiques de salaires
-   */
-  const fetchSalaryStats = async () => {
-    try {
-      const response = await jobOffersService.getSalaryStats()
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erreur lors du chargement des statistiques de salaires'
-      throw err
-    }
-  }
-  
-  /**
-   * Récupérer les statistiques mensuelles
-   */
-  const fetchMonthlyStats = async (year?: number) => {
-    try {
-      const response = await jobOffersService.getMonthlyStats(year)
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erreur lors du chargement des statistiques mensuelles'
-      throw err
-    }
-  }
-  
-  /**
-   * Récupérer les top offres
-   */
-  const fetchTopOffers = async (limit?: number) => {
-    try {
-      const response = await jobOffersService.getTopOffersStats(limit)
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erreur lors du chargement du top des offres'
-      throw err
-    }
-  }
-  
-  /**
-   * Récupérer les insights
-   */
-  const fetchJobInsights = async () => {
-    try {
-      const response = await jobOffersService.getJobInsights()
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erreur lors du chargement des insights'
-      throw err
-    }
-  }
-  
-  /**
-   * Récupérer l'évolution des candidatures
-   */
-  const fetchApplicationsEvolution = async (period?: 'daily' | 'weekly' | 'monthly') => {
-    try {
-      const response = await jobOffersService.getApplicationsEvolution(period)
-      return response.data
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Erreur lors du chargement de l\'évolution des candidatures'
-      throw err
-    }
-  }
-  
-  /**
-   * Nettoyer les statistiques
-   */
-  const clearStats = () => {
-    dashboardStats.value = null
-    offersStats.value = null
-    applicationsStats.value = null
-  }
+  // === STATISTICS ACTIONS (simplified) ===
   
   const downloadJobAttachment = async (attachmentId: string, filename: string) => {
     try {
@@ -723,6 +568,7 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
     
     // Job Applications Actions
     fetchJobApplications,
+    fetchMyJobApplications,
     getJobApplicationById,
     createJobApplication,
     updateApplicationStatus,
@@ -746,28 +592,6 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
     filterOffersByStatus,
     
     // Statistics State
-    dashboardStats,
-    offersStats,
-    applicationsStats,
     statsLoading,
-    
-    // Statistics Getters
-    hasStatsData,
-    offersGrowthRate,
-    applicationsGrowthRate,
-    acceptanceRate,
-    
-    // Statistics Actions
-    fetchDashboardStats,
-    fetchOffersStats,
-    fetchApplicationsStats,
-    fetchContractTypesStats,
-    fetchLocationsStats,
-    fetchSalaryStats,
-    fetchMonthlyStats,
-    fetchTopOffers,
-    fetchJobInsights,
-    fetchApplicationsEvolution,
-    clearStats,
   }
 })

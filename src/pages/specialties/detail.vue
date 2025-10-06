@@ -223,7 +223,7 @@ import type { Specialty } from '@/types/specialties'
 
 const router = useRouter()
 const route = useRoute()
-const trainingStore = useSpecialtyStore()
+const trainingStore = useTrainingStore()
 
 // State
 const error = ref('')
@@ -237,7 +237,8 @@ const specialtyId = computed(() => route.params.id as string)
 const loadSpecialty = async () => {
   try {
     const id = parseInt(specialtyId.value)
-    currentSpecialty.value = await trainingStore.fetchSpecialty(id)
+    const response = await trainingStore.getSpecialty(id)
+    currentSpecialty.value = response.data
   } catch (err: any) {
     console.error('Erreur lors du chargement de la spécialité:', err)
     error.value = 'Erreur lors du chargement de la spécialité'

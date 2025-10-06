@@ -95,7 +95,7 @@ export const useTrainingStore = defineStore('training', () => {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.getTraining(id)
+      const response = await trainingService.getTrainingById(id)
       currentTraining.value = response.data
       return response
       
@@ -173,7 +173,7 @@ export const useTrainingStore = defineStore('training', () => {
         sessionFilters.value = filters
       }
       
-      const response = await trainingService.getSessions(sessionFilters.value)
+      const response = await trainingService.getTrainingSessions(sessionFilters.value)
       sessions.value = response.data || []
       
     } catch (err: any) {
@@ -189,7 +189,7 @@ export const useTrainingStore = defineStore('training', () => {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.getSession(id)
+      const response = await trainingService.getTrainingSessionById(id)
       currentSession.value = response.data
       return response
       
@@ -207,7 +207,7 @@ export const useTrainingStore = defineStore('training', () => {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.createSession(data)
+      const response = await trainingService.createTrainingSession(data)
       await loadSessions() // Recharger la liste
       return response
       
@@ -225,7 +225,7 @@ export const useTrainingStore = defineStore('training', () => {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.updateSession(id, data)
+      const response = await trainingService.updateTrainingSession(id, data)
       await loadSessions() // Recharger la liste
       return response
       
@@ -243,7 +243,7 @@ export const useTrainingStore = defineStore('training', () => {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.deleteSession(id)
+      const response = await trainingService.deleteTrainingSession(id)
       await loadSessions() // Recharger la liste
       return response
       
@@ -283,7 +283,7 @@ export const useTrainingStore = defineStore('training', () => {
       isLoading.value = true
       error.value = null
       
-      const response = await trainingService.getSpecialty(id)
+      const response = await trainingService.getSpecialtyById(id)
       currentSpecialty.value = response.data
       return response
       

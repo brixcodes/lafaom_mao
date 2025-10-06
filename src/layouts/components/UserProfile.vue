@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAuthGuard } from '@/composables/useAuthGuard'
@@ -36,13 +36,25 @@ const handleLogout = async () => {
     console.error('Erreur lors de la déconnexion:', error)
   }
 }
+
+// Initialiser l'authentification au montage du composant
+onMounted(async () => {
+  // S'assurer que l'authentification est initialisée
+  if (!authStore.isInitialized) {
+    try {
+      await authStore.initializeAuth()
+    } catch (error) {
+      console.error('[UserProfile] Erreur lors de l\'initialisation de l\'authentification:', error)
+    }
+  }
+})
 </script>
 
 <template>
   <VBadge v-if="isAuthenticated" dot location="bottom right" offset-x="3" offset-y="3" color="success" bordered>
     <VAvatar class="cursor-pointer" color="primary" variant="tonal">
       <!-- Image de profil utilisateur ou avatar par défaut -->
-      <VImg v-if="user?.picture" :src="user.picture" :alt="userFullName" />
+      <VImg v-if="user?.picture && user.picture.trim()" :src="user.picture" :alt="userFullName" />
       <VImg v-else :src="avatar1" :alt="userFullName" />
 
       <!-- SECTION Menu -->
@@ -54,7 +66,7 @@ const handleLogout = async () => {
               <VListItemAction start>
                 <VBadge dot location="bottom right" offset-x="3" offset-y="3" color="success">
                   <VAvatar color="primary" variant="tonal" size="40">
-                    <VImg v-if="user?.picture" :src="user.picture" :alt="userFullName" />
+                    <VImg v-if="user?.picture && user.picture.trim()" :src="user.picture" :alt="userFullName" />
                     <VImg v-else :src="avatar1" :alt="userFullName" />
                   </VAvatar>
                 </VBadge>

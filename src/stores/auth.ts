@@ -21,6 +21,7 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null)
   const twoFactorRequired = ref(false)
   const twoFactorEmail = ref<string | null>(null)
+  const isInitialized = ref(false)
 
   // Getters
   const isAuthenticated = computed(() => !!token.value && !!user.value)
@@ -33,11 +34,14 @@ export const useAuthStore = defineStore('auth', () => {
     return `${user.value.first_name[0]}${user.value.last_name[0]}`.toUpperCase()
   })
   
-  // Vérification des permissions (à adapter selon votre structure backend)
+  // État pour les permissions
+  const userPermissions = ref<string[]>([])
+  const userRoles = ref<any[]>([])
+
+  // Vérification des permissions
   const hasPermission = computed(() => (permission: string) => {
-    // TODO: Implémenter la logique de vérification des permissions
-    // selon la structure des rôles/permissions dans votre backend
-    return false
+    if (!user.value || !userPermissions.value.length) return false
+    return userPermissions.value.includes(permission)
   })
 
   // Actions
@@ -49,6 +53,7 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = authData.user
     twoFactorRequired.value = false
     twoFactorEmail.value = null
+    isInitialized.value = true
     
     // Stockage dans localStorage
     localStorage.setItem('access_token', authData.access_token.token)
@@ -56,6 +61,17 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('refresh_token', authData.access_token.refresh_token)
     if (authData.access_token.device_id)
       localStorage.setItem('device_id', authData.access_token.device_id)
+    
+    // Sauvegarder les informations utilisateur dans localStorage
+    if (authData.user && authData.user.id) {
+      localStorage.setItem('user_data', JSON.stringify(authData.user))
+      console.log('[Auth] Données utilisateur sauvegardées dans localStorage:', authData.user.first_name, authData.user.last_name)
+    } else {
+      console.warn('[Auth] Données utilisateur incomplètes, pas de sauvegarde dans localStorage')
+    }
+    
+    // Charger les permissions après la connexion
+    loadUserPermissions()
   }
 
   function clearAuthData() {
@@ -66,11 +82,127 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     twoFactorRequired.value = false
     twoFactorEmail.value = null
+    isInitialized.value = false
+    userPermissions.value = []
+    userRoles.value = []
     
     // Nettoyage du localStorage
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
     localStorage.removeItem('device_id')
+    localStorage.removeItem('user_data')
+    localStorage.removeItem('user_permissions')
+    console.log('[Auth] Données d\'authentification nettoyées')
+  }
+
+  // Charger les permissions de l'utilisateur
+  async function loadUserPermissions() {
+    try {
+      if (!token.value) return
+      
+      const response = await authService.getMyPermissions()
+      userPermissions.value = response.data.map((p: any) => p.permission)
+      
+      // Sauvegarder les permissions dans localStorage pour un chargement instantané
+      localStorage.setItem('user_permissions', JSON.stringify(userPermissions.value))
+      
+      // console.log('[Auth] Permissions chargées:', userPermissions.value)
+    } catch (error) {
+      console.error('[Auth] Erreur lors du chargement des permissions:', error)
+      userPermissions.value = []
+    }
+  }
+
+  // Fonction utilitaire pour nettoyer les données corrompues
+  function clearCorruptedData() {
+    console.log('[Auth] Nettoyage des données corrompues...')
+    localStorage.removeItem('user_data')
+    // Optionnel : nettoyer aussi les tokens si nécessaire
+    // localStorage.removeItem('access_token')
+    // localStorage.removeItem('refresh_token')
+  }
+
+  // Fonction d'initialisation pour recharger les données utilisateur
+  async function initializeAuth() {
+    if (isInitialized.value) return
+    
+    console.log('[Auth] Initialisation de l\'authentification...')
+    
+    // D'abord, essayer de charger les données depuis localStorage
+    if (token.value && !user.value) {
+      const savedUserData = localStorage.getItem('user_data')
+      const savedPermissions = localStorage.getItem('user_permissions')
+      
+      if (savedUserData) {
+        try {
+          const parsedUserData = JSON.parse(savedUserData)
+          
+          // Vérifier que les données utilisateur sont valides
+          if (parsedUserData && parsedUserData.id && (parsedUserData.first_name || parsedUserData.last_name)) {
+            user.value = parsedUserData
+            
+            // Charger les permissions depuis localStorage si disponibles
+            if (savedPermissions) {
+              try {
+                userPermissions.value = JSON.parse(savedPermissions)
+                console.log('[Auth] Permissions chargées depuis localStorage:', userPermissions.value.length)
+              } catch (error) {
+                console.warn('[Auth] Erreur lors du parsing des permissions:', error)
+                userPermissions.value = []
+              }
+            }
+            
+            isInitialized.value = true
+            console.log('[Auth] Utilisateur chargé depuis localStorage:', user.value.first_name, user.value.last_name)
+            
+            // Charger les permissions en arrière-plan pour les mettre à jour
+            loadUserPermissions()
+            return
+          } else {
+            console.warn('[Auth] Données utilisateur invalides dans localStorage, nettoyage...')
+            clearCorruptedData()
+          }
+        } catch (error) {
+          console.error('[Auth] Erreur lors du parsing des données utilisateur:', error)
+          clearCorruptedData()
+        }
+      }
+      
+      // Si pas de données sauvegardées ou erreur, recharger depuis l'API
+      try {
+        console.log('[Auth] Rechargement des informations utilisateur depuis l\'API...')
+        isLoading.value = true
+        const response = await authService.getMe()
+        
+        // Extraire les données utilisateur de la réponse API
+        // L'API retourne {success: true, message: '...', data: {...}}
+        const userData = response.data || response
+        user.value = userData
+        isInitialized.value = true
+        
+        // Vérifier que les données utilisateur sont valides avant de les sauvegarder
+        if (user.value && user.value.id && (user.value.first_name || user.value.last_name)) {
+          localStorage.setItem('user_data', JSON.stringify(user.value))
+          console.log('[Auth] Utilisateur rechargé depuis l\'API:', user.value.first_name, user.value.last_name)
+        } else {
+          console.warn('[Auth] Données utilisateur incomplètes reçues de l\'API:', user.value)
+        }
+      } catch (error) {
+        console.error('[Auth] Erreur lors du rechargement de l\'utilisateur:', error)
+        // Si le token est invalide, nettoyer les données
+        clearAuthData()
+      } finally {
+        isLoading.value = false
+      }
+    } else if (!token.value) {
+      // Pas de token, marquer comme initialisé
+      isInitialized.value = true
+      console.log('[Auth] Aucun token trouvé')
+    } else {
+      // Token et utilisateur présents, marquer comme initialisé
+      isInitialized.value = true
+      console.log('[Auth] Utilisateur déjà chargé')
+    }
   }
 
   // Inscription d'un nouvel utilisateur
@@ -109,14 +241,17 @@ export const useAuthStore = defineStore('auth', () => {
       twoFactorRequired.value = false
       
       const response = await authService.login(credentials)
+      console.log('[Auth Store] Login response:', response)
       
       // Vérifier si c'est une réponse 2FA ou un token complet
       if ('access_token' in response) {
         // Login réussi avec token
+        console.log('[Auth Store] Login successful with token')
         setAuthData(response as UserTokenOut)
         return { success: true, requiresTwoFactor: false }
-      } else if ('two_factor_enabled' in response) {
+      } else if (response.data && response.data.two_factor_enabled === true) {
         // 2FA requis
+        console.log('[Auth Store] 2FA required for:', credentials.email)
         twoFactorRequired.value = true
         twoFactorEmail.value = credentials.email
         return { success: false, requiresTwoFactor: true, email: credentials.email }
@@ -134,18 +269,27 @@ export const useAuthStore = defineStore('auth', () => {
   // Authentification à deux facteurs
   const twoFactorAuth = async (code: string) => {
     try {
+      console.log('[Auth Store] 2FA state check:', {
+        twoFactorRequired: twoFactorRequired.value,
+        twoFactorEmail: twoFactorEmail.value,
+        code: code
+      })
+      
       if (!twoFactorEmail.value) {
         throw new Error('Email pour 2FA non disponible')
       }
       
+      console.log('[Auth Store] Validating 2FA code for:', twoFactorEmail.value)
+      console.log('[Auth Store] Sending 2FA request with:', { code, email: twoFactorEmail.value })
       isLoading.value = true
       error.value = null
       
-      const response = await authService.twoFactorToken({
-        email: twoFactorEmail.value,
-        code: code
+      const response = await authService.validateTwoFactorToken({
+        code: code,
+        email: twoFactorEmail.value
       })
       
+      console.log('[Auth Store] 2FA validation response:', response)
       setAuthData(response)
       return { success: true }
     } catch (err: any) {
@@ -188,7 +332,19 @@ export const useAuthStore = defineStore('auth', () => {
       error.value = null
       
       const response = await authService.updateProfile(profileData)
-      user.value = response
+      
+      // Extraire les données utilisateur de la réponse API
+      const userData = response.data || response
+      user.value = userData
+      
+      // Vérifier que les données utilisateur sont valides avant de les sauvegarder
+      if (user.value && user.value.id && (user.value.first_name || user.value.last_name)) {
+        localStorage.setItem('user_data', JSON.stringify(user.value))
+        console.log('[Auth] Profil mis à jour et sauvegardé dans localStorage:', user.value.first_name, user.value.last_name)
+      } else {
+        console.warn('[Auth] Données utilisateur incomplètes après mise à jour:', user.value)
+      }
+      
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur de mise à jour du profil'
@@ -266,7 +422,18 @@ export const useAuthStore = defineStore('auth', () => {
         code
       })
       
-      user.value = response
+      // Extraire les données utilisateur de la réponse API
+      const userData = response.data || response
+      user.value = userData
+      
+      // Vérifier que les données utilisateur sont valides avant de les sauvegarder
+      if (user.value && user.value.id && (user.value.first_name || user.value.last_name)) {
+        localStorage.setItem('user_data', JSON.stringify(user.value))
+        console.log('[Auth] Email mis à jour et sauvegardé dans localStorage:', user.value.first_name, user.value.last_name)
+      } else {
+        console.warn('[Auth] Données utilisateur incomplètes après changement d\'email:', user.value)
+      }
+      
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Code invalide ou expiré'
@@ -287,7 +454,18 @@ export const useAuthStore = defineStore('auth', () => {
         new_password: newPassword,
       })
       
-      user.value = response
+      // Extraire les données utilisateur de la réponse API
+      const userData = response.data || response
+      user.value = userData
+      
+      // Vérifier que les données utilisateur sont valides avant de les sauvegarder
+      if (user.value && user.value.id && (user.value.first_name || user.value.last_name)) {
+        localStorage.setItem('user_data', JSON.stringify(user.value))
+        console.log('[Auth] Mot de passe mis à jour et sauvegardé dans localStorage:', user.value.first_name, user.value.last_name)
+      } else {
+        console.warn('[Auth] Données utilisateur incomplètes après changement de mot de passe:', user.value)
+      }
+      
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur de changement de mot de passe'
@@ -307,7 +485,19 @@ export const useAuthStore = defineStore('auth', () => {
       formData.append('image', file)
       
       const response = await authService.uploadProfileImage(formData)
-      user.value = response
+      
+      // Extraire les données utilisateur de la réponse API
+      const userData = response.data || response
+      user.value = userData
+      
+      // Vérifier que les données utilisateur sont valides avant de les sauvegarder
+      if (user.value && user.value.id && (user.value.first_name || user.value.last_name)) {
+        localStorage.setItem('user_data', JSON.stringify(user.value))
+        console.log('[Auth] Image de profil mise à jour et sauvegardée dans localStorage:', user.value.first_name, user.value.last_name)
+      } else {
+        console.warn('[Auth] Données utilisateur incomplètes après upload d\'image:', user.value)
+      }
+      
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur d\'upload de l\'image'
@@ -323,7 +513,19 @@ export const useAuthStore = defineStore('auth', () => {
       if (!token.value) return
       
       const response = await authService.getCurrentUser()
-      user.value = response
+      
+      // Extraire les données utilisateur de la réponse API
+      // L'API retourne {success: true, message: '...', data: {...}}
+      const userData = response.data || response
+      user.value = userData
+      
+      // Vérifier que les données utilisateur sont valides avant de les sauvegarder
+      if (user.value && user.value.id && (user.value.first_name || user.value.last_name)) {
+        localStorage.setItem('user_data', JSON.stringify(user.value))
+        console.log('[Auth] Profil utilisateur sauvegardé dans localStorage:', user.value.first_name, user.value.last_name)
+      } else {
+        console.warn('[Auth] Données utilisateur incomplètes reçues de l\'API:', user.value)
+      }
     } catch (err) {
       console.error('Erreur lors du chargement du profil:', err)
       clearAuthData()
@@ -344,7 +546,11 @@ export const useAuthStore = defineStore('auth', () => {
   // Initialisation du store au démarrage
   const initialize = async () => {
     if (token.value) {
-      await loadUserProfile()
+      // Charger le profil et les permissions en parallèle pour plus de rapidité
+      await Promise.all([
+        loadUserProfile(),
+        loadUserPermissions()
+      ])
     }
   }
 
@@ -358,6 +564,7 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     twoFactorRequired,
     twoFactorEmail,
+    isInitialized,
     
     // Getters
     isAuthenticated,
@@ -379,8 +586,10 @@ export const useAuthStore = defineStore('auth', () => {
     updatePassword,
     uploadProfileImage,
     loadUserProfile,
+    loadUserPermissions,
     clearError,
     resetTwoFactor,
     initialize,
+    initializeAuth,
   }
 })

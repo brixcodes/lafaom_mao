@@ -335,7 +335,7 @@ const sortOptions = [
 const loadAllTrainings = async () => {
   try {
     isInitialLoading.value = true
-    const response = await trainingService.listTrainings({ page: 1, page_size: 1000, order_by: 'created_at', asc: 'desc' })
+    const response = await trainingService.getTrainings({ page: 1, page_size: 1000, order_by: 'created_at', asc: 'desc' })
     allTrainings.value = [...response.data]
   } catch (err) {
     console.error('Erreur lors du chargement des formations:', err)
@@ -347,7 +347,7 @@ const loadAllTrainings = async () => {
 
 const fetchSpecialties = async () => {
   try {
-    const response = await trainingService.listSpecialties({})
+    const response = await trainingService.getSpecialties({})
     specialties.value = response.data
   } catch (error) {
     console.error('Erreur lors du chargement des spécialités:', error)

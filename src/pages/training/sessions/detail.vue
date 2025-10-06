@@ -274,7 +274,7 @@ const loadSession = async () => {
   try {
     isLoading.value = true
     const sessionId = route.params.id as string
-    const response = await trainingService.getTrainingSession(sessionId)
+    const response = await trainingService.getTrainingSessionById(sessionId)
     session.value = response.data
   } catch (err) {
     console.error('Erreur lors du chargement de la session:', err)
@@ -286,7 +286,7 @@ const loadSession = async () => {
 
 const fetchTrainings = async () => {
   try {
-    const response = await trainingService.listTrainings({ page: 1, page_size: 1000 })
+    const response = await trainingService.getTrainings({ page: 1, page_size: 1000 })
     trainings.value = response.data.map(t => ({ id: t.id, title: t.title }))
   } catch (error) {
     console.error('Erreur lors du chargement des formations:', error)

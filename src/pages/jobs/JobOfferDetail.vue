@@ -20,7 +20,7 @@
         <VBtn color="primary" variant="outlined" @click="shareOffer" class="action-btn mx-1" prepend-icon="ri-share-line">
           Partager
         </VBtn>
-        <VBtn color="primary" @click="applyToJob" class="action-btn" prepend-icon="ri-send-plane-line">
+        <VBtn v-if="jobOffer" color="primary" :to="{ name: 'job-offers-apply', params: { id: jobOffer.id } }" class="action-btn" prepend-icon="ri-send-plane-line">
           Candidater
         </VBtn>
       </div>
@@ -378,6 +378,10 @@
 
 <script>
 import { useJobOffersStore } from '@/stores/jobOffers'
+
+import { PermissionEnum } from '@/types/permissions'
+import { useInstantPermissions } from '@/composables/useInstantPermissions'
+const { hasPermission, hasPermissions } = useInstantPermissions()
 
 export default {
   name: 'JobOfferDetail',

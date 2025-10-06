@@ -638,15 +638,17 @@ const updateProfile = async () => {
   try {
     loading.value = true
     const profileData = {
-      first_name: editableProfile.value.first_name,
-      last_name: editableProfile.value.last_name,
-      birth_date: editableProfile.value.birth_date,
-      civility: editableProfile.value.civility,
-      country_code: editableProfile.value.country_code,
-      mobile_number: editableProfile.value.mobile_number,
-      fix_number: editableProfile.value.fix_number,
-      two_factor_enabled: editableProfile.value.two_factor_enabled,
-      lang: editableProfile.value.lang
+      first_name: editableProfile.value.first_name || '',
+      last_name: editableProfile.value.last_name || '',
+      user_type: user.value?.user_type || 'student',
+      status: user.value?.status || 'active',
+      birth_date: editableProfile.value.birth_date || '',
+      civility: editableProfile.value.civility || '',
+      country_code: editableProfile.value.country_code || 'SN',
+      mobile_number: editableProfile.value.mobile_number || '',
+      fix_number: editableProfile.value.fix_number || '',
+      two_factor_enabled: editableProfile.value.two_factor_enabled || false,
+      lang: editableProfile.value.lang || 'fr'
     }
 
     await authService.updateProfile(profileData)
@@ -660,10 +662,20 @@ const updateProfile = async () => {
     editMode.value = false
   } catch (error: any) {
     console.error('Erreur lors de la mise à jour du profil:', error)
-    showToast({
-      message: error.response?.data?.message || 'Erreur lors de la mise à jour du profil',
-      type: 'error'
-    })
+    
+    // Afficher les erreurs de validation détaillées
+    if (error.response?.data?.error && Array.isArray(error.response.data.error)) {
+      const validationErrors = error.response.data.error.map((err: any) => err.msg || err.message || err).join(', ')
+      showToast({
+        message: `Erreurs de validation: ${validationErrors}`,
+        type: 'error'
+      })
+    } else {
+      showToast({
+        message: error.response?.data?.message || 'Erreur lors de la mise à jour du profil',
+        type: 'error'
+      })
+    }
   } finally {
     loading.value = false
   }
@@ -731,10 +743,20 @@ const uploadProfileImage = async () => {
     profileImage.value = null
   } catch (error: any) {
     console.error('Erreur lors du téléchargement de l\'image:', error)
-    showToast({
-      message: error.response?.data?.message || 'Erreur lors du téléchargement de l\'image',
-      type: 'error'
-    })
+    
+    // Afficher les erreurs de validation détaillées
+    if (error.response?.data?.error && Array.isArray(error.response.data.error)) {
+      const validationErrors = error.response.data.error.map((err: any) => err.msg || err.message || err).join(', ')
+      showToast({
+        message: `Erreurs de validation: ${validationErrors}`,
+        type: 'error'
+      })
+    } else {
+      showToast({
+        message: error.response?.data?.message || 'Erreur lors du téléchargement de l\'image',
+        type: 'error'
+      })
+    }
   } finally {
     uploadingImage.value = false
   }

@@ -260,35 +260,23 @@
 
                   <VDivider />
 
-                  <!-- Actions principales : seulement Accepter et Rejeter -->
-                  <VCardActions class="pa-4 d-flex flex-wrap gap-2" v-if="!isStatusFinal">
-                    <!-- Statut -->
-                    <VBtn color="success" variant="outlined" @click="updateStatus('ACCEPTED')"
-                      prepend-icon="ri-check-line" :loading="updatingStatus"
-                      :disabled="application.status === 'ACCEPTED'">
-                      Accepter
-                    </VBtn>
-
-                    <VBtn color="error" variant="outlined" @click="updateStatus('REJECTED')"
-                      prepend-icon="ri-close-line" :loading="updatingStatus"
-                      :disabled="application.status === 'REJECTED'">
-                      Rejeter
-                    </VBtn>
-
+                  <!-- Actions principales : seulement consulter -->
+                  <VCardActions class="pa-4 d-flex flex-wrap gap-2">
                     <!-- Contact -->
                     <VBtn variant="outlined" prepend-icon="ri-mail-send-line" @click="sendEmail">
                       Contacter
                     </VBtn>
 
                     <!-- Offre d'emploi -->
-                    <VBtn v-if="application.job_offer_id" variant="outlined" prepend-icon="ri-eye-line"
+                    <VBtn v-if="application && application.job_offer_id" variant="outlined" prepend-icon="ri-eye-line"
                       @click="viewJobOffer">
                       voir l'offre
                     </VBtn>
 
                     <!-- Télécharger tous les documents -->
-                    <VBtn v-if="application.attachments && application.attachments.length > 0" variant="outlined"
-                      prepend-icon="ri-download-line" @click="downloadAllDocuments" :loading="downloadingAll">
+                    <VBtn v-if="application && application.attachments && application.attachments.length > 0"
+                      variant="outlined" prepend-icon="ri-download-line" @click="downloadAllDocuments"
+                      :loading="downloadingAll">
                       Télécharger
                     </VBtn>
                   </VCardActions>
@@ -296,12 +284,12 @@
 
 
                   <!-- Message pour les candidatures finalisées -->
-                  <VCardText v-else class="pa-4">
-                    <VAlert :type="application.status === 'accepted' ? 'success' : 'info'" variant="tonal"
-                      :icon="application.status === 'accepted' ? 'ri-check-circle-line' : 'ri-information-line'">
-                      Cette candidature a été {{ application.status === 'ACCEPTED' ? 'acceptée' : (application.status
-                        === 'REJECTED' ?
-                        'rejetée' : 'finalisée') }} et ne peut plus être modifiée.
+                  <VCardText v-if="application && (application.status === 'APPROVED' || application.status === 'REFUSED' || application.status === 'FINALIZED')" class="pa-4">
+                    <VAlert :type="application.status === 'APPROVED' ? 'success' : 'info'" variant="tonal"
+                      :icon="application.status === 'APPROVED' ? 'ri-check-circle-line' : 'ri-information-line'">
+                      Cette candidature a été {{ application.status === 'APPROVED' ? 'approuvée' : (application.status
+                        === 'REFUSED' ?
+                        'refusée' : 'finalisée') }} et ne peut plus être modifiée.
                     </VAlert>
                   </VCardText>
 
@@ -338,41 +326,6 @@
       </VRow>
     </VFadeTransition>
 
-    <!-- Dialog confirmation changement de statut -->
-    <VDialog v-model="statusConfirmDialog" max-width="500">
-      <VCard>
-        <VCardTitle class="d-flex align-center">
-          <VIcon :icon="pendingStatusInfo?.icon || 'ri-question-line'" class="me-2"
-            :color="pendingStatusInfo?.color || 'primary'" />
-          Confirmer le changement de statut
-        </VCardTitle>
-        <VCardText>
-          <p class="text-body-1 mb-4">
-            Voulez-vous vraiment changer le statut de cette candidature vers
-            <VChip size="small" :color="pendingStatusInfo?.color" class="mx-1">
-              {{ pendingStatusInfo?.text }}
-            </VChip> ?
-          </p>
-
-          <!-- Champ de commentaire OBLIGATOIRE pour les rejets -->
-          <VTextarea v-if="pendingStatus === 'REJECTED'" v-model="statusChangeReason" label="Raison du rejet *"
-            placeholder="Expliquez la raison du rejet (obligatoire)..." variant="outlined" rows="3" class="mb-4"
-            :error="pendingStatus === 'REJECTED' && !statusChangeReason.trim()"
-            error-messages="La raison du rejet est obligatoire" />
-
-          <VAlert v-if="getStatusChangeWarning(pendingStatus)" type="info" variant="tonal" class="mb-4">
-            {{ getStatusChangeWarning(pendingStatus) }}
-          </VAlert>
-        </VCardText>
-        <VCardActions class="justify-end">
-          <VBtn variant="text" @click="cancelStatusChange">Annuler</VBtn>
-          <VBtn variant="flat" :color="pendingStatusInfo?.color || 'primary'" :loading="updatingStatus"
-            @click="confirmStatusChange" :disabled="pendingStatus === 'REJECTED' && !statusChangeReason.trim()">
-            Confirmer
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
   </VContainer>
 </template>
 
@@ -401,10 +354,6 @@ export default {
       error: null,
       downloadingFiles: {},
       downloadingAll: false,
-      updatingStatus: false,
-      statusConfirmDialog: false,
-      pendingStatus: null,
-      statusChangeReason: ''
     }
   },
   computed: {
@@ -429,9 +378,9 @@ export default {
       return jobOffer?.title || 'Offre d\'emploi'
     },
 
-    // Vérifier si le statut est final (accepté ou rejeté)
+    // Vérifier si le statut est final (approuvé ou refusé)
     isStatusFinal() {
-      return this.application && ['ACCEPTED', 'REJECTED', 'CANCELLED'].includes(this.application.status)
+      return this.application && ['APPROVED', 'REFUSED', 'CANCELLED'].includes(this.application.status)
     },
 
     // Informations du statut en attente de changement
@@ -481,94 +430,7 @@ export default {
       }
     },
 
-    // Gestion des statuts - seulement accept et reject
-    async updateStatus(newStatus) {
-      if (!this.application || this.application.status === newStatus || this.updatingStatus) return
 
-      // Toujours demander confirmation
-      this.pendingStatus = newStatus
-      this.statusChangeReason = ''
-      this.statusConfirmDialog = true
-    },
-
-    // Effectuer le changement de statut
-    async performStatusChange(newStatus, reason = '') {
-      if (!this.application || this.updatingStatus) return
-
-      this.updatingStatus = true
-
-      try {
-        await this.jobApplicationsStore.updateApplicationStatus({
-          application_id: this.application.id,
-          status: newStatus,
-          reason: reason
-        })
-
-        // Recharger la candidature pour avoir les données à jour
-        await this.loadApplication()
-
-        const statusInfo = APPLICATION_STATUSES.find(s => s.value === newStatus)
-        if (this.$toast) {
-          this.$toast.success(`Statut mis à jour: ${statusInfo?.text || newStatus}`)
-        }
-
-      } catch (error) {
-        console.error('Erreur lors du changement de statut:', error)
-        console.error('Données envoyées:', { application_id: this.application.id, status: newStatus, reason })
-        console.error('Réponse d\'erreur complète:', error.response?.data)
-        console.error('Status code:', error.response?.status)
-
-        let errorMessage = 'Erreur lors du changement de statut'
-        if (error.response?.data?.detail) {
-          if (Array.isArray(error.response.data.detail)) {
-            errorMessage = error.response.data.detail.map(d => d.msg || d).join(', ')
-          } else {
-            errorMessage = error.response.data.detail
-          }
-        } else if (error.response?.data?.message) {
-          errorMessage = error.response.data.message
-        } else if (error.response?.data) {
-          errorMessage = JSON.stringify(error.response.data)
-        }
-
-        if (this.$toast) {
-          this.$toast.error(errorMessage)
-        }
-      } finally {
-        this.updatingStatus = false
-      }
-    },
-
-    // Confirmer le changement de statut
-    async confirmStatusChange() {
-      if (!this.pendingStatus) return
-
-      // Vérifier que la raison est fournie pour les rejets
-      if (this.pendingStatus === 'REJECTED' && !this.statusChangeReason.trim()) {
-        return
-      }
-
-      await this.performStatusChange(this.pendingStatus, this.statusChangeReason)
-      this.statusConfirmDialog = false
-      this.pendingStatus = null
-      this.statusChangeReason = ''
-    },
-
-    // Annuler le changement de statut
-    cancelStatusChange() {
-      this.statusConfirmDialog = false
-      this.pendingStatus = null
-      this.statusChangeReason = ''
-    },
-
-    // Obtenir un message d'avertissement pour le changement de statut
-    getStatusChangeWarning(status) {
-      const warnings = {
-        'REJECTED': 'Cette action notifiera le candidat du rejet de sa candidature.',
-        'ACCEPTED': 'Cette action notifiera le candidat de l\'acceptation de sa candidature.',
-      }
-      return warnings[status] || null
-    },
 
     // Navigation
     goBack() {
@@ -578,6 +440,8 @@ export default {
     async viewJobOffer() {
       if (this.application?.job_offer_id && this.$router) {
         this.$router.push(`/jobs/offers/${this.application.job_offer_id}`)
+      } else {
+        console.error('Application ou job_offer_id manquant:', this.application)
       }
     },
 
@@ -768,8 +632,8 @@ export default {
       const colors = {
         'RECEIVED': 'warning',
         'UNDER_REVIEW': 'info',
-        'ACCEPTED': 'success',
-        'REJECTED': 'error',
+        'APPROVED': 'success',
+        'REFUSED': 'error',
         'CANCELLED': 'secondary',
         // Fallbacks pour anciens statuts
         'pending': 'warning',
@@ -785,8 +649,8 @@ export default {
       const icons = {
         'RECEIVED': 'ri-mail-line',
         'UNDER_REVIEW': 'ri-loader-line',
-        'ACCEPTED': 'ri-check-line',
-        'REJECTED': 'ri-close-line',
+        'APPROVED': 'ri-check-line',
+        'REFUSED': 'ri-close-line',
         'CANCELLED': 'ri-forbid-line',
         // Fallbacks pour anciens statuts
         'pending': 'ri-time-line',
@@ -802,8 +666,8 @@ export default {
       const labels = {
         'RECEIVED': 'En étude de dossier',
         'UNDER_REVIEW': 'En cours d\'examen',
-        'ACCEPTED': 'Acceptée',
-        'REJECTED': 'Rejetée',
+        'APPROVED': 'Approuvée',
+        'REFUSED': 'Refusée',
         'CANCELLED': 'Annulée',
         // Fallbacks pour anciens statuts
         'pending': 'En attente',

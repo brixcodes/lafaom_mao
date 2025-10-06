@@ -391,7 +391,7 @@ const loadApplications = async () => {
       asc = 'asc'
     }
 
-    await jobOffersStore.getJobApplications({
+    await jobOffersStore.fetchMyJobApplications({
       search: filters.search || undefined,
       status: filters.status || undefined as any,
       job_offer_id: filters.job_offer_id || undefined,
@@ -399,7 +399,6 @@ const loadApplications = async () => {
       page_size: pageSize.value,
       order_by: orderBy as 'created_at' | 'application_number' | 'status',
       asc: asc
-      // Note: Le filtrage par utilisateur connecté sera géré côté backend
     })
   } catch (error) {
     console.error('Erreur lors du chargement des candidatures:', error)

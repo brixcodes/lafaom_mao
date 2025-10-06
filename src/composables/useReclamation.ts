@@ -129,7 +129,7 @@ const loadReclamations = async (reset = false) => {
     }
 
     console.log('🔍 Chargement des réclamations avec params:', params)
-    const response = await reclamationsService.getReclamations(params)
+    const response = await reclamationsService.getAllReclamations(params)
     console.log('📋 Réponse API réclamations:', response)
     
     reclamations.value = reset ? response.data : [...reclamations.value, ...response.data]
@@ -203,7 +203,7 @@ const createReclamation = async (data: ReclamationCreateInput) => {
 const getReclamation = async (id: number) => {
   try {
     isLoading.value = true
-    const response = await reclamationsService.getReclamation(id)
+    const response = await reclamationsService.getMyReclamationById(id)
     currentReclamation.value = response.data
     return response.data
   } catch (err: any) {

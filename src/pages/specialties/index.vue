@@ -11,7 +11,7 @@
           Gérez et consultez toutes les spécialités disponibles
         </p>
       </div>
-      <VBtn prepend-icon="ri-add-line" color="primary" :to="{ name: 'specialties-create' }">
+      <VBtn prepend-icon="ri-add-line" color="primary" :to="{ name: 'specialties-create' }" v-if="hasPermissions([PermissionEnum.CAN_CREATE_SPECIALTY])">
         Créer une spécialité
       </VBtn>
     </div>
@@ -96,6 +96,10 @@ import { confirmAction } from '@/utils/confirm'
 import type { Specialty } from '@/types/specialties'
 import SpecialtyTable from '@/components/Specialty/SpecialtyTable.vue'
 
+import { PermissionEnum } from '@/types/permissions'
+import { useInstantPermissions } from '@/composables/useInstantPermissions'
+const { hasPermission, hasPermissions } = useInstantPermissions()
+
 const router = useRouter()
 const trainingStore = useTrainingStore()
 
@@ -169,7 +173,7 @@ const headers = [
 // Methods
 const loadSpecialties = async () => {
   try {
-    await trainingStore.fetchSpecialties({
+    await trainingStore.loadSpecialties({
       page: currentPage.value,
       limit: itemsPerPage.value,
       search: searchQuery.value || undefined,

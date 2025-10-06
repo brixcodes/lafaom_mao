@@ -55,17 +55,21 @@ const onSubmit = async () => {
     return
   }
   try {
+    console.log('[Login Page] Attempting login for:', form.value.email)
     const result = await authStore.login({
       email: form.value.email,
       password: form.value.password,
     })
     
+    console.log('[Login Page] Login result:', result)
+    
     if (result.success) {
       showToast({ message: 'Connexion réussie.', type: 'success' })
       router.push('/dashboard')
     } else if (result.requiresTwoFactor) {
+      console.log('[Login Page] Redirecting to 2FA for:', result.email)
       showToast({ message: 'Vérification 2FA requise.', type: 'info' })
-      router.push({ path: '/two-factor', query: { email: form.value.email } })
+      router.push({ path: '/two-factor', query: { email: result.email || form.value.email } })
     }
   } catch (err: any) {
     showToast({ message: authStore.error || 'Erreur de connexion', type: 'error' })

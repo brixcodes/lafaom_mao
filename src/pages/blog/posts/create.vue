@@ -5,9 +5,9 @@
         <VIcon icon="ri-arrow-left-line" color="primary" />
       </VBtn>
       <div>
-        <h1 class="font-weight-bold mb-1">Créer un article</h1>
+        <h1 class="font-weight-bold mb-1">Créer une actualitée</h1>
         <p class="text-body-2 text-secondary mb-0">
-          Remplissez le formulaire pour ajouter un nouvel article au blog.
+          Remplissez le formulaire pour ajouter une nouvelle actualitée à votre blog.
         </p>
       </div>
     </div>
@@ -46,7 +46,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiService } from '@/services/api/base'
 import { blogService } from '@/services/api/blog'
-import { confirmAction } from '@/utils/confirm'
 import { showToast } from '@/components/toast/toastManager'
 
 const router = useRouter()
@@ -99,20 +98,10 @@ const fetchCategories = async () => {
 }
 
 const handleCreate = async (formData: FormData) => {
-  const confirmed = await confirmAction({
-    title: 'Confirmation',
-    text: 'Voulez-vous vraiment créer cet article ?',
-    confirmButtonText: '<span style="color:white">Oui, créer</span>',
-    cancelButtonText: '<span style="color:white">Annuler</span>',
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-  })
-  if (!confirmed) return
-
   isLoading.value = true
   try {
     const res = await apiService.upload('/blog/posts', formData) as any
-    showToast({ message: "✅ L'article a été créé avec succès.", type: 'success' })
+    showToast({ message: "✅ L'actualitée a été créé avec succès.", type: 'success' })
     router.push('/blog/posts')
   } catch (err: any) {
     if (err?.response?.status === 422 && err?.response?.data?.error) {
@@ -124,10 +113,8 @@ const handleCreate = async (formData: FormData) => {
         }
       })
       form.value.backendErrors = backendErrors
-      showToast({ message: '❌ Erreur de validation. Vérifiez vos champs.', type: 'error' })
-    } else {
-      showToast({ message: '⚠️ Erreur serveur ou réseau.', type: 'error' })
     }
+    showToast({ message: 'Erreur lors de la création de l\'article.', type: 'error' })
   } finally {
     isLoading.value = false
   }

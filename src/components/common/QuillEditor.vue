@@ -59,7 +59,6 @@ const editorRef = ref()
 const quillInstance = ref<any>(null)
 const showToolbar = computed(() => props.theme === 'snow')
 
-// Configuration de l'éditeur selon le thème
 const editorOptions = computed(() => ({
   theme: props.theme,
   modules: {
@@ -82,83 +81,58 @@ const editorOptions = computed(() => ({
   placeholder: props.placeholder
 }))
 
-// Gestion des changements de contenu
 const onContentChange = (data: any) => {
   const htmlContent = data.html || ''
-  console.log(`📝 QuillEditor ${props.editorId} content changed:`, htmlContent)
   content.value = htmlContent
-  console.log(`📝 Emitting update:modelValue for ${props.editorId} with:`, htmlContent)
   emit('update:modelValue', htmlContent)
 }
 
 const onTextChange = (quill: any) => {
-  console.log(`🎨 QuillEditor ${props.editorId} text change - quill instance:`, quill)
-  if (quill && quill.root) {
+  if (quill?.root) {
     const htmlContent = quill.root.innerHTML || ''
-    console.log(`🎨 Text change HTML content:`, htmlContent)
     content.value = htmlContent
     emit('update:modelValue', htmlContent)
   }
 }
 
 const onBlur = (quill: any) => {
-  console.log(`🔵 QuillEditor ${props.editorId} blur - quill:`, quill)
-  if (quill && quill.root) {
+  if (quill?.root) {
     const htmlContent = quill.root.innerHTML || ''
-    console.log(`🔵 Blur HTML content:`, htmlContent)
     content.value = htmlContent
     emit('update:modelValue', htmlContent)
   }
 }
 
 const onFocus = (quill: any) => {
-  console.log(`🔴 QuillEditor ${props.editorId} focus - quill:`, quill)
-  if (quill && quill.root) {
-    console.log(`🔴 Focus HTML content:`, quill.root.innerHTML)
-  }
+  // Focus event hook – intentionally left empty for now
 }
 
-// Callback quand l'éditeur est prêt
 const onEditorReady = (quill: any) => {
-  // L'éditeur est maintenant prêt
-  console.log(`Éditeur Quill ${props.editorId} prêt (thème: ${props.theme})`, quill)
-  
-  // Stocker l'instance Quill pour les autres méthodes
   quillInstance.value = quill
-  
-  // S'assurer que le contenu initial est défini
+
   if (props.modelValue && props.modelValue !== quill.root.innerHTML) {
     quill.root.innerHTML = props.modelValue
   }
-  
-  // Force la mise à jour du contenu pour éviter la perte lors des remontages
+
   if (content.value) {
     quill.clipboard.dangerouslyPasteHTML(content.value)
   }
-  
-  // Ajouter un gestionnaire direct sur l'instance Quill pour capturer tous les changements
+
   quill.on('text-change', () => {
     const htmlContent = quill.root.innerHTML || ''
-    console.log(`🔥 Direct Quill text-change for ${props.editorId}:`, htmlContent)
     content.value = htmlContent
     emit('update:modelValue', htmlContent)
   })
 }
 
-// Synchronisation avec modelValue - amélioration
+// Synchronise content si modelValue change
 watch(() => props.modelValue, (newValue) => {
-  console.log(`🔄 QuillEditor ${props.editorId} modelValue changed:`, newValue)
   if (newValue !== content.value) {
     content.value = newValue || ''
-    console.log(`🔄 Content updated to:`, content.value)
   }
 }, { immediate: true })
-
-// Watcher sur content pour debug
-watch(() => content.value, (newValue) => {
-  console.log(`📊 QuillEditor ${props.editorId} internal content changed:`, newValue)
-})
 </script>
+
 
 <style scoped>
 .quill-editor-wrapper {

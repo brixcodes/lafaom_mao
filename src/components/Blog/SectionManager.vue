@@ -14,7 +14,7 @@
           </div>
         </div>
 
-        <VBtn color="primary" prepend-icon="ri-add-line" @click="showCreateForm" :disabled="isLoading">
+        <VBtn color="primary" prepend-icon="ri-add-line" @click="showCreateForm" :disabled="isLoading" v-if="hasPermissions([PermissionEnum.CAN_CREATE_BLOG])">
           Ajouter
         </VBtn>
       </VCardTitle>
@@ -33,21 +33,33 @@
         <VCardText class="pa-4">
           <VForm @submit.prevent="handleCreate">
             <VRow>
-              <VCol cols="12" md="7">
+              <VCol cols="12" md="9">
                 <VTextField v-model="createForm.title" label="Titre de la section" variant="outlined"
                   :error-messages="createErrors.title" class="mb-3" clearable prepend-inner-icon="ri-text" />
-
-                <VTextarea v-model="createForm.content" label="Contenu" variant="outlined" rows="6" auto-grow
-                  :error-messages="createErrors.content" class="mb-3" clearable prepend-inner-icon="ri-align-left" />
               </VCol>
 
-              <VCol cols="12" md="5">
+              <VCol cols="12" md="3">
                 <VTextField v-model.number="createForm.position" label="Position" type="number" variant="outlined"
                   min="1" :error-messages="createErrors.position" class="mb-3" prepend-inner-icon="ri-sort-number-asc" />
 
+              </VCol>
+              <VCol cols="12" md="12">
                 <VFileInput v-model="createForm.cover_image" label="Image de couverture" accept="image/*"
                   variant="outlined" prepend-icon="" prepend-inner-icon="ri-image-line"
                   :error-messages="createErrors.cover_image" show-size />
+              </VCol>
+              <VCol cols="12" md="12">
+                <div class="mb-3">
+                  <label class="text-body-2 text-medium-emphasis mb-2 d-block">Contenu</label>
+                  <QuillEditor 
+                    v-model="createForm.content" 
+                    editor-id="section-content-editor"
+                    theme="snow"
+                    placeholder="Rédigez le contenu de votre section..."
+                    class="quill-editor-custom"
+                  />
+                  <div v-if="createErrors.content" class="text-error mt-1">{{ createErrors.content }}</div>
+                </div>
               </VCol>
             </VRow>
 
@@ -72,14 +84,14 @@
 
     <!-- Liste des sections -->
     <VFadeTransition group>
-      <SectionCard v-for="(section, index) in sortedSections" :key="section.id" :section="section"
+      <SectionCard v-for="(section, index) in sortedSections" :key="section.id" :section="section" v-if="hasPermissions([PermissionEnum.CAN_VIEW_BLOG])"
         :is-first="index === 0" :is-last="index === sortedSections.length - 1"
         @update="(data) => handleSectionUpdate(section.id, data)" @delete="handleSectionDelete(section.id)"
         @move-up="handleSectionMoveUp(section)" @move-down="handleSectionMoveDown(section)" />
     </VFadeTransition>
 
     <!-- État vide -->
-    <VCard v-if="!isLoading && sections.length === 0" class="text-center pa-8" elevation="1">
+    <VCard v-if="!isLoading && sections.length === 0 && hasPermissions([PermissionEnum.CAN_VIEW_BLOG])" class="text-center pa-8" elevation="1">
       <VIcon size="64" color="grey-lighten-2" class="mb-4">ri-file-list-3-line</VIcon>
       <h4 class="text-h6 mb-2">Aucune section</h4>
       <p class="text-body-2 text-medium-emphasis mb-4">
@@ -98,7 +110,12 @@ import { blogService } from '@/services/api/blog'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'
 import SectionCard from './SectionCard.vue'
+import QuillEditor from '@/components/common/QuillEditor.vue'
 import type { PostSectionOut, PostSectionCreateInput } from '@/types/blog'
+
+import { PermissionEnum } from '@/types/permissions'
+import { useInstantPermissions } from '@/composables/useInstantPermissions'
+const { hasPermission, hasPermissions } = useInstantPermissions()
 
 const props = defineProps<{ postId: number }>()
 const sections = ref<PostSectionOut[]>([])
@@ -314,5 +331,37 @@ onMounted(() => {
 
 .create-form-card {
   border-radius: 5px;
+}
+
+/* Styles pour QuillEditor */
+.quill-editor-custom {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 4px;
+  background-color: rgb(var(--v-theme-surface));
+}
+
+.quill-editor-custom :deep(.ql-toolbar) {
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-radius: 4px 4px 0 0;
+}
+
+.quill-editor-custom :deep(.ql-container) {
+  border: none;
+  border-radius: 0 0 4px 4px;
+  font-family: inherit;
+}
+
+.quill-editor-custom :deep(.ql-editor) {
+  min-height: 120px;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.quill-editor-custom :deep(.ql-editor.ql-blank::before) {
+  font-style: normal;
+  color: rgba(var(--v-theme-on-surface), 0.6);
 }
 </style>

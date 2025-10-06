@@ -547,6 +547,16 @@ export const routes = [
           requiresAuth: true,
         }
       },
+      {
+        path: 'student-applications/:id',
+        name: 'student-applications-detail',
+        component: () => import('@/pages/student-applications/detail.vue'),
+        meta: {
+          title: 'Détails de la candidature',
+          requiresAuth: true,
+        },
+        props: true
+      },
       // Specialties CRUD
       {
         path: 'training/specialties',

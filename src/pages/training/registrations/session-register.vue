@@ -378,7 +378,7 @@ const loadSession = async () => {
       return
     }
 
-    const response = await trainingService.getTrainingSession(sessionId)
+    const response = await trainingService.getTrainingSessionById(sessionId)
     session.value = response.data
 
   } catch (err: any) {
@@ -391,7 +391,7 @@ const loadSession = async () => {
 
 const fetchTrainings = async () => {
   try {
-    const response = await trainingService.listTrainings({ page: 1, page_size: 1000 })
+    const response = await trainingService.getTrainings({ page: 1, page_size: 1000 })
     trainings.value = response.data.map(t => ({ id: t.id, title: t.title }))
   } catch (error) {
     console.error('Erreur lors du chargement des formations:', error)
@@ -400,7 +400,7 @@ const fetchTrainings = async () => {
 
 const fetchCenters = async () => {
   try {
-    const response = await organizationCentersService.listOrganizationCenters({ page: 1, page_size: 1000 })
+    const response = await organizationCentersService.getOrganizationCenters({ page: 1, page_size: 1000 })
     centers.value = response.data.map((c: any) => ({ id: c.id, name: c.name }))
   } catch (error) {
     console.error('Erreur lors du chargement des centres:', error)
@@ -497,7 +497,7 @@ const handlePayment = async () => {
     
     // 2. Récupérer les informations complètes de la candidature créée
     console.log('Récupération des informations de la candidature créée...')
-    const fullApplication = await studentApplicationsService.getStudentApplication(applicationResponse.data.id)
+    const fullApplication = await studentApplicationsService.getStudentApplicationById(applicationResponse.data.id)
     console.log('Candidature complète récupérée:', fullApplication)
     
     // 3. Initier le paiement avec l'ID de la candidature (contournement CORS)
@@ -508,7 +508,7 @@ const handlePayment = async () => {
     console.log('Montant des frais d\'inscription:', session.value?.registration_fee)
     console.log('Utilisation de l\'endpoint submit avec l\'ID de candidature dans le body:', applicationId)
     
-    const paymentResponse = await studentApplicationsService.submitApplicationWithPayment(applicationId)
+    const paymentResponse = await studentApplicationsService.submitStudentApplication(applicationId)
     
     console.log('Réponse du paiement:', paymentResponse)
     

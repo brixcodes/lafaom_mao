@@ -80,7 +80,7 @@ export const useStudentApplicationStore = defineStore('studentApplications', () 
     error.value = null
     
     try {
-      const response = await studentApplicationService.getStudentApplication(applicationId)
+      const response = await studentApplicationService.getStudentApplicationById(applicationId)
       currentStudentApplication.value = response.data
       return response.data
     } catch (err: any) {

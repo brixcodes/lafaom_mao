@@ -47,7 +47,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { apiService } from '@/services/api/base'
 import { blogService } from '@/services/api/blog'
 import { showToast } from '@/components/toast/toastManager'
-import { confirmAction } from '@/utils/confirm'
 
 const route = useRoute()
 const router = useRouter()
@@ -104,7 +103,8 @@ const fetchPost = async () => {
   try {
     const res = await blogService.getPostById(postId);
     if (res && res.data) {
-      form.value = {
+      // Nettoyer les données pour éviter les erreurs backend
+      const cleanData = {
         author_name: res.data.author_name || '',
         title: res.data.title || '',
         summary: res.data.summary || '',
@@ -115,6 +115,33 @@ const fetchPost = async () => {
         cover_image_url: res.data.cover_image || '',
         backendErrors: {},
       };
+      
+      // Vérifier que les valeurs ne sont pas des messages d'erreur
+      Object.keys(cleanData).forEach(key => {
+        if (typeof cleanData[key] === 'string' && cleanData[key].includes('Field required')) {
+          cleanData[key] = '';
+        }
+      });
+      
+      // Nettoyer et corriger le format des tags
+      if (Array.isArray(cleanData.tags)) {
+        cleanData.tags = cleanData.tags.map(tag => {
+          // Si le tag est une chaîne JSON, le parser
+          if (typeof tag === 'string' && tag.startsWith('[') && tag.endsWith(']')) {
+            try {
+              const parsedTags = JSON.parse(tag);
+              return Array.isArray(parsedTags) ? parsedTags : [tag];
+            } catch (e) {
+              return [tag];
+            }
+          }
+          return tag;
+        }).flat().filter(tag => 
+          typeof tag === 'string' && !tag.includes('Field required')
+        );
+      }
+      
+      form.value = cleanData;
       console.log('[DEBUG] Form data après fetchPost:', form.value);
     } else {
       showToast({ message: "Données de l'article incomplètes ou invalides.", type: 'warning' });
@@ -133,20 +160,9 @@ const handleUpdate = async (formData: FormData) => {
     console.log(`[DEBUG] FormData from handleUpdate: ${key}=${value}`);
   }
 
-  const confirmed = await confirmAction({
-    title: 'Confirmation',
-    text: "Voulez-vous vraiment modifier cet article ?",
-    confirmButtonText: '<span style="color:white">Oui, modifier</span>',
-    cancelButtonText: '<span style="color:white">Annuler</span>',
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-  });
-
-  if (!confirmed) return;
-
   isLoading.value = true;
   try {
-    const res = await blogService.updatePostNoConfirm(postId, formData);
+    const res = await blogService.updatePost(postId, formData);
     showToast({ message: "✅ L'article a été modifié avec succès.", type: 'success' });
     router.push('/blog/posts');
   } catch (err: any) {
@@ -160,10 +176,8 @@ const handleUpdate = async (formData: FormData) => {
         }
       });
       form.value.backendErrors = backendErrors;
-      showToast({ message: '❌ Erreur de validation. Vérifiez vos champs.', type: 'error' });
-    } else {
-      showToast({ message: '⚠️ Erreur serveur ou réseau.', type: 'error' });
     }
+    showToast({ message: 'Erreur lors de la modification de l\'article.', type: 'error' });
     console.error('[DEBUG] Exception API:', err);
   } finally {
     isLoading.value = false;

@@ -243,7 +243,7 @@ const loadSession = async () => {
       return
     }
 
-    const response = await trainingService.getTrainingSession(sessionId)
+    const response = await trainingService.getTrainingSessionById(sessionId)
     session.value = response.data
 
     // Charger les formations pour trouver le type de formation
@@ -265,7 +265,7 @@ const loadSession = async () => {
 const fetchTrainings = async () => {
   try {
     isLoadingTrainings.value = true
-    const response = await trainingService.listTrainings({ page: 1, page_size: 1000 })
+    const response = await trainingService.getTrainingByIds({ page: 1, page_size: 1000 })
     trainings.value = response.data.map(t => ({
       id: t.id,
       title: t.title,
@@ -281,7 +281,7 @@ const fetchTrainings = async () => {
 const fetchCenters = async () => {
   try {
     isLoadingCenters.value = true
-    const response = await organizationCentersService.listOrganizationCenters({ page: 1, page_size: 1000 })
+    const response = await organizationCentersService.getOrganizationCenters({ page: 1, page_size: 1000 })
     centers.value = response.data.map((c: any) => ({ id: c.id, name: c.name }))
   } catch (error) {
     console.error('Erreur lors du chargement des centres:', error)

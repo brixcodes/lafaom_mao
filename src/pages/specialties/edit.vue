@@ -85,7 +85,7 @@ import type { Specialty, SpecialtyUpdateInput } from '@/types/specialties'
 
 const router = useRouter()
 const route = useRoute()
-const trainingStore = useSpecialtyStore()
+const trainingStore = useTrainingStore()
 
 // Form ref
 const formRef = ref()
@@ -109,7 +109,8 @@ const isLoading = computed(() => trainingStore.isLoading)
 const loadSpecialty = async () => {
   try {
     const specialtyId = parseInt(route.params.id as string)
-    currentSpecialty.value = await trainingStore.fetchSpecialty(specialtyId)
+    const response = await trainingStore.getSpecialty(specialtyId)
+    currentSpecialty.value = response.data
 
     // Populate form with current specialty data
     specialty.value = {

@@ -11,7 +11,7 @@
           Gérez et consultez tous les centres d'organisation disponibles
         </p>
       </div>
-      <VBtn prepend-icon="ri-add-line" color="primary" :to="{ name: 'organization-centers-create' }">
+      <VBtn prepend-icon="ri-add-line" color="primary" :to="{ name: 'organization-centers-create' }" v-if="hasPermissions([PermissionEnum.CAN_CREATE_ORGANIZATION_CENTER])">
         Créer un centre
       </VBtn>
     </div>
@@ -69,7 +69,7 @@
     </div>
 
     <!-- Liste des centres -->
-    <div v-else-if="hasCenters">
+    <div v-else-if="hasCenters && hasPermissions([PermissionEnum.CAN_VIEW_ORGANIZATION_CENTER])">
       <VRow>
         <VCol v-for="center in centers" :key="center.id" cols="12" sm="6" md="6" lg="4">
           <VCard class="mx-auto my-6">
@@ -128,14 +128,19 @@
                   </template>
                   <VList>
                     <VListItem prepend-icon="ri-eye-line" title="Voir les détails"
-                      :to="{ name: 'organization-centers-detail', params: { id: center.id } }" />
+                      :to="{ name: 'organization-centers-detail', params: { id: center.id } }"  v-if="hasPermissions([PermissionEnum.CAN_VIEW_ORGANIZATION_CENTER])" />
+                      
                     <VListItem  prepend-icon="ri-edit-line" title="Modifier"
-                      :to="{ name: 'organization-centers-edit', params: { id: center.id } }" />
+                      :to="{ name: 'organization-centers-edit', params: { id: center.id } }"  v-if="hasPermissions([PermissionEnum.CAN_UPDATE_ORGANIZATION_CENTER])" />
+
                     <VListItem  prepend-icon="ri-toggle-line" title="Changer le statut"
-                      @click="toggleStatus(center)" />
-                    <VDivider />
-                    <VListItem  prepend-icon="ri-delete-bin-line" title="Supprimer"
-                      class="text-error" @click="confirmDelete(center)" />
+                      @click="toggleStatus(center)" v-if="hasPermissions([PermissionEnum.CAN_UPDATE_ORGANIZATION_CENTER])"/>
+
+                    <span v-if="hasPermissions([PermissionEnum.CAN_DELETE_ORGANIZATION_CENTER])">
+                      <VDivider />
+                      <VListItem  prepend-icon="ri-delete-bin-line" title="Supprimer"
+                        class="text-error" @click="confirmDelete(center)" />
+                    </span>
                   </VList>
                 </VMenu>
               </VCardActions>
@@ -192,8 +197,11 @@ import { TrainingPermission } from '@/types/permissions'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'
 
+import { PermissionEnum } from '@/types/permissions'
+import { useInstantPermissions } from '@/composables/useInstantPermissions'
+const { hasPermission, hasPermissions } = useInstantPermissions()
+
 const router = useRouter()
-const { hasPermission } = usePermissions()
 
 // Expansion par centre
 const expandedCenters = ref<Set<number>>(new Set())
@@ -518,7 +526,7 @@ const sortOptions = [
 const loadAllCenters = async () => {
   try {
     isInitialLoading.value = true
-    const response = await organizationCentersService.listOrganizationCenters({ page: 1, page_size: 1000, order_by: 'created_at', asc: 'desc' })
+    const response = await organizationCentersService.getOrganizationCenters({ page: 1, page_size: 1000, order_by: 'created_at', asc: 'desc' })
     allCenters.value = [...response.data]
   } catch (err) {
     console.error('Erreur lors du chargement des centres:', err)
@@ -579,7 +587,7 @@ const toggleStatus = async (center: OrganizationCenter) => {
   if (!confirmed) return
 
   try {
-    await organizationCentersService.updateOrganizationCenterStatus(center.id, { status: newStatus })
+    await organizationCentersService.changeOrganizationCenterStatus(center.id, { status: newStatus })
     center.status = newStatus
     showToast({ message: 'Statut mis à jour avec succès', type: 'success' })
   } catch (err) {

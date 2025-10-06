@@ -44,12 +44,3 @@
     </VCard>
   </div>
 </template>
-
-<script setup lang="ts">
-// Ce composant affiche des informations générales sur la gestion des permissions
-// Les fonctionnalités spécifiques sont gérées par UserPermissionManager et UserRoleManager
-</script>
-
-<style scoped>
-/* Soft, modern style */
-</style>

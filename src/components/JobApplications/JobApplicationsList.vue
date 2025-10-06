@@ -188,7 +188,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { jobApplicationsService } from '@/services/api/job-offers'
+import { jobOffersService } from '@/services/api/job-offers'
 import type { JobApplication, JobApplicationFilter } from '@/types/jobOffers'
 import { debounce } from 'lodash-es'
 
@@ -257,7 +257,7 @@ const availableStatuses = computed(() => [
 const fetchApplications = async () => {
   loading.value = true
   try {
-    const response = await jobApplicationsService.getJobApplications(filters.value)
+    const response = await jobOffersService.getJobApplications(filters.value)
     applications.value = response.data || []
     totalApplications.value = response.total_number || 0
   } catch (error) {
@@ -303,7 +303,7 @@ const confirmStatusChange = async () => {
   try {
     updatingStatusId.value = selectedApplication.value.id
 
-    await jobApplicationsService.updateJobApplicationStatus({
+    await jobOffersService.updateJobApplicationStatus({
       application_id: selectedApplication.value.id,
       status: newStatus.value as any,
       reason: rejectionReason.value || undefined
@@ -328,7 +328,7 @@ const confirmDelete = async () => {
 
   try {
     deletingId.value = selectedApplication.value.id
-    await jobApplicationsService.deleteJobApplication(selectedApplication.value.id)
+    await jobOffersService.deleteJobApplication(selectedApplication.value.id)
     deleteDialog.value = false
     await fetchApplications()
   } catch (error) {

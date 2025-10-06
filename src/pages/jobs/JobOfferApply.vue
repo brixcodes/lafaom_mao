@@ -37,15 +37,31 @@
     <div v-else-if="jobOffersStore.currentJobOffer">
       <VRow>
         <!-- Colonne principale - Formulaire -->
-        <VCol cols="12" lg="8">
+        <VCol cols="12" md="7">
 
           <VCard elevation="3">
-            <VCardTitle class="d-flex align-center py-4 mb-2">
-              <VIcon icon="ri-user-add-line" class="me-2" color="primary" />
-              Candidater pour ce poste
-            </VCardTitle>
-
             <VCardText class="pb-8">
+              <!-- Alerte d'information pour les utilisateurs connectés -->
+              <VAlert v-if="authStore.isAuthenticated" type="info" variant="tonal" class="mb-6"
+                prepend-icon="ri-information-line">
+                <template #title>Informations pré-remplies</template>
+                Vos informations personnelles ont été automatiquement remplies. Vous pouvez les modifier si nécessaire.
+              </VAlert>
+
+              <!-- Alerte d'erreur de paiement -->
+              <VAlert
+                v-if="fileErrors.some(error => error.includes('Montant insuffisant'))"
+                type="error"
+                variant="tonal"
+                class="mb-6"
+                prepend-icon="ri-error-warning-line"
+                closable
+                @click:close="fileErrors = []"
+              >
+                <template #title>Erreur de paiement</template>
+                Le montant des frais de candidature est trop faible. Le minimum requis est de 0,20 €.
+              </VAlert>
+
               <VForm ref="formRef" @submit.prevent="handleSubmit">
                 <!-- Informations personnelles -->
                 <div class="mb-6">
@@ -99,7 +115,7 @@
                 </div>
 
                 <!-- Documents requis -->
-                <div class="mb-6">
+                <div class="mb-6" v-if="requiredDocuments.length > 0">
                   <h3 class="text-h6 mb-4 d-flex align-center">
                     <VIcon icon="ri-file-upload-line" class="me-2" color="primary" />
                     Documents requis
@@ -204,15 +220,14 @@
           </VCard>
         </VCol>
 
-        <!-- Colonne latérale - Récapitulatif -->
-        <VCol cols="12" lg="4">
-          <!-- Récapitulatif de l'offre -->
-          <VCard elevation="2" class="mb-6">
-            <VCardTitle class="d-flex align-center">
-              Récapitulatif de l'offre
-            </VCardTitle>
+          <!-- Colonne latérale - Récapitulatif -->
+          <VCol cols="12" md="5">
+            <!-- Détails de l'offre d'emploi -->
+           
 
-            <VCardText>
+            <!-- Récapitulatif de l'offre -->
+            <VCard elevation="2" class="mb-6">
+              <VCardText>
               <div class="offer-summary">
                 <h4 class="text-h6 mb-2">{{ jobOffersStore.currentJobOffer.title }}</h4>
                 <p class="text-body-2 text-medium-emphasis mb-3">
@@ -221,22 +236,22 @@
 
                 <div class="summary-items">
                   <div>
-                    <VIcon icon="ri-map-pin-line" size="small" class="me-2" />
+                    <VIcon icon="ri-map-pin-line" color="primary" size="small" class="me-2" />
                     <span>{{ jobOffersStore.currentJobOffer.location }}</span>
                   </div>
 
                   <div>
-                    <VIcon icon="ri-file-text-line" size="small" class="me-2" />
+                    <VIcon icon="ri-file-text-line" color="primary" size="small" class="me-2" />
                     <span>{{ contractTypeLabel }}</span>
                   </div>
 
                   <div>
-                    <VIcon icon="ri-calendar-todo-line" size="small" class="me-2" />
+                    <VIcon icon="ri-calendar-todo-line" color="primary" size="small" class="me-2" />
                     <span>Limite: {{ formatDate(jobOffersStore.currentJobOffer.submission_deadline) }}</span>
                   </div>
 
                   <div v-if="jobOffersStore.currentJobOffer.salary">
-                    <VIcon icon="ri-money-euro-circle-line" size="small" class="me-2" />
+                    <VIcon icon="ri-money-euro-circle-line" color="primary" size="small" class="me-2" />
                     <span>{{ formatSalary(jobOffersStore.currentJobOffer.salary,
                       jobOffersStore.currentJobOffer.currency)
                     }}</span>
@@ -266,7 +281,7 @@
           </VCard>
 
           <!-- Conseils -->
-          <VCard elevation="1" color="info" variant="tonal">
+          <VCard elevation="1" color="info" variant="tonal" class="mb-6">
             <VCardText>
               <h4 class="text-subtitle-1 mb-3 d-flex align-center">
                 <VIcon icon="ri-lightbulb-line" class="me-2" />
@@ -287,10 +302,10 @@
 
     <!-- Dialog de confirmation -->
     <VDialog v-model="confirmDialog" max-width="600" persistent>
-      <VCard title="Confirmation de candidature">
+      <VCard class="pa-3">
 
         <VCardText>
-          <p class="text-body-1 mb-4">
+          <p class="text-body-1 mb-4 text-center">
             Êtes-vous sûr de vouloir envoyer votre candidature pour le poste de
             <strong>{{ jobOffersStore.currentJobOffer?.title }}</strong> ?
           </p>
@@ -302,37 +317,31 @@
               <div><strong>Nom :</strong> {{ form.first_name }} {{ form.last_name }}</div>
               <div><strong>Email :</strong> {{ form.email }}</div>
               <div><strong>Téléphone :</strong> {{ form.phone_number }}</div>
-              <div><strong>Documents :</strong> {{ uploadedFilesCount }} fichier(s)</div>
+              <div><strong>Documents transmis :</strong> {{ uploadedFilesCount }} fichier(s)</div>
             </div>
           </div>
-
-          <p class="text-caption text-medium-emphasis mt-3">
-            Une fois envoyée, votre candidature ne pourra plus être modifiée sans code OTP.
-          </p>
         </VCardText>
 
         <VCardActions class="justify-end">
           <VBtn variant="flat" color="error" @click="confirmDialog = false">Annuler</VBtn>
           <VBtn variant="flat" color="primary" :loading="submitting" @click="submitApplication">
-            Candidater
+            Soumettre
           </VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
 
     <!-- Dialog de succès -->
-    <VDialog v-model="successDialog" max-width="550" persistent>
-      <VCard>
-
+    <VDialog v-model="successDialog" max-width="430" persistent>
+      <VCard class="pa-3">
         <VCardText>
           <div class="text-center py-4">
-            <!-- @images/avatars/avatar-1.png -->
-            <!-- <img src="/success.gif" alt="Succès" class="mb-4" style="width:80px; height:80px;" /> -->
-             
-            <VIcon icon="ri-checkbox-circle-line" size="150" color="success" class="mb-4" />
-            <h3 class="text-h6 mb-4">Votre candidature a été envoyée !</h3>
+            <VIcon icon="ri-checkbox-circle-line" size="100" color="success" class="mb-4" />
+            <h3 class="text-h6 mb-4">
+              Votre candidature est sur le point d'être envoyée.
+            </h3>
 
-            <div v-if="applicationNumber" class="mb-4">
+            <!-- <div v-if="applicationNumber" class="mb-4">
               <VAlert type="info" variant="tonal" density="compact">
                 <div class="text-body-2">
                   <strong>Numéro de candidature :</strong><br>
@@ -342,39 +351,43 @@
               <p class="text-caption text-medium-emphasis mt-2">
                 Conservez ce numéro pour suivre votre candidature
               </p>
-            </div>
+            </div> -->
 
             <p class="text-body-2 text-medium-emphasis mb-4">
-              Nous avons bien reçu votre candidature. Vous recevrez un email de confirmation
-              dans les prochaines minutes.
+              plus qu'une étape payez les frais d'étude de dossier afin de garantir la validité de votre candidature!
             </p>
           </div>
+          <VCardActions class="justify-center">
+            <VBtn variant="flat" color="primary" @click="goBackToOffer">
+              Finaliser
+            </VBtn>
+          </VCardActions>
+
         </VCardText>
 
-        <VCardActions class="justify-center">
-          <VBtn variant="flat" color="primary" @click="goBackToOffer">
-            Continuer vers paiement
-          </VBtn>
-        </VCardActions>
+
       </VCard>
     </VDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useJobOffersStore } from '@/stores/jobOffers'
+import { useAuthStore } from '@/stores/auth'
 import type { JobApplicationCreateInput, JobAttachmentInput } from '@/types/jobOffers'
 import { CONTRACT_TYPES, DOCUMENT_TYPES } from '@/types/jobOffers'
 import { jobOffersService } from '@/services/api'
 import CountryAutocomplete, { type Country } from '@/components/common/CountryAutocomplete.vue'
+import { showToast } from '@/components/toast/toastManager'
 import success from '@images/success.gif'
 
 // Composables
 const route = useRoute()
 const router = useRouter()
 const jobOffersStore = useJobOffersStore()
+const authStore = useAuthStore()
 
 // State
 const formRef = ref<any>(null)
@@ -817,12 +830,62 @@ const submitApplication = async () => {
   } catch (error: any) {
     console.error('Erreur lors de l\'envoi de la candidature:', error)
 
-    // Handle backend errors
-    if (error.response?.data?.error && Array.isArray(error.response.data.error)) {
+    // Gestion spécifique de l'erreur de montant trop faible
+    if (error.response?.data?.error_code === 'payment_initiation_failed' && 
+        error.response?.data?.message?.includes('ERROR_AMOUNT_TOO_LOW')) {
+      
+      showToast({
+        message: 'Le montant des frais de candidature est trop faible. Le minimum requis est de 0,20 €.',
+        type: 'error',
+        duration: 6000
+      })
+      
+      // Afficher aussi l'erreur dans l'interface
+      fileErrors.value = ['Montant insuffisant: Le minimum requis est de 0,20 €']
+      
+    } else if (error.response?.data?.error_code === 'payment_initiation_failed') {
+      
+      const errorMessage = error.response?.data?.message || 'Erreur inconnue'
+      
+      showToast({
+        message: `Erreur de paiement: ${errorMessage}. Veuillez réessayer ou contacter le support.`,
+        type: 'error',
+        duration: 5000
+      })
+      
+      fileErrors.value = ['Erreur de paiement: ' + errorMessage]
+      
+    } else if (error.response?.data?.message?.includes('payment') || 
+               error.response?.data?.message?.includes('Payment')) {
+      
+      showToast({
+        message: `Erreur de paiement: ${error.response?.data?.message}. Veuillez contacter le support si le problème persiste.`,
+        type: 'error',
+        duration: 5000
+      })
+      
+      fileErrors.value = ['Erreur de paiement: ' + error.response?.data?.message]
+      
+    } else if (error.response?.data?.error && Array.isArray(error.response.data.error)) {
       const errors = error.response.data.error.map((err: any) => err.msg).join(', ')
+      
+      showToast({
+        message: `Erreur de validation: ${errors}`,
+        type: 'error',
+        duration: 5000
+      })
+      
       fileErrors.value = [`Erreur: ${errors}`]
     } else {
-      fileErrors.value = [`Erreur: ${error.message || 'Erreur inconnue'}`]
+      const errorMessage = error.message || 'Erreur inconnue'
+      
+      showToast({
+        message: `Erreur: ${errorMessage}`,
+        type: 'error',
+        duration: 4000
+      })
+      
+      fileErrors.value = [`Erreur: ${errorMessage}`]
     }
   } finally {
     submitting.value = false
@@ -843,9 +906,79 @@ const goBackToOffer = () => {
   }
 }
 
+// Fonction pour pré-remplir le formulaire avec les informations de l'utilisateur
+const populateUserInfo = () => {
+  if (authStore.isAuthenticated && authStore.user) {
+    const user = authStore.user
+
+    // Pré-remplir les champs avec les informations de l'utilisateur connecté
+    form.email = user.email || ''
+    form.first_name = user.first_name || ''
+    form.last_name = user.last_name || ''
+    form.phone_number = user.mobile_number || user.fix_number || ''
+    form.civility = user.civility || ''
+    form.country_code = user.country_code || ''
+    form.date_of_birth = user.birth_date || ''
+
+    // Si l'utilisateur a un pays, le sélectionner dans l'autocomplétion
+    if (user.country_code) {
+      selectedCountry.value = {
+        code: user.country_code,
+        name: user.country_code, // Utiliser le code comme nom par défaut
+        code3: user.country_code,
+        flag: '',
+        region: '',
+        subregion: ''
+      }
+    }
+
+    console.log('[JobOfferApply] Formulaire pré-rempli avec les informations utilisateur:', {
+      email: form.email,
+      first_name: form.first_name,
+      last_name: form.last_name,
+      phone_number: form.phone_number
+    })
+  }
+}
+
+// Watcher pour surveiller les changements d'authentification
+watch(
+  () => authStore.isAuthenticated,
+  (isAuthenticated) => {
+    if (isAuthenticated) {
+      console.log('[JobOfferApply] Utilisateur connecté, pré-remplissage du formulaire')
+      populateUserInfo()
+    }
+  }
+)
+
+// Fonctions de support
+const contactSupport = () => {
+  // Numéro de téléphone du support (à configurer selon vos besoins)
+  const supportPhone = '+237 6XX XX XX XX'
+  window.open(`tel:${supportPhone}`, '_self')
+}
+
+const emailSupport = () => {
+  // Email du support (à configurer selon vos besoins)
+  const supportEmail = 'support@lafaom.com'
+  const subject = `Support candidature - ${jobOffersStore.currentJobOffer?.title || 'Offre d\'emploi'}`
+  const body = `Bonjour,\n\nJe rencontre des difficultés pour candidater à l'offre d'emploi "${jobOffersStore.currentJobOffer?.title || ''}" (Réf: ${jobOffersStore.currentJobOffer?.reference || ''}).\n\nPouvez-vous m'aider ?\n\nMerci.`
+  
+  window.open(`mailto:${supportEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_self')
+}
+
+const openChat = () => {
+  // Ouvrir le chat en direct (à configurer selon votre système de chat)
+  console.log('Ouverture du chat en direct...')
+  // Ici vous pouvez intégrer votre système de chat (Intercom, Zendesk, etc.)
+  alert('Fonctionnalité de chat en direct à venir prochainement !')
+}
+
 // Lifecycle
 onMounted(() => {
   loadJobOffer()
+  populateUserInfo()
 })
 </script>
 

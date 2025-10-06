@@ -87,9 +87,12 @@ export class ApiService {
 
   async post<T>(url: string, data?: any, confirmOptions?: any): Promise<T> {
     try {
+      console.log('[API Base] POST request:', { url, data })
       const response = await this.api.post(url, data)
+      console.log('[API Base] POST response:', response.data)
       return response.data
     } catch (error) {
+      console.error('[API Base] POST error:', error)
       if (confirmOptions?.errorMessage) {
         showToast({ message: confirmOptions.errorMessage, type: 'error' })
       }

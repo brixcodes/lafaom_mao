@@ -386,7 +386,7 @@ const loadTraining = async () => {
   error.value = ''
 
   try {
-    const response = await trainingService.getTraining(trainingId)
+    const response = await trainingService.getTrainingById(trainingId)
     training.value = response.data
 
     // Charger les spécialités pour l'affichage
@@ -401,7 +401,7 @@ const loadTraining = async () => {
 
 const fetchSpecialties = async () => {
   try {
-    const response = await trainingService.listSpecialties({})
+    const response = await trainingService.getSpecialties({})
     specialties.value = response.data
   } catch (error) {
     console.error('Erreur lors du chargement des spécialités:', error)

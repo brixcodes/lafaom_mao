@@ -238,7 +238,7 @@ const loadTraining = async () => {
 
   isLoading.value = true
   try {
-    const response = await trainingService.getTraining(trainingId)
+    const response = await trainingService.getTrainingById(trainingId)
     currentTraining.value = response.data
     
     // Remplir le formulaire avec les données existantes
@@ -265,7 +265,7 @@ const loadTraining = async () => {
 
 const fetchSpecialties = async () => {
   try {
-    const response = await trainingService.listSpecialties({})
+    const response = await trainingService.getSpecialties({})
     specialties.value = response.data
   } catch (err: any) {
     showToast({ message: 'Erreur lors du chargement des spécialités', type: 'error' })

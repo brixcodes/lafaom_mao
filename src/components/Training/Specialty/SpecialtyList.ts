@@ -21,11 +21,11 @@ export default defineComponent({
   },
   
   setup() {
-    const trainingStore = useSpecialtyStore()
+    const trainingStore = useTrainingStore()
     const router = useRouter()
     
     onMounted(async () => {
-      await trainingStore.fetchSpecialties()
+      await trainingStore.loadSpecialties()
     })
     
     const handleCreate = () => {

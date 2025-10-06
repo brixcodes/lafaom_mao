@@ -1,33 +1,7 @@
 <template>
   <div class="role-permission-manager">
-    <!-- Informations utilisateur -->
-    <VCard class="mb-6">
-      <VCardText>
-        <div v-if="userInfo" class="d-flex align-center">
-          <VAvatar size="48" class="me-4">
-            <VImg v-if="userInfo.picture" :src="userInfo.picture" />
-            <VIcon v-else icon="ri-user-line" size="24" />
-          </VAvatar>
-          <div class="flex-grow-1">
-            <div class="text-h6 font-weight-bold">{{ userInfo.first_name }} {{ userInfo.last_name }}</div>
-            <div class="text-body-2 text-medium-emphasis mb-2">{{ userInfo.email }}</div>
-            <div class="d-flex align-center gap-2">
-              <VChip :color="getUserTypeColor(userInfo.user_type)" size="small">
-                <VIcon :icon="getUserTypeIcon(userInfo.user_type)" class="me-1" />
-                {{ getUserTypeLabel(userInfo.user_type) }}
-              </VChip>
-              <VChip v-if="userRole" :color="getRoleColor(userRole.name)" size="small">
-                <VIcon icon="ri-shield-user-line" class="me-1" />
-                {{ translateRole(userRole.name) }}
-              </VChip>
-            </div>
-          </div>
-        </div>
-      </VCardText>
-    </VCard>
-
     <!-- Gestion des rôles -->
-    <VCard class="mb-6">
+    <VCard class="mb-6" v-if="hasPermission(PermissionEnum.CAN_GIVE_ROLE)">
       <VCardTitle class="d-flex align-center justify-space-between">
         <div class="d-flex align-center">
           <VIcon icon="ri-shield-user-line" class="me-2" />
@@ -70,7 +44,7 @@
     </VCard>
 
     <!-- Gestion des permissions -->
-    <VCard class="mb-6">
+    <VCard class="mb-6" v-if="hasPermission(PermissionEnum.CAN_GIVE_PERMISSION)">
       <VCardTitle class="d-flex align-center justify-space-between">
         <div class="d-flex align-center">
           <VIcon icon="ri-key-line" class="me-2" />
@@ -105,8 +79,9 @@
         </div>
       </VCardText>
     </VCard>
+    
     <!-- Dialog pour assigner un rôle -->
-    <VDialog v-model="showRoleDialog" max-width="480" transition="dialog-bottom-transition">
+    <VDialog v-model="showRoleDialog" max-width="480" transition="dialog-bottom-transition"  v-if="hasPermission(PermissionEnum.CAN_GIVE_ROLE)">
       <VCard class="shadow-lg">
 
         <!-- Header -->
@@ -137,9 +112,8 @@
       </VCard>
     </VDialog>
 
-
     <!-- Dialog pour assigner des permissions -->
-    <VDialog v-model="showPermissionDialog" max-width="1200" transition="dialog-bottom-transition">
+    <VDialog v-model="showPermissionDialog" max-width="1200" transition="dialog-bottom-transition" v-if="hasPermission(PermissionEnum.CAN_GIVE_PERMISSION)">
       <VCard class="shadow-lg">
 
         <!-- Header -->
@@ -200,7 +174,6 @@
 
       </VCard>
     </VDialog>
-
   </div>
 </template>
 
@@ -218,6 +191,9 @@ import {
   getPermissionIcon,
   getPermissionColor
 } from '@/utils/translations'
+
+import { useInstantPermissions } from '@/composables/useInstantPermissions'
+const { hasPermission, hasPermissions } = useInstantPermissions()
 
 interface UserInfo {
   id: string

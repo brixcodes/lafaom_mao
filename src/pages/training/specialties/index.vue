@@ -75,7 +75,7 @@ const headers = [
 
 const fetchSpecialties = async () => {
   try {
-    const response = await trainingService.listSpecialties({})
+    const response = await trainingService.getSpecialties({})
     specialties.value = response.data
   } catch (error) {
     showToast({ message: 'Erreur lors du chargement des spécialités', type: 'error' })

@@ -55,7 +55,10 @@ const jobsRoutes: RouteRecordRaw[] = [
       {
         path: 'offers/:id/apply',
         name: 'job-offers-apply',
-        component: () => import('@/pages/jobs/JobOfferApply.vue'),
+        component: () => import('@/pages/jobs/JobOfferApply.vue').catch(err => {
+          console.error('Error loading JobOfferApply.vue:', err)
+          return import('@/pages/jobs/JobOffersList.vue')
+        }),
         meta: {
           title: 'Candidater',
           icon: 'ri-send-plane-line',

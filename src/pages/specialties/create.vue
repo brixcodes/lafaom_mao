@@ -62,7 +62,7 @@ import { confirmAction } from '@/utils/confirm'
 import type { SpecialtyCreateInput } from '@/types/specialties'
 
 const router = useRouter()
-const trainingStore = useSpecialtyStore()
+const trainingStore = useTrainingStore()
 
 // Form ref
 const formRef = ref()

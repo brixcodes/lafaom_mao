@@ -1,233 +1,206 @@
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed } from 'vue'
+import { permissionService } from '@/services/permissions'
 import { useAuthStore } from '@/stores/auth'
-import { rolesPermissionsService } from '@/services/api/roles-permissions'
-// import { usePermissionEvents } from '@/utils/permissionEvents'
-import { 
-  PermissionEnum, 
-  RoleEnum, 
-  TrainingPermission, 
-  UserRole, 
-  rolePermissions, 
-  legacyRolePermissions,
-  userRoleToRoleEnum 
-} from '@/types/permissions'
+import type { PermissionEnum } from '@/types/permissions'
 
-export const usePermissions = () => {
+/**
+ * Composable pour la gestion des permissions
+ * Fournit une interface réactive pour vérifier les permissions de l'utilisateur
+ */
+export function usePermissions() {
   const authStore = useAuthStore()
-  // const { permissionEvents } = usePermissionEvents()
-  
-  // States
-  const userPermissions = ref<string[]>([])
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
 
-  // Charger les permissions de l'utilisateur
-  const loadUserPermissions = async () => {
-    if (!authStore.isAuthenticated) {
-      userPermissions.value = []
-      return
-    }
+  // État réactif
+  const permissions = computed(() => permissionService.permissionsList.value)
+  const roles = computed(() => permissionService.rolesList.value)
+  const loading = computed(() => permissionService.loading.value)
+  const isInitialized = computed(() => permissionService.isInitialized.value)
+  const lastUpdateTime = computed(() => permissionService.lastUpdateTime.value)
 
-    try {
-      isLoading.value = true
-      error.value = null
-      
-      // Essayer de récupérer les permissions depuis l'API
-      const response = await rolesPermissionsService.getMyPermissions()
-      
-      if (response.success && response.data && response.data.length > 0) {
-        // Utiliser les permissions de l'API
-        userPermissions.value = response.data.map(p => p.permission)
-        // Permissions mises à jour avec succès
-      } else {
-        // Fallback sur les permissions basées sur le rôle
-        userPermissions.value = getFallbackPermissions()
-        console.log('⚠️ Permissions chargées basées sur le rôle (fallback):', userPermissions.value)
-        
-        // Permissions mises à jour avec succès
-        console.log('✅ Permissions mises à jour:', userPermissions.value.length, 'permissions')
-      }
-    } catch (err) {
-      console.error('❌ Erreur lors du chargement des permissions:', err)
-      error.value = 'Erreur lors du chargement des permissions'
-      // Fallback sur les permissions basées sur le rôle
-      userPermissions.value = getFallbackPermissions()
-      console.log('⚠️ Permissions chargées basées sur le rôle (erreur):', userPermissions.value)
-      
-      // Permissions mises à jour même en cas d'erreur
-      console.log('⚠️ Permissions mises à jour (fallback):', userPermissions.value.length, 'permissions')
-    } finally {
-      isLoading.value = false
-    }
+  /**
+   * Vérifie si l'utilisateur a une permission spécifique
+   * @param permission - La permission à vérifier
+   * @returns true si l'utilisateur a la permission
+   */
+  const hasPermission = (permission: string | PermissionEnum): boolean => {
+    if (!authStore.isAuthenticated) return false
+    return permissionService.hasPermission(permission)
   }
 
-  // Permissions de fallback basées sur le rôle
-  const getFallbackPermissions = (): string[] => {
-    const currentRole = getCurrentRole()
-    const currentRoleEnum = userRoleToRoleEnum[currentRole]
-    return rolePermissions[currentRoleEnum] || []
+  /**
+   * Vérifie si l'utilisateur a plusieurs permissions
+   * @param permissions - Les permissions à vérifier
+   * @param requireAll - Si true, toutes les permissions sont requises
+   * @returns true si les conditions sont remplies
+   */
+  const hasPermissions = (
+    permissions: (string | PermissionEnum)[], 
+    requireAll = false
+  ): boolean => {
+    if (!authStore.isAuthenticated) return false
+    return permissionService.hasPermissions(permissions, requireAll)
   }
 
-  const getCurrentRole = (): UserRole => {
-    const user = authStore.user
-    if (!user) return UserRole.STUDENT
-    
-    // Essayer de déterminer le rôle basé sur les données utilisateur
-    const professionalStatus = user.professions_status?.professional_status
-    
-    // Mapping des statuts professionnels vers les rôles
-    if (professionalStatus === 'admin' || professionalStatus === 'ADMIN') {
-      return UserRole.ADMIN
-    } else if (professionalStatus === 'teacher' || professionalStatus === 'instructor') {
-      return UserRole.INSTRUCTOR
-    } else {
-      return UserRole.STUDENT
-    }
+  /**
+   * Vérifie si l'utilisateur a un rôle spécifique
+   * @param roleName - Le nom du rôle à vérifier
+   * @returns true si l'utilisateur a le rôle
+   */
+  const hasRole = (roleName: string): boolean => {
+    if (!authStore.isAuthenticated) return false
+    return permissionService.hasRole(roleName)
   }
 
-  const currentRole = computed(() => getCurrentRole())
-  const currentRoleEnum = computed(() => userRoleToRoleEnum[currentRole.value])
+  /**
+   * Vérifie si l'utilisateur a plusieurs rôles
+   * @param roleNames - Les noms des rôles à vérifier
+   * @param requireAll - Si true, tous les rôles sont requis
+   * @returns true si les conditions sont remplies
+   */
+  const hasRoles = (roleNames: string[], requireAll = false): boolean => {
+    if (!authStore.isAuthenticated) return false
+    return permissionService.hasRoles(roleNames, requireAll)
+  }
 
-  // Fonction pour recharger les permissions
+  /**
+   * Vérifie si l'utilisateur peut effectuer une action sur un sujet
+   * @param action - L'action (create, read, update, delete)
+   * @param subject - Le sujet (user, blog, job_offer, etc.)
+   * @returns true si l'utilisateur peut effectuer l'action
+   */
+  const can = (action: string, subject: string): boolean => {
+    const permission = `can_${action}_${subject}`.toLowerCase()
+    return hasPermission(permission)
+  }
+
+  /**
+   * Vérifie si l'utilisateur peut voir un module
+   * @param module - Le nom du module
+   * @returns true si l'utilisateur peut voir le module
+   */
+  const canView = (module: string): boolean => {
+    return can('view', module)
+  }
+
+  /**
+   * Vérifie si l'utilisateur peut créer dans un module
+   * @param module - Le nom du module
+   * @returns true si l'utilisateur peut créer
+   */
+  const canCreate = (module: string): boolean => {
+    return can('create', module)
+  }
+
+  /**
+   * Vérifie si l'utilisateur peut modifier dans un module
+   * @param module - Le nom du module
+   * @returns true si l'utilisateur peut modifier
+   */
+  const canUpdate = (module: string): boolean => {
+    return can('update', module)
+  }
+
+  /**
+   * Vérifie si l'utilisateur peut supprimer dans un module
+   * @param module - Le nom du module
+   * @returns true si l'utilisateur peut supprimer
+   */
+  const canDelete = (module: string): boolean => {
+    return can('delete', module)
+  }
+
+  /**
+   * Récupère toutes les permissions de l'utilisateur
+   */
+  const getAllPermissions = () => {
+    return permissionService.getAllPermissions()
+  }
+
+  /**
+   * Récupère tous les rôles de l'utilisateur
+   */
+  const getAllRoles = () => {
+    return permissionService.getAllRoles()
+  }
+
+  /**
+   * Récupère les permissions par catégorie
+   */
+  const getPermissionsByCategory = () => {
+    return permissionService.getPermissionsByCategory()
+  }
+
+  /**
+   * Force le rafraîchissement des permissions
+   */
   const refreshPermissions = async () => {
-    console.log('🔄 Rechargement des permissions...')
-    await loadUserPermissions()
+    await permissionService.refreshPermissions()
   }
 
-  // Charger les permissions au montage
-  onMounted(() => {
-    if (authStore.isAuthenticated) {
-      loadUserPermissions()
-    }
+  /**
+   * Vérifie si l'utilisateur est administrateur
+   */
+  const isAdmin = computed(() => {
+    return hasRole('super_admin') || hasRole('admin')
   })
 
-  // Watcher pour l'authentification
-  watch(() => authStore.isAuthenticated, (newValue) => {
-    if (newValue) {
-      loadUserPermissions()
-    } else {
-      userPermissions.value = []
-    }
+  /**
+   * Vérifie si l'utilisateur est manager
+   */
+  const isManager = computed(() => {
+    return hasRole('manager')
   })
 
-  // Watcher pour les changements d'utilisateur
-  watch(() => authStore.user?.id, (newUserId, oldUserId) => {
-    if (newUserId && newUserId !== oldUserId) {
-      console.log('👤 Changement d\'utilisateur détecté, rechargement des permissions...')
-      loadUserPermissions()
-    }
+  /**
+   * Vérifie si l'utilisateur est visiteur
+   */
+  const isVisitor = computed(() => {
+    return hasRole('visitor')
   })
 
-  // Les permissions se rechargent automatiquement via les watchers
-
-  // Méthodes de vérification des permissions
-  const hasPermission = (permission: PermissionEnum | TrainingPermission): boolean => {
-    return userPermissions.value.includes(permission as PermissionEnum)
-  }
-
-  const hasAnyPermission = (permissions: (PermissionEnum | TrainingPermission)[]): boolean => {
-    return permissions.some(permission => hasPermission(permission))
-  }
-
-  const hasAllPermissions = (permissions: (PermissionEnum | TrainingPermission)[]): boolean => {
-    return permissions.every(permission => hasPermission(permission))
-  }
-
-  // Permissions spécifiques aux formations (pour compatibilité)
-  const canViewTrainings = computed(() => hasPermission(TrainingPermission.VIEW_TRAININGS))
-  const canCreateTraining = computed(() => hasPermission(TrainingPermission.CREATE_TRAINING))
-  const canEditTraining = computed(() => hasPermission(TrainingPermission.EDIT_TRAINING))
-  const canDeleteTraining = computed(() => hasPermission(TrainingPermission.DELETE_TRAINING))
-  const canManageSessions = computed(() => hasPermission(TrainingPermission.MANAGE_SESSIONS))
-  const canReviewApplications = computed(() => hasPermission(TrainingPermission.REVIEW_APPLICATIONS))
-
-  // Permissions générales
-  const canViewUsers = computed(() => hasPermission(PermissionEnum.CAN_VIEW_USER))
-  const canCreateUsers = computed(() => hasPermission(PermissionEnum.CAN_CREATE_USER))
-  const canUpdateUsers = computed(() => hasPermission(PermissionEnum.CAN_UPDATE_USER))
-  const canDeleteUsers = computed(() => hasPermission(PermissionEnum.CAN_DELETE_USER))
-  
-  const canViewBlogs = computed(() => hasPermission(PermissionEnum.CAN_VIEW_BLOG))
-  const canCreateBlogs = computed(() => hasPermission(PermissionEnum.CAN_CREATE_BLOG))
-  const canUpdateBlogs = computed(() => hasPermission(PermissionEnum.CAN_UPDATE_BLOG))
-  const canDeleteBlogs = computed(() => hasPermission(PermissionEnum.CAN_DELETE_BLOG))
-  const canPublishBlogs = computed(() => hasPermission(PermissionEnum.CAN_PUBLISH_BLOG))
-  
-  const canViewJobOffers = computed(() => hasPermission(PermissionEnum.CAN_VIEW_JOB_OFFER))
-  const canCreateJobOffers = computed(() => hasPermission(PermissionEnum.CAN_CREATE_JOB_OFFER))
-  const canUpdateJobOffers = computed(() => hasPermission(PermissionEnum.CAN_UPDATE_JOB_OFFER))
-  const canDeleteJobOffers = computed(() => hasPermission(PermissionEnum.CAN_DELETE_JOB_OFFER))
-  
-  const canViewJobApplications = computed(() => hasPermission(PermissionEnum.CAN_VIEW_JOB_APPLICATION))
-  const canChangeJobApplicationStatus = computed(() => hasPermission(PermissionEnum.CAN_CHANGE_JOB_APPLICATION_STATUS))
-  
-  const canViewStudentApplications = computed(() => hasPermission(PermissionEnum.CAN_VIEW_STUDENT_APPLICATION))
-  const canChangeStudentApplicationStatus = computed(() => hasPermission(PermissionEnum.CAN_CHANGE_STUDENT_APPLICATION_STATUS))
-  
-  const canViewPayments = computed(() => hasPermission(PermissionEnum.CAN_VIEW_PAYMENT))
-  
-  const canGivePermissions = computed(() => hasPermission(PermissionEnum.CAN_GIVE_PERMISSION))
-  const canGiveRoles = computed(() => hasPermission(PermissionEnum.CAN_GIVE_ROLE))
+  /**
+   * Récupère le niveau d'accès de l'utilisateur
+   */
+  const accessLevel = computed(() => {
+    if (isAdmin.value) return 'admin'
+    if (isManager.value) return 'manager'
+    if (isVisitor.value) return 'visitor'
+    return 'none'
+  })
 
   return {
-    // États
-    currentRole,
-    currentRoleEnum,
-    userPermissions,
-    isLoading,
-    error,
+    // État
+    permissions,
+    roles,
+    loading,
+    isInitialized,
+    lastUpdateTime,
     
-    // Méthodes
-    loadUserPermissions,
-    
-    // Méthodes de vérification
+    // Vérifications de permissions
     hasPermission,
-    hasAnyPermission,
-    hasAllPermissions,
+    hasPermissions,
+    hasRole,
+    hasRoles,
     
-    // Permissions spécifiques aux formations
-    canViewTrainings,
-    canCreateTraining,
-    canEditTraining,
-    canDeleteTraining,
-    canManageSessions,
-    canReviewApplications,
+    // Vérifications d'actions
+    can,
+    canView,
+    canCreate,
+    canUpdate,
+    canDelete,
     
-    // Permissions utilisateurs
-    canViewUsers,
-    canCreateUsers,
-    canUpdateUsers,
-    canDeleteUsers,
+    // Récupération de données
+    getAllPermissions,
+    getAllRoles,
+    getPermissionsByCategory,
     
-    // Permissions blog
-    canViewBlogs,
-    canCreateBlogs,
-    canUpdateBlogs,
-    canDeleteBlogs,
-    canPublishBlogs,
+    // Actions
+    refreshPermissions,
     
-    // Permissions offres d'emploi
-    canViewJobOffers,
-    canCreateJobOffers,
-    canUpdateJobOffers,
-    canDeleteJobOffers,
-    
-    // Permissions candidatures emploi
-    canViewJobApplications,
-    canChangeJobApplicationStatus,
-    
-    // Permissions candidatures formation
-    canViewStudentApplications,
-    canChangeStudentApplicationStatus,
-    
-    // Permissions paiements
-    canViewPayments,
-    
-    // Permissions de gestion
-    canGivePermissions,
-    canGiveRoles,
-    
-    // Méthodes
-    refreshPermissions
+    // Helpers
+    isAdmin,
+    isManager,
+    isVisitor,
+    accessLevel
   }
 }

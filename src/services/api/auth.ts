@@ -38,7 +38,9 @@ class AuthService {
    * Validation du code à deux facteurs
    */
   async validateTwoFactorToken(data: ValidateChangeCodeInput): Promise<UserTokenOut> {
+    console.log('[Auth API] Sending 2FA validation request:', data)
     const response = await apiService.post('/auth/two-factor-token', data)
+    console.log('[Auth API] 2FA validation response:', response)
     return response as UserTokenOut
   }
 
@@ -148,15 +150,8 @@ class AuthService {
   /**
    * Upload de l'image de profil
    */
-  async uploadProfileImage(image: File): Promise<UserFullOutSuccess> {
-    const formData = new FormData()
-    formData.append('image', image)
-    
-    const response = await apiService.post('/auth/upload-profile-image', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+  async uploadProfileImage(formData: FormData): Promise<UserFullOutSuccess> {
+    const response = await apiService.post('/auth/upload-profile-image', formData)
     return response as UserFullOutSuccess
   }
 

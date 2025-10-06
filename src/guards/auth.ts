@@ -27,6 +27,12 @@ export async function authGuard(
   }
 
   try {
+    // Attendre que l'authentification soit initialisée
+    if (!authStore.isInitialized) {
+      console.log('Initialisation de l\'authentification en cours...')
+      await authStore.initializeAuth()
+    }
+
     // Vérifier si l'utilisateur est authentifié
     if (!authStore.isAuthenticated) {
       // Si pas de token, rediriger vers login

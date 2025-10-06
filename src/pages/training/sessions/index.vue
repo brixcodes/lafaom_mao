@@ -318,7 +318,7 @@ const sortOptions = [
 const loadAllSessions = async () => {
   try {
     isInitialLoading.value = true
-    const response = await trainingService.listTrainingSessions({ page: 1, page_size: 1000, order_by: 'created_at', asc: 'desc' })
+    const response = await trainingService.getTrainingSessions({ page: 1, page_size: 1000, order_by: 'created_at', asc: 'desc' })
     allSessions.value = [...response.data]
   } catch (err) {
     console.error('Erreur lors du chargement des sessions:', err)
@@ -330,7 +330,7 @@ const loadAllSessions = async () => {
 
 const fetchTrainings = async () => {
   try {
-    const response = await trainingService.listTrainings({ page: 1, page_size: 1000 })
+    const response = await trainingService.getTrainings({ page: 1, page_size: 1000 })
     trainings.value = response.data.map(t => ({ id: t.id, title: t.title }))
   } catch (error) {
     console.error('Erreur lors du chargement des formations:', error)

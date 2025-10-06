@@ -254,7 +254,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUsers } from '@/composables/useUsers'
-import { usePermissions } from '@/composables/usePermissions'
+import { useRolePermissionManagement } from '@/composables/useRolePermissionManagement'
+import { useInstantPermissions } from '@/composables/useInstantPermissions'
 import { showToast } from '@/components/toast/toastManager'
 import { confirmAction } from '@/utils/confirm'
 
@@ -263,7 +264,8 @@ const route = useRoute()
 const { loadUser, isLoading } = useUsers()
 
 // Permissions
-const { canViewUsers, canUpdateUsers, canDeleteUsers, canGivePermissions, canGiveRoles } = usePermissions()
+const { canManagePermissions, canManageRoles } = useRolePermissionManagement()
+const { hasPermission } = useInstantPermissions()
 
 const user = ref<any>(null)
 const error = ref('')

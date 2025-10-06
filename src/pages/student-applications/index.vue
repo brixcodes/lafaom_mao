@@ -8,7 +8,7 @@
           Mes candidatures
         </h1>
         <p class="text-body-1 text-medium-emphasis">
-          Gérez vos candidatures aux formations (affiche uniquement les candidatures payées)
+          Gérez vos candidatures aux formations
         </p>
       </div>
     </div>
@@ -45,63 +45,67 @@
     </VCard>
 
     <!-- Statistiques -->
-    <VRow class="mb-6">
-      <VRow class="pa-3">
-        <VCol cols="12" md="3">
-          <VCard>
-            <VCardText class="d-flex flex-column align-center">
-              <div class="rounded-circle d-flex align-center justify-center mb-3">
-                <VIcon size="28" color="primary">ri-file-list-line</VIcon>
-              </div>
-              <div class="text-h4 font-weight-bold text-primary">{{ paidApplicationsCount }}</div>
-              <div class="text-caption mt-1">Candidatures payées</div>
-            </VCardText>
-          </VCard>
-        </VCol>
+    <VRow class="mb-0">
+      <VCol cols="12" sm="6" md="3">
+        <VCard class="session-card" elevation="2">
+          <VCardText class="d-flex align-center">
+            <div class="stats-icon">
+              <VIcon icon="ri-group-line" size="50" />
+            </div>
+            <div class="flex-grow-1">
+              <div class="stats-value">{{ totalApplicationsCount.toLocaleString() }}</div>
+              <div>Total</div>
+            </div>
+          </VCardText>
+        </VCard>
+      </VCol>
 
-        <VCol cols="12" md="3">
-          <VCard>
-            <VCardText class="d-flex flex-column align-center">
-              <div class="rounded-circle d-flex align-center justify-center mb-3">
-                <VIcon size="28" color="info">ri-send-plane-line</VIcon>
-              </div>
-              <div class="text-h4 font-weight-bold text-info">{{ getStatusCount('SUBMITTED') }}</div>
-              <div class="text-caption mt-1">Soumises</div>
-            </VCardText>
-          </VCard>
-        </VCol>
+      <VCol cols="12" sm="6" md="3">
+        <VCard class="active-users-card" elevation="2">
+          <VCardText class="d-flex align-center">
+            <div class="stats-icon">
+              <VIcon icon="ri-user-heart-line" size="50" />
+            </div>
+            <div class="flex-grow-1">
+              <div class="stats-value">{{ getStatusCount('SUBMITTED').toLocaleString() }}</div>
+              <div>Soumises</div>
+            </div>
+          </VCardText>
+        </VCard>
+      </VCol>
 
-        <VCol cols="12" md="3">
-          <VCard>
-            <VCardText class="d-flex flex-column align-center">
-              <div class="rounded-circle d-flex align-center justify-center mb-3">
-                <VIcon size="28" color="success">ri-check-line</VIcon>
-              </div>
-              <div class="text-h4 font-weight-bold text-success">{{ getStatusCount('APPROVED') }}</div>
-              <div class="text-caption mt-1">Approuvées</div>
-            </VCardText>
-          </VCard>
-        </VCol>
+      <VCol cols="12" sm="6" md="3">
+        <VCard class="paid-users-card" elevation="2">
+          <VCardText class="d-flex align-center">
+            <div class="stats-icon">
+              <VIcon icon="ri-user-follow-line" size="50" />
+            </div>
+            <div class="flex-grow-1">
+              <div class="stats-value">{{ getStatusCount('APPROVED').toLocaleString() }}</div>
+              <div>Approuvées</div>
+            </div>
+          </VCardText>
+        </VCard>
+      </VCol>
 
-        <VCol cols="12" md="3">
-          <VCard>
-            <VCardText class="d-flex flex-column align-center">
-              <div class="rounded-circle d-flex align-center justify-center mb-3">
-                <VIcon size="28" color="error">ri-close-line</VIcon>
-              </div>
-              <div class="text-h4 font-weight-bold text-error">{{ getStatusCount('REFUSED') }}</div>
-              <div class="text-caption mt-1">Refusées</div>
-            </VCardText>
-          </VCard>
-        </VCol>
-      </VRow>
-
+      <VCol cols="12" sm="6" md="3">
+        <VCard class="pending-users-card" elevation="2">
+          <VCardText class="d-flex align-center">
+            <div class="stats-icon">
+              <VIcon icon="ri-user-unfollow-line" size="50" />
+            </div>
+            <div class="flex-grow-1">
+              <div class="stats-value">{{ getStatusCount('REFUSED').toLocaleString() }}</div>
+              <div>Refusées</div>
+            </div>
+          </VCardText>
+        </VCard>
+      </VCol>
     </VRow>
 
     <VRow>
       <VCol v-for="application in filteredApplications" :key="application.id" cols="12" md="6" lg="4">
-         <StudentApplicationCard :application="application" @view="handleView" @delete="handleDelete"
-           @submit="handleSubmit" @pay="handlePay" />
+        <StudentApplicationCard :application="application" @view="handleView" @delete="handleDelete" />
       </VCol>
     </VRow>
 
@@ -119,7 +123,7 @@
         <VIcon size="64" color="grey-lighten-1" class="mb-4">ri-file-list-line</VIcon>
         <h3 class="text-h6 mb-2">Aucune candidature</h3>
         <p class="text-body-2 text-medium-emphasis mb-4">
-          Vous n'avez pas encore de candidatures aux formations.
+          Vous n'avez pas encore de candidatures aux formations. Créez votre première candidature pour commencer.
         </p>
       </VCardText>
     </VCard>
@@ -205,7 +209,6 @@
                   <p class="mb-0">Vous serez redirigé vers une plateforme de paiement sécurisée.</p>
                 </div>
               </VAlert>
-
               <VCheckbox v-model="acceptPaymentTerms"
                 label="J'accepte les conditions de paiement et la politique de confidentialité"
                 :rules="[(v: boolean) => !!v || 'Vous devez accepter les conditions']" required />
@@ -304,9 +307,17 @@ const totalPaymentAmount = computed(() => {
   return registrationFee + trainingFee
 })
 
-// Statistiques basées uniquement sur les candidatures payées
+// Statistiques basées sur toutes les candidatures
+const totalApplicationsCount = computed(() => {
+  return applications.value.length
+})
+
 const paidApplicationsCount = computed(() => {
   return applications.value.filter(app => !!app.payment_id).length
+})
+
+const unpaidApplicationsCount = computed(() => {
+  return applications.value.filter(app => !app.payment_id).length
 })
 
 // Methods
@@ -319,8 +330,8 @@ const handleFilterChange = async () => {
 }
 
 const handleView = (id: number) => {
-  // Redirection vers la page de création pour voir/modifier
-  router.push({ name: 'student-applications-create' })
+  // Redirection vers la page de détails de la candidature
+  router.push({ name: 'student-applications-detail', params: { id: id.toString() } })
 }
 
 
@@ -460,7 +471,7 @@ const formatCurrency = (amount: number | undefined) => {
 }
 
 const getStatusCount = (status: string) => {
-  return applications.value.filter(app => app.status === status && !!app.payment_id).length
+  return applications.value.filter(app => app.status === status).length
 }
 
 // Lifecycle
@@ -472,5 +483,66 @@ onMounted(() => {
 <style scoped>
 .student-applications-page {
   max-width: 1200px;
+}
+
+/* Styles pour les cartes de statistiques */
+.stats-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  transition: all 0.3s ease;
+}
+
+.stats-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.total-applications-card .stats-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.submitted-applications-card .stats-icon {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.approved-applications-card .stats-icon {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+.refused-applications-card .stats-icon {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  color: white;
+}
+
+/* Hover effects */
+.total-applications-card:hover .stats-icon,
+.submitted-applications-card:hover .stats-icon,
+.approved-applications-card:hover .stats-icon,
+.refused-applications-card:hover .stats-icon {
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .stats-icon {
+    width: 50px;
+    height: 50px;
+    margin-right: 12px;
+  }
+
+  .stats-value {
+    font-size: 1.5rem;
+  }
 }
 </style>

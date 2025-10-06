@@ -192,7 +192,7 @@ const getPaymentByTransaction = async (transactionId: string) => {
     isLoading.value = true
     error.value = ''
     
-    const response = await paymentsService.getPaymentByTransactionId(transactionId)
+    const response = await paymentsService.getPaymentByTransaction(transactionId)
     
     return response
   } catch (err: any) {

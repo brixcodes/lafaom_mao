@@ -44,8 +44,8 @@ export interface ChangeEmailInput {
 }
 
 export interface ValidateChangeCodeInput {
-  email: string
   code: string
+  email: string
 }
 
 export interface ValidateForgottenCodeInput {
@@ -71,6 +71,8 @@ export interface SocialTokenInput {
 export interface UpdateUserProfile {
   first_name: string
   last_name: string
+  user_type: string
+  status: string
   birth_date: string
   civility: string
   country_code?: string

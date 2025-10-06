@@ -2,12 +2,7 @@
   <div class="job-offer-create-page">
     <!-- En-tête -->
     <div class="d-flex align-center mb-6">
-      <VBtn
-        icon="ri-arrow-left-line"
-        variant="text"
-        :to="{ name: 'job-offers-list' }"
-        class="me-3"
-      />
+      <VBtn icon="ri-arrow-left-line" variant="text" :to="{ name: 'job-offers-list' }" class="me-3" />
       <div>
         <h1 class="text-h4 mb-1">
           <VIcon icon="ri-add-line" class="me-2" color="primary" />
@@ -20,21 +15,10 @@
     </div>
 
     <!-- Formulaire -->
-    <JobForm
-      ref="jobFormRef"
-      :loading="isLoading"
-      @submit="handleSubmit"
-      @cancel="handleCancel"
-    />
+    <JobForm ref="jobFormRef" :loading="isLoading" @submit="handleSubmit" @cancel="handleCancel" />
 
     <!-- Message d'erreur -->
-    <VAlert
-      v-if="error"
-      type="error"
-      class="mt-4"
-      closable
-      @click:close="clearError"
-    >
+    <VAlert v-if="error" type="error" class="mt-4" closable @click:close="clearError">
       {{ error }}
     </VAlert>
   </div>
@@ -61,12 +45,12 @@ const { isLoading, error } = jobOffersStore
 const handleSubmit = async (data: JobOfferCreateInput) => {
   try {
     await jobOffersStore.createJobOffer(data)
-    
+
     // Rediriger vers la liste des offres
     router.push({ name: 'job-offers-list' })
   } catch (err: any) {
     console.error('Erreur lors de la création:', err)
-    
+
     // Gérer les erreurs de validation backend
     if (err.response?.data?.validation_errors) {
       jobFormRef.value?.handleBackendErrors(err.response.data.validation_errors)

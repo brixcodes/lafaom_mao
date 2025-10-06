@@ -67,7 +67,7 @@ export const useOrganizationCentersStore = defineStore('organizationCenters', ()
       error.value = ''
       
       const mergedFilters = { ...filters.value, ...newFilters }
-      const response = await organizationCentersService.listOrganizationCenters(mergedFilters)
+      const response = await organizationCentersService.getOrganizationCenters(mergedFilters)
       
       centers.value = response.data
       filters.value = mergedFilters
@@ -148,7 +148,7 @@ export const useOrganizationCentersStore = defineStore('organizationCenters', ()
       isLoading.value = true
       error.value = ''
       
-      const response = await organizationCentersService.updateOrganizationCenterStatus(id, { status })
+      const response = await organizationCentersService.changeOrganizationCenterStatus(id, { status })
       
       // Update in local state
       const index = centers.value.findIndex(center => center.id === id)

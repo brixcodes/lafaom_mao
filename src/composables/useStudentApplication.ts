@@ -40,8 +40,8 @@ export function useStudentApplication() {
   
   const filteredApplications = computed(() => {
     if (!searchQuery.value && !Object.keys(filters.value).length) {
-      // Par défaut, afficher seulement les candidatures payées
-      return applications.value.filter(app => !!app.payment_id)
+      // Par défaut, afficher toutes les candidatures (payées et non payées)
+      return applications.value
     }
     
     return applications.value.filter(app => {
@@ -130,7 +130,7 @@ export function useStudentApplication() {
       }
       
       console.log('🔍 Chargement des candidatures via /student-applications avec params:', params)
-      const response = await studentApplicationsService.listMyStudentApplications(params)
+      const response = await studentApplicationsService.getMyStudentApplications(params)
       console.log('📋 Réponse API candidatures:', response)
       applications.value = reset ? response.data : [...applications.value, ...response.data]
       totalCount.value = response.total_number
@@ -182,7 +182,7 @@ export function useStudentApplication() {
       }
       
       console.log('🔍 Chargement des candidatures de l\'utilisateur connecté avec params:', params)
-      const response = await studentApplicationsService.listMyStudentApplications(params)
+      const response = await studentApplicationsService.getMyStudentApplications(params)
       console.log('📋 Réponse API candidatures utilisateur:', response)
       applications.value = reset ? response.data : [...applications.value, ...response.data]
       totalCount.value = response.total_number
@@ -229,7 +229,7 @@ export function useStudentApplication() {
       isLoading.value = true
       error.value = ''
       
-      const response = await studentApplicationsService.getStudentApplication(id)
+      const response = await studentApplicationsService.getMyStudentApplicationById(id)
       currentApplication.value = response.data
       
     } catch (err: any) {
@@ -270,12 +270,12 @@ export function useStudentApplication() {
   /**
    * Mettre à jour une candidature
    */
-  const updateApplication = async (id: number, data: StudentApplicationUpdateInput) => {
+  const updateApplication = async (id: number, data: StudentApplicationCreateInput) => {
     try {
       isSubmitting.value = true
       error.value = ''
       
-      const response = await studentApplicationsService.updateStudentApplication(id, data)
+      const response = await studentApplicationsService.updateMyStudentApplication(id, data)
       
       // Mettre à jour la candidature dans la liste
       const index = applications.value.findIndex(app => app.id === id)
@@ -310,7 +310,7 @@ export function useStudentApplication() {
       isSubmitting.value = true
       error.value = ''
       
-      await studentApplicationsService.deleteStudentApplication(id)
+      await studentApplicationsService.deleteMyStudentApplication(id)
       
       // Retirer la candidature de la liste
       applications.value = applications.value.filter(app => app.id !== id)
@@ -399,10 +399,7 @@ export function useStudentApplication() {
       isSubmitting.value = true
       error.value = ''
       
-      await studentApplicationsService.submitStudentApplication({
-        application_id: applicationId,
-        target_session_id: sessionId
-      })
+      await studentApplicationsService.submitStudentApplication(applicationId)
       
       showToast({ message: 'Candidature soumise avec succès', type: 'success' })
       await loadApplications(true) // Recharger la liste
@@ -490,21 +487,24 @@ export function useStudentApplication() {
   /**
    * Vérifier si une candidature peut être modifiée
    */
-  const canEditApplication = (application: StudentApplicationOut): boolean => {
+  const canEditApplication = (application: StudentApplicationOut | null): boolean => {
+    if (!application) return false
     return application.status === ApplicationStatusEnum.SUBMITTED
   }
 
   /**
    * Vérifier si une candidature peut être supprimée
    */
-  const canDeleteApplication = (application: StudentApplicationOut): boolean => {
+  const canDeleteApplication = (application: StudentApplicationOut | null): boolean => {
+    if (!application) return false
     return application.status === ApplicationStatusEnum.SUBMITTED
   }
 
   /**
    * Vérifier si une candidature peut être soumise
    */
-  const canSubmitApplication = (application: StudentApplicationOut): boolean => {
+  const canSubmitApplication = (application: StudentApplicationOut | null): boolean => {
+    if (!application) return false
     return application.status === ApplicationStatusEnum.SUBMITTED
   }
 

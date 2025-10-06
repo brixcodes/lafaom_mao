@@ -340,7 +340,7 @@ const toggleStatus = async () => {
   if (!confirmed) return
 
   try {
-    await organizationCentersService.updateOrganizationCenterStatus(center.value.id, { status: newStatus })
+    await organizationCentersService.changeOrganizationCenterStatus(center.value.id, { status: newStatus })
     center.value.status = newStatus
     showToast({ message: 'Statut mis à jour avec succès', type: 'success' })
   } catch (error) {
@@ -382,7 +382,7 @@ const loadCenter = async () => {
   try {
     isLoading.value = true
     const centerId = route.params.id as string
-    const response = await organizationCentersService.getOrganizationCenter(parseInt(centerId))
+    const response = await organizationCentersService.getOrganizationCenterById(parseInt(centerId))
     center.value = response.data
   } catch (err) {
     console.error('Erreur lors du chargement du centre:', err)

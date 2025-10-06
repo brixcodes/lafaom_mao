@@ -60,7 +60,7 @@ const training = reactive<TrainingCreateInput>({
 const fetchSpecialties = async () => {
   isLoading.value = true
   try {
-    const response = await trainingService.listSpecialties({})
+    const response = await trainingService.getSpecialties({})
     specialties.value = response.data
   } catch (error) {
     showToast({ message: 'Erreur lors du chargement des spécialités', type: 'error' })

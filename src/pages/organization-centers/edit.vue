@@ -511,7 +511,7 @@ const loadCenter = async () => {
   try {
     isLoading.value = true
     const centerId = route.params.id as string
-    const response = await organizationCentersService.getOrganizationCenter(parseInt(centerId))
+    const response = await organizationCentersService.getOrganizationCenterById(parseInt(centerId))
     currentCenter.value = response.data
     
     // Populate form with current center data

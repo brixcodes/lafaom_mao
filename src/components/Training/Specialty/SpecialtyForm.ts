@@ -28,7 +28,7 @@ export default defineComponent({
   },
   
   setup(props) {
-    const trainingStore = useSpecialtyStore()
+    const trainingStore = useTrainingStore()
     const router = useRouter()
     
     const form = ref({

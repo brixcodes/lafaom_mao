@@ -1,7 +1,7 @@
 // Store Pinia pour les candidatures (Job Applications)
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { jobApplicationsService } from '@/services/api/job-offers'
+import { jobOffersService } from '@/services/api/job-offers'
 import type {
   JobApplicationOut,
   JobApplicationCreateInput,
@@ -69,7 +69,7 @@ export const useJobApplicationsStore = defineStore('jobApplications', () => {
       isLoading.value = true
       error.value = null
       
-      const response: JobApplicationsPageOutSuccess = await jobApplicationsService.getJobApplications(filter)
+      const response: JobApplicationsPageOutSuccess = await jobOffersService.getJobApplications(filter)
       jobApplications.value = response.data
       applicationsPagination.value = {
         page: response.page,
@@ -94,7 +94,7 @@ export const useJobApplicationsStore = defineStore('jobApplications', () => {
       isLoading.value = true
       error.value = null
       
-      const response: JobApplicationOutSuccess = await jobApplicationsService.getJobApplicationById(id)
+      const response: JobApplicationOutSuccess = await jobOffersService.getJobApplicationById(id)
       currentJobApplication.value = response.data
       
       return response
@@ -114,7 +114,7 @@ export const useJobApplicationsStore = defineStore('jobApplications', () => {
       isLoading.value = true
       error.value = null
       
-      const response: JobApplicationOutSuccess = await jobApplicationsService.createJobApplication(applicationData)
+      const response: JobApplicationOutSuccess = await jobOffersService.createJobApplication(applicationData)
       jobApplications.value.unshift(response.data)
       
       return response
@@ -134,7 +134,7 @@ export const useJobApplicationsStore = defineStore('jobApplications', () => {
       isLoading.value = true
       error.value = null
       
-      const response: JobApplicationOutSuccess = await jobApplicationsService.updateJobApplicationStatus(data)
+      const response: JobApplicationOutSuccess = await jobOffersService.changeJobApplicationStatus(data)
       const index = jobApplications.value.findIndex(app => app.id === data.application_id)
       if (index !== -1) {
         jobApplications.value[index] = response.data
@@ -161,7 +161,7 @@ export const useJobApplicationsStore = defineStore('jobApplications', () => {
       isLoading.value = true
       error.value = null
       
-      const response: BaseOutSuccess = await jobApplicationsService.requestApplicationOTP(data)
+      const response: BaseOutSuccess = await jobOffersService.requestApplicationOTP(data)
       return response
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur lors de la demande du code OTP'
@@ -179,7 +179,7 @@ export const useJobApplicationsStore = defineStore('jobApplications', () => {
       isLoading.value = true
       error.value = null
       
-      const response: JobApplicationOutSuccess = await jobApplicationsService.updateApplicationByCandidate(data)
+      const response: JobApplicationOutSuccess = await jobOffersService.updateApplicationByCandidate(data)
       
       // Mettre à jour dans la liste si elle est chargée
       const index = jobApplications.value.findIndex(app => app.application_number === data.application_number)
@@ -204,7 +204,7 @@ export const useJobApplicationsStore = defineStore('jobApplications', () => {
       isLoading.value = true
       error.value = null
       
-      const response: JobAttachmentListOutSuccess = await jobApplicationsService.getApplicationAttachments(applicationId)
+      const response: JobAttachmentListOutSuccess = await jobOffersService.getJobApplicationAttachments(applicationId)
       applicationAttachments.value = response.data
       
       return response
@@ -224,7 +224,7 @@ export const useJobApplicationsStore = defineStore('jobApplications', () => {
       isLoading.value = true
       error.value = null
       
-      await jobApplicationsService.deleteJobApplication(id)
+      await jobOffersService.deleteJobApplication(id)
       jobApplications.value = jobApplications.value.filter(app => app.id !== id)
       
       if (currentJobApplication.value && currentJobApplication.value.id === id) {
@@ -259,7 +259,7 @@ export const useJobApplicationsStore = defineStore('jobApplications', () => {
       isLoading.value = true
       error.value = null
       
-      const response = await jobApplicationsService.getApplicationsStats()
+      const response = await jobOffersService.getApplicationsStats()
       applicationsStats.value = response.data
       
       return response
@@ -276,7 +276,7 @@ export const useJobApplicationsStore = defineStore('jobApplications', () => {
    */
   const downloadAttachment = async (attachmentId: number, filename: string) => {
     try {
-      await jobApplicationsService.downloadAttachment(attachmentId, filename)
+      await jobOffersService.downloadAttachment(attachmentId, filename)
     } catch (err: any) {
       error.value = 'Erreur lors du téléchargement du fichier'
       throw err

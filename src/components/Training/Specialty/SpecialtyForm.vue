@@ -6,7 +6,7 @@ import { confirmAction } from '@/utils/confirm'
 import { showToast } from '@/components/toast/toastManager'
 
 const props = defineProps<{ specialtyId?: number }>()
-const trainingStore = useSpecialtyStore()
+const trainingStore = useTrainingStore()
 const router = useRouter()
 const route = useRoute()
 

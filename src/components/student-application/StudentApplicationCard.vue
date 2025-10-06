@@ -45,11 +45,6 @@
           <span class="text-caption text-medium-emphasis">Frais de formation</span>
           <span class="text-body-2 font-weight-medium">{{ formatCurrency(application.training_fee) }}</span>
         </div>
-        <div v-if="!canPay" class="d-flex align-center justify-space-between mt-2 pt-2"
-          style="border-top: 1px solid rgba(0,0,0,0.12);">
-          <span class="text-body-2 font-weight-bold text-success">Total à payer</span>
-          <span class="text-h6 font-weight-bold text-success">{{ formatCurrency(totalFees) }}</span>
-        </div>
       </div>
 
       <!-- Date de création -->
@@ -66,26 +61,7 @@
       <div class="d-flex justify-space-between align-center">
         <!-- Actions principales -->
         <div class="d-flex gap-2">
-          <VBtn
-            v-if="!canPay"
-            size="small"
-            color="success"
-            variant="flat"
-            @click="$emit('pay', application)"
-          >
-            <VIcon size="small" class="mr-1">ri-bank-card-line</VIcon>
-            Payer les frais
-          </VBtn>
-
-          <VBtn
-            v-if="!canSubmit"
-            size="small"
-            color="success"
-            @click="$emit('submit', application.id)"
-          >
-            <VIcon size="small" class="mr-1">ri-send-plane-line</VIcon>
-            Soumettre
-          </VBtn>
+          <!-- Pas d'actions principales pour le moment -->
         </div>
 
         <!-- Menu des actions -->
@@ -139,8 +115,6 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   view: [id: number]
   delete: [id: number]
-  submit: [id: number]
-  pay: [application: any]
 }>()
 
 // Computed properties
@@ -179,23 +153,8 @@ const canDelete = computed(() => {
   return props.application.status === ApplicationStatusEnum.SUBMITTED
 })
 
-const canSubmit = computed(() => {
-  return props.application.status === ApplicationStatusEnum.SUBMITTED
-})
 
-const canPay = computed(() => {
-  // Peut payer si la candidature n'est pas encore payée et qu'il y a des frais à payer
-  const hasFees = (props.application.registration_fee && props.application.registration_fee > 0) ||
-    (props.application.training_fee && props.application.training_fee > 0)
-  const isNotPaid = !props.application.payment_id
-  return isNotPaid && hasFees
-})
 
-const totalFees = computed(() => {
-  const registrationFee = props.application.registration_fee || 0
-  const trainingFee = props.application.training_fee || 0
-  return registrationFee + trainingFee
-})
 
 // Utility functions
 const formatDate = (date: string | undefined) => {

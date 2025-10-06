@@ -283,7 +283,7 @@ const loadTraining = async () => {
     }
     
     console.log('About to call API with training ID:', trainingId)
-    const response = await trainingService.getTraining(trainingId)
+    const response = await trainingService.getTrainingById(trainingId)
     training.value = response.data
   } catch (err: any) {
     console.error('Erreur lors du chargement de la formation:', err)

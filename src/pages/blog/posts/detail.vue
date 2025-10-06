@@ -11,7 +11,7 @@
         </p>
       </div>
     </div>
-    
+
     <v-fade-transition>
       <v-row v-if="post">
         <v-col cols="12">
@@ -57,13 +57,14 @@
                   </v-card-title>
                   <v-divider></v-divider>
                   <v-card-text class="py-4">
-                    <p class="text-body-1">{{ post.summary }}</p>
+                    <p class="text-body-1" v-html="post.summary"></p>
+                    <!-- <p class="text-body-1">{{ post.summary }}</p> -->
                   </v-card-text>
                 </v-card>
               </v-slide-y-transition>
 
               <!-- Gestionnaire de sections -->
-              <v-slide-y-transition>
+              <v-slide-y-transition v-if="hasPermissions([PermissionEnum.CAN_VIEW_BLOG])">
                 <SectionManager :postId="post.id" />
               </v-slide-y-transition>
             </v-col>
@@ -80,30 +81,37 @@
                   <v-list lines="two" density="comfortable">
                     <v-list-item>
                       <template v-slot:prepend>
-                        <v-icon color="primary">mdi-tag</v-icon>
+                        <v-icon color="primary">ri-archive-stack-line</v-icon>
                       </template>
-                      <v-list-item-title>Catégorie</v-list-item-title>
+                      <v-list-item-title>Slug</v-list-item-title>
                       <v-list-item-subtitle>{{ post.slug || 'Sans catégorie' }}</v-list-item-subtitle>
                     </v-list-item>
                     <v-list-item>
                       <template v-slot:prepend>
-                        <v-icon color="primary">mdi-calendar-clock</v-icon>
+                        <v-icon color="primary">ri-calendar-event-line</v-icon>
                       </template>
                       <v-list-item-title>Dernière modification</v-list-item-title>
                       <v-list-item-subtitle>{{ new Date(post.updated_at).toLocaleDateString() }}</v-list-item-subtitle>
                     </v-list-item>
                   </v-list>
                   <v-divider></v-divider>
-                  <v-card-actions class="pa-2 d-flex flex-row">
+                  <v-card-actions class="pa-2 d-flex flex-row ga-2">
                     <v-btn color="primary" variant="elevated" @click="goToEdit" prepend-icon="ri-edit-2-line"
-                      size="small" density="comfortable" class="flex-1 mr-2">
+                      size="small" density="comfortable" class="flex-grow-1" v-if="hasPermissions([PermissionEnum.CAN_UPDATE_BLOG])">
                       Modifier
                     </v-btn>
-                    <v-btn color="error" variant="outlined" @click="confirmDelete" prepend-icon="ri-delete-bin-line"
-                      size="small" density="comfortable" class="flex-1">
+
+                    <v-btn v-if="!post.published_at" variant="elevated" @click="publishPost"
+                      prepend-icon="ri-send-plane-line" size="small" density="comfortable" class="flex-grow-1">
+                      Publier
+                    </v-btn>
+
+                    <v-btn variant="flat" @click="confirmDelete" prepend-icon="ri-delete-bin-line" size="small"
+                      density="comfortable" class="flex-grow-1" v-if="hasPermissions([PermissionEnum.CAN_DELETE_BLOG])">
                       Supprimer
                     </v-btn>
                   </v-card-actions>
+
 
 
                 </v-card>
@@ -147,6 +155,10 @@ import { blogService } from '@/services/api/blog'
 import Swal from 'sweetalert2'
 import SectionManager from '@/components/Blog/SectionManager.vue'
 
+import { PermissionEnum } from '@/types/permissions'
+import { useInstantPermissions } from '@/composables/useInstantPermissions'
+const { hasPermission, hasPermissions } = useInstantPermissions()
+
 const route = useRoute()
 const router = useRouter()
 const post = ref<any>(null)
@@ -168,13 +180,6 @@ const fetchPost = async () => {
   try {
     const res = await blogService.getPostById(postId)
     post.value = res.data
-
-    // Débogage des tags
-    console.log('Tags reçus:', post.value?.tags)
-    console.log('Type des tags:', typeof post.value?.tags)
-    if (Array.isArray(post.value?.tags)) {
-      console.log('Format tableau, longueur:', post.value.tags.length)
-    }
   } finally {
     isLoading.value = false
   }
@@ -184,24 +189,60 @@ const confirmDelete = async () => {
   const result = await confirmAction({
     title: 'Êtes vous sûres?',
     text: "Souhaitez-vous réellement supprimer cet article ? Cette action est irréversible.",
+    confirmButtonText: '<span style="color:white">Supprimer</span>',
     cancelButtonText: '<span style="color:white">Annuler</span>',
-    confirmButtonText: '<span style="color:white">Oui, supprimer</span>',
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
     customClass: {
       confirmButton: 'swal2-confirm-white',
       cancelButton: 'swal2-cancel-white',
     },
   })
-  if (result.isConfirmed) {
-    await blogService.deletePostNoConfirm(postId)
-    showToast({ message: '✅ Article supprimé', type: 'success' })
-    router.push('/blog/posts')
+
+  if (result) {
+    try {
+      await blogService.deletePost(postId)
+      showToast({ message: '✅ Article supprimé', type: 'success' })
+      router.push('/blog/posts')
+    } catch (error) {
+      console.error('[ERREUR] Suppression échouée :', error)
+      showToast({ message: 'Erreur lors de la suppression', type: 'error' })
+    }
+  }
+}
+
+const publishPost = async () => {
+  const result = await confirmAction({
+    title: 'Êtes vous sûres?',
+    text: "Voulez-vous publier cet article ? Il sera visible par tous les utilisateurs.",
+    confirmButtonText: '<span style="color:white">Publier</span>',
+    cancelButtonText: '<span style="color:white">Annuler</span>',
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    customClass: {
+      confirmButton: 'swal2-confirm-white',
+      cancelButton: 'swal2-cancel-white',
+    },
+  })
+
+  if (result) {
+    try {
+      isLoading.value = true
+      await blogService.publishPost(postId)
+      showToast({ message: 'Article publié avec succès', type: 'success' })
+      await fetchPost()
+    } catch (error) {
+      console.error('[ERREUR] Publication échouée :', error)
+      showToast({ message: 'Erreur lors de la publication', type: 'error' })
+    } finally {
+      isLoading.value = false
+    }
   }
 }
 
 onMounted(fetchPost)
 </script>
+
 
 <style scoped>
 .post-detail-container {

@@ -89,7 +89,7 @@ const loadTrainingInfo = async () => {
     const trainingIdParam = route.query.trainingId as string
     if (trainingIdParam) {
       trainingId.value = trainingIdParam
-      const response = await trainingService.getTraining(parseInt(trainingIdParam))
+      const response = await trainingService.getTrainingById(parseInt(trainingIdParam))
       trainingTitle.value = response.data.title
     }
   } catch (error) {

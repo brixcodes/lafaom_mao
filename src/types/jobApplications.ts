@@ -1,7 +1,7 @@
 import type { BaseModel, BaseOutPage, BaseOutSuccess } from './index'
 
 // Status types for job applications
-export type JobApplicationStatus = 'pending' | 'processing' | 'accepted' | 'rejected' | 'cancelled'
+export type JobApplicationStatus = 'RECEIVED' | 'REFUSED' | 'APPROVED'
 
 // === JOB APPLICATIONS ===
 export interface JobApplicationOut extends BaseModel {
@@ -111,39 +111,27 @@ export interface JobAttachmentListOutSuccess extends BaseOutSuccess<JobAttachmen
 
 // === APPLICATION STATUSES ===
 export const APPLICATION_STATUSES = [
-  { value: 'pending', text: 'En attente', color: 'warning', icon: 'ri-time-line' },
-  { value: 'processing', text: 'En traitement', color: 'info', icon: 'ri-loader-line' },
-  { value: 'accepted', text: 'Acceptée', color: 'success', icon: 'ri-check-circle-line' },
-  { value: 'rejected', text: 'Rejetée', color: 'error', icon: 'ri-close-circle-line' },
-  { value: 'cancelled', text: 'Annulée', color: 'surface', icon: 'ri-forbid-line' }
+  { value: 'RECEIVED', text: 'Reçue', color: 'warning', icon: 'ri-time-line' },
+  { value: 'APPROVED', text: 'Approuvée', color: 'success', icon: 'ri-check-circle-line' },
+  { value: 'REFUSED', text: 'Refusée', color: 'error', icon: 'ri-close-circle-line' }
 ] as const
 
 // === STATUS LABELS (pour compatibilité) ===
 export const APPLICATION_STATUS_LABELS = {
-  ['pending']: {
-    text: 'En attente',
+  ['RECEIVED']: {
+    text: 'Reçue',
     color: 'warning',
     icon: 'ri-time-line'
   },
-  ['processing']: {
-    text: 'En traitement',
-    color: 'info',
-    icon: 'ri-loader-line'
-  },
-  ['accepted']: {
-    text: 'Acceptée',
+  ['APPROVED']: {
+    text: 'Approuvée',
     color: 'success',
     icon: 'ri-check-circle-line'
   },
-  ['rejected']: {
-    text: 'Rejetée',
+  ['REFUSED']: {
+    text: 'Refusée',
     color: 'error',
     icon: 'ri-close-circle-line'
-  },
-  ['cancelled']: {
-    text: 'Annulée',
-    color: 'surface',
-    icon: 'ri-forbid-line'
   }
 } as const
 

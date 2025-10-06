@@ -8,29 +8,29 @@
           <VForm ref="refStep1Form" @submit.prevent="validateStep1">
             <VRow class="pa-3">
               <!-- Référence -->
-              <VCol cols="12" md="6">
-                <VTextField v-model="form.reference" prepend-inner-icon="ri-hashtag" label="Référence *"
+              <VCol cols="12" md="12">
+                <VTextField v-model="form.reference" prepend-inner-icon="ri-hashtag" label="Référence"
                   variant="outlined" :rules="rules.reference" :error-messages="errors.reference"
                   placeholder="EX: REF2024001" />
               </VCol>
 
               <!-- Titre -->
-              <VCol cols="12" md="6">
-                <VTextField v-model="form.title" prepend-inner-icon="ri-briefcase-line" label="Titre du poste *"
+              <VCol cols="12" md="12">
+                <VTextField v-model="form.title" prepend-inner-icon="ri-briefcase-line" label="Titre du poste"
                   variant="outlined" :rules="rules.title" :error-messages="errors.title"
                   placeholder="Ex: Développeur Full Stack" />
               </VCol>
 
               <!-- Localisation -->
               <VCol cols="12" md="6">
-                <VTextField v-model="form.location" prepend-inner-icon="ri-map-pin-line" label="Localisation *"
+                <VTextField v-model="form.location" prepend-inner-icon="ri-map-pin-line" label="Localisation"
                   variant="outlined" :rules="rules.location" :error-messages="errors.location"
                   placeholder="Ex: Paris, Lyon..." />
               </VCol>
 
               <!-- Code postal -->
               <VCol cols="12" md="6">
-                <VTextField v-model="form.postal_code" prepend-inner-icon="ri-map-2-line" label="Code postal *"
+                <VTextField v-model="form.postal_code" prepend-inner-icon="ri-map-2-line" label="Code postal"
                   variant="outlined" :rules="rules.postal_code" :error-messages="errors.postal_code"
                   placeholder="Ex: 75001" />
               </VCol>
@@ -58,57 +58,51 @@
           <VForm ref="refStep2Form" @submit.prevent="validateStep2">
             <VRow class="pa-3">
               <!-- Type de contrat -->
-              <VCol cols="12" md="4">
+              <VCol cols="12" md="6">
                 <VSelect v-model="form.contract_type" :items="contractTypes" prepend-inner-icon="ri-file-list-line"
-                  label="Type de contrat *" variant="outlined" :rules="rules.contract_type"
+                  label="Type de contrat" variant="outlined" :rules="rules.contract_type"
                   :error-messages="errors.contract_type" placeholder="Sélectionnez le type" />
               </VCol>
 
               <!-- Heures de travail -->
-              <VCol cols="12" md="4">
+              <VCol cols="12" md="6">
                 <VTextField v-model.number="form.weekly_hours" prepend-inner-icon="ri-time-line"
                   label="Heures hebdomadaires" variant="outlined" type="number" min="1" max="60"
                   :error-messages="errors.weekly_hours" placeholder="35" />
               </VCol>
 
               <!-- Contrat à terme incertain -->
-              <VCol cols="12" md="4">
+              <VCol cols="12" md="3">
                 <div class="d-flex align-center h-100">
-                  <VCheckbox v-model="form.uncertain_term" label="Contrat à terme incertain" color="primary" />
+                  <VCheckbox v-model="form.uncertain_term" label="Contrat à terme incertain." color="primary" />
+                </div>
+              </VCol>
+
+              <!-- Permis de conduire -->
+              <VCol cols="12" md="3">
+                <div class="d-flex align-center h-100">
+                  <VCheckbox v-model="form.driving_license_required" label="Permis de conduire B requis."
+                    color="primary" />
                 </div>
               </VCol>
 
               <!-- Date de début -->
-              <VCol cols="12" md="4">
+              <VCol cols="12" md="6">
                 <VTextField v-model="form.start_date" prepend-inner-icon="ri-calendar-event-line"
                   label="Date de début souhaitée" variant="outlined" type="date" :error-messages="errors.start_date" />
               </VCol>
 
               <!-- Date de fin -->
-              <VCol cols="12" md="4">
+              <VCol cols="12" md="6">
                 <VTextField v-model="form.end_date" prepend-inner-icon="ri-calendar-check-line"
                   label="Date de fin du contrat" variant="outlined" type="date" :error-messages="errors.end_date" />
               </VCol>
 
-              <!-- Permis de conduire -->
-              <VCol cols="12" md="4">
-                <div class="d-flex align-center h-100">
-                  <VCheckbox v-model="form.driving_license_required" label="Permis de conduire requis"
-                    color="primary" />
-                </div>
-              </VCol>
-
               <!-- Date limite de candidature -->
-              <VCol cols="12" md="8">
+              <VCol cols="12" md="6">
                 <VTextField v-model="form.submission_deadline" prepend-inner-icon="ri-calendar-todo-line"
-                  label="Date limite de candidature *" variant="outlined" type="date" :rules="rules.submission_deadline"
+                  label="Date limite de candidature" variant="outlined" type="date" :rules="rules.submission_deadline"
                   :error-messages="errors.submission_deadline" :min="tomorrow" />
-              </VCol>
-
-              <!-- Date limite de l'offre -->
-              <VCol cols="12" md="4">
-                <VTextField v-model="form.deadline" prepend-inner-icon="ri-calendar-close-line"
-                  label="Date limite de l'offre" variant="outlined" type="date" :error-messages="errors.deadline" />
               </VCol>
 
               <VCol cols="12">
@@ -128,59 +122,32 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 3: Descriptions de l'offre -->
+        <!-- Étape 3: Mission principale -->
         <VWindowItem :value="2">
           <VForm ref="refStep3Form" @submit.prevent="validateStep3">
             <VRow class="pa-3">
               <VCol cols="12">
-                <QuillEditor key="main-mission-editor" editor-id="main-mission-editor" v-model="form.main_mission"
-                  theme="snow" placeholder="Décrivez la mission principale de ce poste..." min-height="120px"
-                  max-height="250px" />
-                <div v-if="errors.main_mission" class="v-messages v-messages--active">
+                <div class="text-center mb-4">
+                  <VIcon size="48" color="primary" class="mb-3">ri-target-line</VIcon>
+                  <h3 class="text-h5 mb-2">Mission Principale</h3>
+                  <p class="text-body-2 text-medium-emphasis">Décrivez la mission principale de ce poste</p>
+                </div>
+                
+                <QuillEditor 
+                  key="main-mission-editor" 
+                  editor-id="main-mission-editor" 
+                  v-model="form.main_mission"
+                  theme="snow" 
+                  placeholder="Décrivez la mission principale de ce poste..." 
+                  min-height="200px"
+                  class="quill-editor-custom"
+                />
+                <div v-if="errors.main_mission" class="v-messages v-messages--active mt-2">
                   <div class="v-messages__message text-error">{{ errors.main_mission }}</div>
                 </div>
               </VCol>
 
-              <VCol cols="12" md="6">
-                <QuillEditor key="responsibilities-editor" editor-id="responsibilities-editor"
-                  v-model="form.responsibilities" theme="bubble" placeholder="Listez les principales responsabilités..."
-                  min-height="150px" />
-                <div v-if="errors.responsibilities" class="v-messages v-messages--active">
-                  <div class="v-messages__message text-error">{{ errors.responsibilities }}</div>
-                </div>
-              </VCol>
-
-              <VCol cols="12" md="6">
-                <QuillEditor key="competencies-editor" editor-id="competencies-editor" v-model="form.competencies"
-                  theme="bubble" placeholder="Décrivez les compétences nécessaires..." min-height="150px" />
-                <div v-if="errors.competencies" class="v-messages v-messages--active">
-                  <div class="v-messages__message text-error">{{ errors.competencies }}</div>
-                </div>
-              </VCol>
-
-              <VCol cols="12" md="6">
-                <QuillEditor key="profile-editor" editor-id="profile-editor" v-model="form.profile" theme="bubble"
-                  placeholder="Décrivez le profil idéal du candidat..." min-height="150px" />
-                <div v-if="errors.profile" class="v-messages v-messages--active">
-                  <div class="v-messages__message text-error">{{ errors.profile }}</div>
-                </div>
-              </VCol>
-
-              <VCol cols="12" md="6">
-                <QuillEditor key="conditions-editor" editor-id="conditions-editor" v-model="form.conditions"
-                  theme="bubble" placeholder="Précisez les conditions de travail..." min-height="150px" />
-              </VCol>
-
-              <VDivider></VDivider>
               <VCol cols="12">
-                <!-- Debug button -->
-                <div class="mb-4">
-                  <VBtn variant="outlined" color="info" size="small" @click="debugQuillContent">
-                    <VIcon icon="ri-bug-line" start />
-                    Vérifier le contenu
-                  </VBtn>
-                </div>
-
                 <div class="d-flex flex-wrap gap-4 justify-sm-space-between justify-center mt-8">
                   <VBtn color="secondary" variant="tonal" @click="currentStep--">
                     <VIcon icon="ri-arrow-left-line" start class="flip-in-rtl" />
@@ -197,35 +164,212 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 4: Rémunération et frais -->
+        <!-- Étape 4: Responsabilités -->
         <VWindowItem :value="3">
           <VForm ref="refStep4Form" @submit.prevent="validateStep4">
+            <VRow class="pa-3">
+              <VCol cols="12">
+                <div class="text-center mb-4">
+                  <VIcon size="48" color="primary" class="mb-3">ri-task-line</VIcon>
+                  <h3 class="text-h5 mb-2">Responsabilités</h3>
+                  <p class="text-body-2 text-medium-emphasis">Listez les principales responsabilités du poste</p>
+                </div>
+                
+                <QuillEditor 
+                  key="responsibilities-editor" 
+                  editor-id="responsibilities-editor"
+                  v-model="form.responsibilities" 
+                  theme="snow" 
+                  placeholder="Listez les principales responsabilités..."
+                  min-height="200px"
+                  class="quill-editor-custom"
+                />
+                <div v-if="errors.responsibilities" class="v-messages v-messages--active mt-2">
+                  <div class="v-messages__message text-error">{{ errors.responsibilities }}</div>
+                </div>
+              </VCol>
+
+              <VCol cols="12">
+                <div class="d-flex flex-wrap gap-4 justify-sm-space-between justify-center mt-8">
+                  <VBtn color="secondary" variant="tonal" @click="currentStep--">
+                    <VIcon icon="ri-arrow-left-line" start class="flip-in-rtl" />
+                    Précédent
+                  </VBtn>
+
+                  <VBtn type="submit" color="primary">
+                    Suivant
+                    <VIcon icon="ri-arrow-right-line" end class="flip-in-rtl" />
+                  </VBtn>
+                </div>
+              </VCol>
+            </VRow>
+          </VForm>
+        </VWindowItem>
+
+        <!-- Étape 5: Compétences -->
+        <VWindowItem :value="4">
+          <VForm ref="refStep5Form" @submit.prevent="validateStep5">
+            <VRow class="pa-3">
+              <VCol cols="12">
+                <div class="text-center mb-4">
+                  <VIcon size="48" color="primary" class="mb-3">ri-award-line</VIcon>
+                  <h3 class="text-h5 mb-2">Compétences Requises</h3>
+                  <p class="text-body-2 text-medium-emphasis">Décrivez les compétences nécessaires pour ce poste</p>
+                </div>
+                
+                <QuillEditor 
+                  key="competencies-editor" 
+                  editor-id="competencies-editor" 
+                  v-model="form.competencies"
+                  theme="snow" 
+                  placeholder="Décrivez les compétences nécessaires..." 
+                  min-height="200px"
+                  class="quill-editor-custom"
+                />
+                <div v-if="errors.competencies" class="v-messages v-messages--active mt-2">
+                  <div class="v-messages__message text-error">{{ errors.competencies }}</div>
+                </div>
+              </VCol>
+
+              <VCol cols="12">
+                <div class="d-flex flex-wrap gap-4 justify-sm-space-between justify-center mt-8">
+                  <VBtn color="secondary" variant="tonal" @click="currentStep--">
+                    <VIcon icon="ri-arrow-left-line" start class="flip-in-rtl" />
+                    Précédent
+                  </VBtn>
+
+                  <VBtn type="submit" color="primary">
+                    Suivant
+                    <VIcon icon="ri-arrow-right-line" end class="flip-in-rtl" />
+                  </VBtn>
+                </div>
+              </VCol>
+            </VRow>
+          </VForm>
+        </VWindowItem>
+
+        <!-- Étape 6: Profil recherché -->
+        <VWindowItem :value="5">
+          <VForm ref="refStep6Form" @submit.prevent="validateStep6">
+            <VRow class="pa-3">
+              <VCol cols="12">
+                <div class="text-center mb-4">
+                  <VIcon size="48" color="primary" class="mb-3">ri-user-search-line</VIcon>
+                  <h3 class="text-h5 mb-2">Profil Recherché</h3>
+                  <p class="text-body-2 text-medium-emphasis">Décrivez le profil idéal du candidat</p>
+                </div>
+                
+                <QuillEditor 
+                  key="profile-editor" 
+                  editor-id="profile-editor" 
+                  v-model="form.profile" 
+                  theme="snow"
+                  placeholder="Décrivez le profil idéal du candidat..." 
+                  min-height="200px"
+                  class="quill-editor-custom"
+                />
+                <div v-if="errors.profile" class="v-messages v-messages--active mt-2">
+                  <div class="v-messages__message text-error">{{ errors.profile }}</div>
+                </div>
+              </VCol>
+
+              <VCol cols="12">
+                <div class="d-flex flex-wrap gap-4 justify-sm-space-between justify-center mt-8">
+                  <VBtn color="secondary" variant="tonal" @click="currentStep--">
+                    <VIcon icon="ri-arrow-left-line" start class="flip-in-rtl" />
+                    Précédent
+                  </VBtn>
+
+                  <VBtn type="submit" color="primary">
+                    Suivant
+                    <VIcon icon="ri-arrow-right-line" end class="flip-in-rtl" />
+                  </VBtn>
+                </div>
+              </VCol>
+            </VRow>
+          </VForm>
+        </VWindowItem>
+
+        <!-- Étape 7: Conditions de travail -->
+        <VWindowItem :value="6">
+          <VForm ref="refStep7Form" @submit.prevent="validateStep7">
+            <VRow class="pa-3">
+              <VCol cols="12">
+                <div class="text-center mb-4">
+                  <VIcon size="48" color="primary" class="mb-3">ri-settings-3-line</VIcon>
+                  <h3 class="text-h5 mb-2">Conditions de Travail</h3>
+                  <p class="text-body-2 text-medium-emphasis">Précisez les conditions de travail (optionnel)</p>
+                </div>
+                
+                <QuillEditor 
+                  key="conditions-editor" 
+                  editor-id="conditions-editor" 
+                  v-model="form.conditions"
+                  theme="snow" 
+                  placeholder="Précisez les conditions de travail..." 
+                  min-height="200px"
+                  class="quill-editor-custom"
+                />
+              </VCol>
+
+              <VCol cols="12">
+                <div class="d-flex flex-wrap gap-4 justify-sm-space-between justify-center mt-8">
+                  <VBtn color="secondary" variant="tonal" @click="currentStep--">
+                    <VIcon icon="ri-arrow-left-line" start class="flip-in-rtl" />
+                    Précédent
+                  </VBtn>
+
+                  <VBtn type="submit" color="primary">
+                    Suivant
+                    <VIcon icon="ri-arrow-right-line" end class="flip-in-rtl" />
+                  </VBtn>
+                </div>
+              </VCol>
+            </VRow>
+          </VForm>
+        </VWindowItem>
+
+        <!-- Étape 8: Rémunération et avantages -->
+        <VWindowItem :value="7">
+          <VForm ref="refStep8Form" @submit.prevent="validateStep8">
             <VRow class="pa-3">
               <!-- Salaire -->
               <VCol cols="12" md="4">
                 <VTextField v-model.number="form.salary" prepend-inner-icon="ri-money-euro-circle-line"
-                  label="Salaire (brut mensuel) *" variant="outlined" type="number" min="0" :rules="rules.salary"
+                  label="Salaire (brut mensuel)" variant="outlined" type="number" min="0" :rules="rules.salary"
                   :error-messages="errors.salary" placeholder="3500" required />
               </VCol>
 
               <!-- Devise -->
               <VCol cols="12" md="4">
                 <VSelect v-model="form.currency" :items="currencies" prepend-inner-icon="ri-exchange-line"
-                  label="Devise *" variant="outlined" :rules="rules.currency" :error-messages="errors.currency" />
+                  label="Devise" variant="outlined" :rules="rules.currency" :error-messages="errors.currency" />
               </VCol>
 
               <!-- Frais de candidature -->
               <VCol cols="12" md="4">
                 <VTextField v-model.number="form.submission_fee" prepend-inner-icon="ri-coins-line"
-                  label="Frais de candidature *" variant="outlined" type="number" min="0" :rules="rules.submission_fee"
+                  label="Frais de candidature" variant="outlined" type="number" min="0" :rules="rules.submission_fee"
                   :error-messages="errors.submission_fee" placeholder="0" />
               </VCol>
 
               <!-- Avantages -->
               <VCol cols="12">
-                <QuillEditor key="benefits-editor" editor-id="benefits-editor" v-model="form.benefits" theme="bubble"
+                <div class="text-center mb-4">
+                  <VIcon size="48" color="primary" class="mb-3">ri-gift-line</VIcon>
+                  <h3 class="text-h5 mb-2">Avantages</h3>
+                  <p class="text-body-2 text-medium-emphasis">Décrivez les avantages offerts (optionnel)</p>
+                </div>
+                
+                <QuillEditor 
+                  key="benefits-editor" 
+                  editor-id="benefits-editor" 
+                  v-model="form.benefits" 
+                  theme="snow"
                   placeholder="Décrivez les avantages offerts (mutuelle, tickets restaurant, formations...)"
-                  min-height="120px" />
+                  min-height="150px"
+                  class="quill-editor-custom"
+                />
               </VCol>
 
               <VCol cols="12">
@@ -244,11 +388,18 @@
             </VRow>
           </VForm>
         </VWindowItem>
-        <!-- Étape 5: Documents requis -->
-        <VWindowItem :value="4">
-          <VForm ref="refStep5Form" @submit.prevent="validateStep5">
+
+        <!-- Étape 9: Documents requis -->
+        <VWindowItem :value="8">
+          <VForm ref="refStep9Form" @submit.prevent="validateStep9">
             <VRow class="pa-3">
               <VCol cols="12">
+                <div class="text-center mb-4">
+                  <VIcon size="48" color="primary" class="mb-3">ri-file-list-3-line</VIcon>
+                  <h3 class="text-h5 mb-2">Documents Requis</h3>
+                  <p class="text-body-2 text-medium-emphasis">Sélectionnez les types de documents à fournir</p>
+                </div>
+                
                 <VAutocomplete v-model="form.attachment" :items="documentTypes" prepend-inner-icon="ri-file-list-3-line"
                   label="Documents à fournir" variant="outlined" multiple chips closable-chips
                   :error-messages="errors.attachment" clearable placeholder="Sélectionnez les types de documents" />
@@ -330,6 +481,10 @@ const refStep2Form = ref()
 const refStep3Form = ref()
 const refStep4Form = ref()
 const refStep5Form = ref()
+const refStep6Form = ref()
+const refStep7Form = ref()
+const refStep8Form = ref()
+const refStep9Form = ref()
 
 // State
 const currentStep = ref(0)
@@ -404,7 +559,7 @@ const rules = {
   ],
   postal_code: [
     (v: string) => !!v || 'Le code postal est obligatoire',
-    (v: string) => (v && /^\d{5}$/.test(v)) || 'Le code postal doit contenir 5 chiffres',
+    (v: string) => (v && /^\d{3}$/.test(v)) || 'Le code postal doit contenir 3 chiffres',
   ],
   contract_type: [
     (v: string) => !!v || 'Le type de contrat est obligatoire',
@@ -457,8 +612,8 @@ const validateStep2 = () => {
 }
 
 const validateStep3 = () => {
-  // Validation manuelle pour les QuillEditor
-  const isValid = validateStep3Fields()
+  // Validation pour la mission principale
+  const isValid = validateMainMission()
   if (isValid) {
     currentStep.value++
     isCurrentStepValid.value = true
@@ -467,73 +622,131 @@ const validateStep3 = () => {
   }
 }
 
-const validateStep3Fields = () => {
-  // Clear previous errors
+const validateStep4 = () => {
+  // Validation pour les responsabilités
+  const isValid = validateResponsibilities()
+  if (isValid) {
+    currentStep.value++
+    isCurrentStepValid.value = true
+  } else {
+    isCurrentStepValid.value = false
+  }
+}
+
+const validateStep5 = () => {
+  // Validation pour les compétences
+  const isValid = validateCompetencies()
+  if (isValid) {
+    currentStep.value++
+    isCurrentStepValid.value = true
+  } else {
+    isCurrentStepValid.value = false
+  }
+}
+
+const validateStep6 = () => {
+  // Validation pour le profil recherché
+  const isValid = validateProfile()
+  if (isValid) {
+    currentStep.value++
+    isCurrentStepValid.value = true
+  } else {
+    isCurrentStepValid.value = false
+  }
+}
+
+const validateStep7 = () => {
+  // Conditions de travail (optionnel) - toujours valide
+  currentStep.value++
+  isCurrentStepValid.value = true
+}
+
+const validateStep8 = () => {
+  // Validation pour la rémunération
+  const isValid = validateSalary()
+  if (isValid) {
+    currentStep.value++
+    isCurrentStepValid.value = true
+  } else {
+    isCurrentStepValid.value = false
+  }
+}
+
+const validateStep9 = async () => {
+  // Validation finale
+  const isValid = await validateAllForms()
+  if (isValid) {
+    await handleFinalSubmit()
+  }
+}
+
+// Helper function to clean HTML content
+const cleanHtmlContent = (htmlContent: string): string => {
+  return htmlContent
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+    .replace(/&amp;/g, '&') // Replace encoded ampersands
+    .replace(/</g, '<') // Replace encoded less than
+    .replace(/&gt;/g, '>') // Replace encoded greater than
+    .replace(/&quot;/g, '"') // Replace encoded quotes
+    .replace(/&#39;/g, "'") // Replace encoded apostrophes
+    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .trim()
+}
+
+// Individual validation functions
+const validateMainMission = () => {
   delete errors.value.main_mission
-  delete errors.value.responsibilities
-  delete errors.value.competencies
-  delete errors.value.profile
-
-  console.log('Validating step 3 fields...')
-
-  let isValid = true
-
-  // Helper function to clean HTML content
-  const cleanHtmlContent = (htmlContent: string): string => {
-    return htmlContent
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
-      .replace(/&amp;/g, '&') // Replace encoded ampersands
-      .replace(/</g, '<') // Replace encoded less than
-      .replace(/&gt;/g, '>') // Replace encoded greater than
-      .replace(/&quot;/g, '"') // Replace encoded quotes
-      .replace(/&#39;/g, "'") // Replace encoded apostrophes
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .trim()
-  }
-
-  // Validate main mission (required field)
   const mainMissionText = cleanHtmlContent(form.value.main_mission || '')
-  console.log('Main mission text:', mainMissionText, 'Length:', mainMissionText.length)
-
+  
   if (!mainMissionText || mainMissionText.length < 10) {
-    console.log('Main mission validation failed')
     errors.value.main_mission = `La mission principale est obligatoire (min. 10 caractères de texte).`
-    isValid = false
+    return false
   }
+  return true
+}
 
-  // Validate responsibilities (required field)
+const validateResponsibilities = () => {
+  delete errors.value.responsibilities
   const responsibilitiesText = cleanHtmlContent(form.value.responsibilities || '')
-  console.log('Responsibilities text:', responsibilitiesText, 'Length:', responsibilitiesText.length)
-
+  
   if (!responsibilitiesText || responsibilitiesText.length < 5) {
-    console.log('Responsibilities validation failed')
     errors.value.responsibilities = `Les responsabilités sont obligatoires (min. 5 caractères de texte).`
-    isValid = false
+    return false
   }
+  return true
+}
 
-  // Validate competencies (required field)
+const validateCompetencies = () => {
+  delete errors.value.competencies
   const competenciesText = cleanHtmlContent(form.value.competencies || '')
-  console.log('Competencies text:', competenciesText, 'Length:', competenciesText.length)
-
+  
   if (!competenciesText || competenciesText.length < 5) {
-    console.log('Competencies validation failed')
     errors.value.competencies = `Les compétences sont obligatoires (min. 5 caractères de texte).`
-    isValid = false
+    return false
   }
+  return true
+}
 
-  // Validate profile (required field)
+const validateProfile = () => {
+  delete errors.value.profile
   const profileText = cleanHtmlContent(form.value.profile || '')
-  console.log('Profile text:', profileText, 'Length:', profileText.length)
-
+  
   if (!profileText || profileText.length < 5) {
-    console.log('Profile validation failed')
     errors.value.profile = `Le profil recherché est obligatoire (min. 5 caractères de texte).`
-    isValid = false
+    return false
   }
+  return true
+}
 
-  console.log('Step 3 validation result:', isValid)
-  return isValid
+const validateSalary = () => {
+  delete errors.value.salary
+  
+  if (!form.value.salary || form.value.salary <= 0) {
+    errors.value.salary = 'Le salaire est obligatoire et doit être supérieur à 0.'
+    return false
+  }
+  return true
 }
 
 // Helper function to check if QuillEditor content is valid
@@ -573,58 +786,28 @@ const debugQuillContent = () => {
   alert(`Contenu des éditeurs:
 
 ✅ CHAMPS OBLIGATOIRES:
-Mission principale: ${hasValidContent(form.value.main_mission, 10) ? 'OK (✓)' : 'Vide ou trop court (✗)'}
-Responsabilités: ${hasValidContent(form.value.responsibilities, 5) ? 'OK (✓)' : 'Vide ou trop court (✗)'}
-Compétences: ${hasValidContent(form.value.competencies, 5) ? 'OK (✓)' : 'Vide ou trop court (✗)'}
-Profil recherché: ${hasValidContent(form.value.profile, 5) ? 'OK (✓)' : 'Vide ou trop court (✗)'}
+Mission principale: ${hasValidContent(form.value.main_mission || '', 10) ? 'OK (✓)' : 'Vide ou trop court (✗)'}
+Responsabilités: ${hasValidContent(form.value.responsibilities || '', 5) ? 'OK (✓)' : 'Vide ou trop court (✗)'}
+Compétences: ${hasValidContent(form.value.competencies || '', 5) ? 'OK (✓)' : 'Vide ou trop court (✗)'}
+Profil recherché: ${hasValidContent(form.value.profile || '', 5) ? 'OK (✓)' : 'Vide ou trop court (✗)'}
 
 🔷 CHAMPS OPTIONNELS:
-Conditions: ${hasValidContent(form.value.conditions) ? 'OK (✓)' : 'Vide'}
-Avantages: ${hasValidContent(form.value.benefits) ? 'OK (✓)' : 'Vide'}`)
-}
-
-const validateStep4 = () => {
-  // Clear previous errors
-  delete errors.value.salary
-
-  console.log('Validating step 4 - salary:', form.value.salary)
-
-  let isValid = true
-
-  // Validate salary (required field)
-  if (!form.value.salary || form.value.salary <= 0) {
-    console.log('Salary validation failed')
-    errors.value.salary = 'Le salaire est obligatoire et doit être supérieur à 0.'
-    isValid = false
-  }
-
-  // Also validate form fields with Vuetify validation
-  refStep4Form.value?.validate().then((valid: any) => {
-    const combinedValid = valid.valid && isValid
-    if (combinedValid) {
-      currentStep.value++
-      isCurrentStepValid.value = true
-    } else {
-      isCurrentStepValid.value = false
-    }
-  })
-}
-
-const validateStep5 = async () => {
-  const isValid = await validateAllForms()
-  if (isValid) {
-    await handleFinalSubmit()
-  }
+Conditions: ${hasValidContent(form.value.conditions || '') ? 'OK (✓)' : 'Vide'}
+Avantages: ${hasValidContent(form.value.benefits || '') ? 'OK (✓)' : 'Vide'}`)
 }
 
 const validateAllForms = async () => {
   const step1Valid = await refStep1Form.value?.validate()
   const step2Valid = await refStep2Form.value?.validate()
-  const step3Valid = validateStep3Fields()
-  const step4Valid = await refStep4Form.value?.validate()
-  const step5Valid = await refStep5Form.value?.validate()
+  const step3Valid = validateMainMission()
+  const step4Valid = validateResponsibilities()
+  const step5Valid = validateCompetencies()
+  const step6Valid = validateProfile()
+  const step7Valid = true // Conditions optionnelles
+  const step8Valid = validateSalary()
+  const step9Valid = await refStep9Form.value?.validate()
 
-  return step1Valid?.valid && step2Valid?.valid && step3Valid && step4Valid?.valid && step5Valid?.valid
+  return step1Valid?.valid && step2Valid?.valid && step3Valid && step4Valid && step5Valid && step6Valid && step7Valid && step8Valid && step9Valid?.valid
 }
 
 const handleFinalSubmit = async () => {
@@ -714,6 +897,10 @@ const resetForm = () => {
   refStep3Form.value?.resetValidation()
   refStep4Form.value?.resetValidation()
   refStep5Form.value?.resetValidation()
+  refStep6Form.value?.resetValidation()
+  refStep7Form.value?.resetValidation()
+  refStep8Form.value?.resetValidation()
+  refStep9Form.value?.resetValidation()
 }
 
 const populateForm = (jobOffer: JobOfferOut) => {
@@ -824,5 +1011,36 @@ defineExpose({
 
 :deep(.v-stepper-item--selected .v-stepper-item__icon) {
   background: rgb(var(--v-theme-primary)) !important;
+}
+
+/* Styles pour QuillEditor */
+.quill-editor-custom {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 4px;
+  background-color: rgb(var(--v-theme-surface));
+}
+
+.quill-editor-custom :deep(.ql-toolbar) {
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-radius: 4px 4px 0 0;
+}
+
+.quill-editor-custom :deep(.ql-container) {
+  border: none;
+  border-radius: 0 0 4px 4px;
+  font-family: inherit;
+}
+
+.quill-editor-custom :deep(.ql-editor) {
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.quill-editor-custom :deep(.ql-editor.ql-blank::before) {
+  font-style: normal;
+  color: rgba(var(--v-theme-on-surface), 0.6);
 }
 </style>
