@@ -1,5 +1,5 @@
 export const routes = [
-  { path: '/', redirect: '/dashboard' },
+  { path: '/', redirect: '/dashboard' }, // Redirection par défaut, sera gérée par le guard
   {
     path: '/',
     component: () => import('@/layouts/default.vue'),

@@ -132,12 +132,12 @@
                   <VList>
                     <VListItem prepend-icon="ri-eye-line" title="Voir les détails"
                       :to="{ name: 'training-trainings-detail', params: { id: training.id } }" />
-                    <VListItem v-if="training.status === TrainingStatusEnum.ACTIVE" prepend-icon="ri-send-plane-line"
-                      title="Candidater" @click="goToApply(training.id)" />
+                    <!-- <VListItem v-if="training.status === TrainingStatusEnum.ACTIVE" prepend-icon="ri-send-plane-line"
+                      title="Candidater" @click="goToApply(training.id)" /> -->
                     <VListItem prepend-icon="ri-edit-line" title="Modifier"
                       :to="{ name: 'training-trainings-edit', params: { id: training.id } }" />
-                    <VListItem prepend-icon="ri-group-2-line" title="Voir les candidatures"
-                      :to="{ name: 'training-applications-index', query: { training_id: training.id } }" />
+                    <!-- <VListItem prepend-icon="ri-group-2-line" title="Voir les candidatures"
+                      :to="{ name: 'training-applications-index', query: { training_id: training.id } }" /> -->
                   </VList>
                 </VMenu>
               </VCardActions>

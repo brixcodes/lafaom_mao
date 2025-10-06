@@ -10,6 +10,7 @@ import authV1Tree from '@images/pages/auth-v1-tree.png'
 import { useAuthStore } from '@/stores/auth'
 import { showToast } from '@/components/toast/toastManager'
 import { validateEmail, validateMinLength } from '@/utils/validation'
+import { getRedirectPathAfterLogin } from '@/utils/redirectUtils'
 
 const form = ref({
   email: '',
@@ -65,7 +66,11 @@ const onSubmit = async () => {
     
     if (result.success) {
       showToast({ message: 'Connexion réussie.', type: 'success' })
-      router.push('/dashboard')
+      
+      // Redirection basée sur le rôle de l'utilisateur
+      const redirectPath = getRedirectPathAfterLogin()
+      console.log('[Login Page] Redirecting to:', redirectPath)
+      router.push(redirectPath)
     } else if (result.requiresTwoFactor) {
       console.log('[Login Page] Redirecting to 2FA for:', result.email)
       showToast({ message: 'Vérification 2FA requise.', type: 'info' })

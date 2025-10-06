@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { reclamationsService } from '@/services/api/reclamations'
 import { showToast } from '@/components/toast/toastManager'
+import { useAuthStore } from '@/stores/auth'
 import type {
   Reclamation,
   ReclamationFullOut,
@@ -112,6 +113,32 @@ const priorityConfig = computed(() => ({
 }))
 
 // Methods
+
+/**
+ * Vérifier si l'utilisateur peut modifier une réclamation
+ */
+const canModifyReclamation = (reclamation: Reclamation): boolean => {
+  const authStore = useAuthStore()
+  if (!authStore.user) return false
+  
+  // Seul le créateur peut modifier sa réclamation
+  return reclamation.user_id === authStore.user.id
+}
+
+/**
+ * Vérifier si l'utilisateur peut changer le statut d'une réclamation
+ */
+const canChangeReclamationStatus = (reclamation: Reclamation): boolean => {
+  const authStore = useAuthStore()
+  if (!authStore.user) return false
+  
+  // Les admins peuvent changer le statut de toutes les réclamations
+  if (authStore.user.user_type === 'admin') return true
+  
+  // Le créateur peut changer le statut de sa propre réclamation
+  return reclamation.user_id === authStore.user.id
+}
+
 const loadReclamations = async (reset = false) => {
   try {
     isLoading.value = true
@@ -203,9 +230,35 @@ const createReclamation = async (data: ReclamationCreateInput) => {
 const getReclamation = async (id: number) => {
   try {
     isLoading.value = true
-    const response = await reclamationsService.getMyReclamationById(id)
-    currentReclamation.value = response.data
-    return response.data
+    
+    // Essayer d'abord de trouver la réclamation dans les données déjà chargées
+    const existingReclamation = reclamations.value.find(r => r.id === id)
+    if (existingReclamation) {
+      console.log('📋 Réclamation trouvée dans les données locales:', existingReclamation)
+      currentReclamation.value = existingReclamation as ReclamationFullOut
+      return existingReclamation
+    }
+    
+    // Si pas trouvée localement, utiliser le service avec fallback
+    try {
+      const response = await reclamationsService.getMyReclamationByIdWithFallback(id)
+      currentReclamation.value = response.data
+      
+      // Afficher un message informatif si c'est des données de base
+      if (response.message?.includes('données de base')) {
+        showToast({ 
+          message: 'Affichage avec des données de base - Endpoint en cours de développement', 
+          type: 'info' 
+        })
+      }
+      
+      return response.data
+    } catch (apiError: any) {
+      console.error('Erreur lors du chargement de la réclamation:', apiError)
+      showToast({ message: 'Erreur lors du chargement de la réclamation', type: 'error' })
+      throw apiError
+    }
+    
   } catch (err: any) {
     console.error('Erreur lors du chargement de la réclamation:', err)
     showToast({ message: 'Erreur lors du chargement de la réclamation', type: 'error' })
@@ -246,6 +299,27 @@ const updateReclamationStatus = async (id: number, status: ReclamationStatusEnum
     throw err
   } finally {
     isLoading.value = false
+  }
+}
+
+/**
+ * Changer le statut d'une réclamation avec vérification des permissions
+ */
+const changeReclamationStatus = async (reclamation: Reclamation, newStatus: ReclamationStatusEnum) => {
+  // Vérifier les permissions
+  if (!canChangeReclamationStatus(reclamation)) {
+    showToast({ 
+      message: 'Vous n\'avez pas l\'autorisation de modifier cette réclamation', 
+      type: 'error' 
+    })
+    return false
+  }
+  
+  try {
+    await updateReclamationStatus(reclamation.id, newStatus)
+    return true
+  } catch (error) {
+    return false
   }
 }
 
@@ -446,6 +520,11 @@ export function useReclamation() {
     getReclamationType,
     createReclamationType,
     updateReclamationType,
-    deleteReclamationType
+    deleteReclamationType,
+    
+    // Permissions
+    canModifyReclamation,
+    canChangeReclamationStatus,
+    changeReclamationStatus
   }
 }

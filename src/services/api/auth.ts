@@ -151,8 +151,33 @@ class AuthService {
    * Upload de l'image de profil
    */
   async uploadProfileImage(formData: FormData): Promise<UserFullOutSuccess> {
-    const response = await apiService.post('/auth/upload-profile-image', formData)
+    // Utiliser la méthode spéciale pour FormData
+    const response = await apiService.postFormData('/auth/upload-profile-image', formData)
     return response as UserFullOutSuccess
+  }
+
+  /**
+   * Upload de l'image de profil en JSON (base64)
+   */
+  async uploadProfileImageAsJson(data: any): Promise<UserFullOutSuccess> {
+    const response = await apiService.post('/auth/upload-profile-image', data)
+    return response as UserFullOutSuccess
+  }
+
+  /**
+   * Supprimer l'image de profil
+   */
+  async removeProfileImage(): Promise<UserFullOutSuccess> {
+    const response = await apiService.delete('/auth/profile-image')
+    return response as UserFullOutSuccess
+  }
+
+  /**
+   * Récupérer les adresses de l'utilisateur
+   */
+  async getUserAddresses(endpoint: string = '/auth/addresses'): Promise<any> {
+    const response = await apiService.get(endpoint)
+    return response
   }
 
   // === OAUTH ===

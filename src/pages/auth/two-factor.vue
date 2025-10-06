@@ -11,6 +11,7 @@ import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/api/auth'
 import { showToast } from '@/components/toast/toastManager'
 import { validateMinLength } from '@/utils/validation'
+import { getRedirectPathAfterLogin } from '@/utils/redirectUtils'
 
 const form = ref({
   email: '',
@@ -118,7 +119,11 @@ const onSubmit = async () => {
 
     if (result.success) {
       showToast({ message: 'Authentification à deux facteurs réussie.', type: 'success' })
-      router.push('/dashboard')
+      
+      // Redirection basée sur le rôle de l'utilisateur
+      const redirectPath = getRedirectPathAfterLogin()
+      console.log('[2FA Page] Redirecting to:', redirectPath)
+      router.push(redirectPath)
     }
   } catch (err: any) {
     console.error('Erreur 2FA:', err)

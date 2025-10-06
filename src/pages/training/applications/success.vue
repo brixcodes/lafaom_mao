@@ -47,6 +47,7 @@
               </VBtn>
               
               <VBtn 
+                v-if="trainingId"
                 variant="outlined" 
                 size="large"
                 :to="{ name: 'training-trainings-detail', params: { id: trainingId } }"

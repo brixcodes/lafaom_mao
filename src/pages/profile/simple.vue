@@ -208,35 +208,55 @@
                       <VRow>
                         <VCol cols="12" md="6">
                           <VTextField v-model="editableProfile.first_name" label="Prénom" variant="outlined"
-                            :rules="[v => !!v || 'Le prénom est requis']" required />
+                            :rules="[v => !!v || 'Le prénom est requis']" required prepend-inner-icon="ri-user-line" />
                         </VCol>
                         <VCol cols="12" md="6">
                           <VTextField v-model="editableProfile.last_name" label="Nom" variant="outlined"
-                            :rules="[v => !!v || 'Le nom est requis']" required />
+                            :rules="[v => !!v || 'Le nom est requis']" required prepend-inner-icon="ri-user-line" />
                         </VCol>
                         <VCol cols="12" md="6">
                           <VSelect v-model="editableProfile.civility" :items="civilityOptions" label="Civilité"
-                            variant="outlined" />
+                            variant="outlined" prepend-inner-icon="ri-user-settings-line" />
                         </VCol>
                         <VCol cols="12" md="6">
                           <VTextField v-model="editableProfile.birth_date" label="Date de naissance" type="date"
-                            variant="outlined" />
+                            variant="outlined" prepend-inner-icon="ri-calendar-line" />
                         </VCol>
                         <VCol cols="12" md="6">
                           <VTextField v-model="editableProfile.mobile_number" label="Téléphone mobile"
-                            variant="outlined" type="tel" />
+                            variant="outlined" type="tel" prepend-inner-icon="ri-smartphone-line" />
                         </VCol>
                         <VCol cols="12" md="6">
                           <VTextField v-model="editableProfile.fix_number" label="Téléphone fixe" variant="outlined"
-                            type="tel" />
+                            type="tel" prepend-inner-icon="ri-phone-line" />
                         </VCol>
                         <VCol cols="12" md="6">
-                          <VSelect v-model="editableProfile.country_code" :items="countryOptions" label="Code pays"
-                            variant="outlined" />
+                          <VAutocomplete
+                            v-model="editableProfile.country_code"
+                            :items="countryOptions"
+                            :loading="countriesLoading"
+                            label="Pays"
+                            variant="outlined"
+                            item-title="title"
+                            item-value="value"
+                            clearable
+                            placeholder="Rechercher un pays..."
+                            prepend-inner-icon="ri-global-line"
+                          >
+                            <template #item="{ props, item }">
+                              <VListItem v-bind="props">
+                                <template #prepend>
+                                  <span class="text-lg">{{ item.raw.flag || '🏳️' }}</span>
+                                </template>
+                                <VListItemTitle>{{ item.raw.title }}</VListItemTitle>
+                                <VListItemSubtitle>{{ item.raw.subtitle }}</VListItemSubtitle>
+                              </VListItem>
+                            </template>
+                          </VAutocomplete>
                         </VCol>
                         <VCol cols="12" md="6">
                           <VSelect v-model="editableProfile.lang" :items="languageOptions" label="Langue"
-                            variant="outlined" />
+                            variant="outlined" prepend-inner-icon="ri-translate" />
                         </VCol>
                         <VCol cols="12">
                           <VSwitch v-model="editableProfile.two_factor_enabled" label="Authentification à deux facteurs"
@@ -304,18 +324,22 @@
                     <VForm v-else @submit.prevent="updateProfessionalInfo">
                       <VRow>
                         <VCol cols="12" md="6">
-                          <VTextField v-model="editableProfile.job_position" label="Poste actuel" variant="outlined" />
+                          <VTextField v-model="editableProfile.job_position" label="Poste actuel" variant="outlined" 
+                            prepend-inner-icon="ri-briefcase-line" />
                         </VCol>
                         <VCol cols="12" md="6">
-                          <VTextField v-model="editableProfile.employer" label="Employeur" variant="outlined" />
+                          <VTextField v-model="editableProfile.employer" label="Employeur" variant="outlined" 
+                            prepend-inner-icon="ri-building-line" />
                         </VCol>
                         <VCol cols="12" md="6">
                           <VTextField v-model="editableProfile.professional_experience_in_months"
-                            label="Expérience (en mois)" type="number" variant="outlined" />
+                            label="Expérience (en mois)" type="number" variant="outlined" 
+                            prepend-inner-icon="ri-time-line" />
                         </VCol>
                         <VCol cols="12" md="6">
                           <VTextField v-model="editableProfile.socio_professional_category"
-                            label="Catégorie professionnelle" variant="outlined" />
+                            label="Catégorie professionnelle" variant="outlined" 
+                            prepend-inner-icon="ri-user-star-line" />
                         </VCol>
                         <VCol cols="12">
                           <VBtn type="submit" color="primary" class="mr-2" :loading="loading">
@@ -345,52 +369,92 @@
                         <VCol cols="12">
                           <h4 class="text-h6 mb-4">Adresse principale</h4>
                         </VCol>
-                        <VCol cols="12" md="6">
-                          <VTextField v-model="editableAddresses.primary_address_country_code" label="Code pays"
-                            variant="outlined" />
+                        <VCol cols="12" md="4">
+                          <VAutocomplete
+                            v-model="editableAddresses.primary_address_country_code"
+                            :items="countryOptions"
+                            :loading="countriesLoading"
+                            label="Pays (Adresse principale)"
+                            variant="outlined"
+                            item-title="title"
+                            item-value="value"
+                            clearable
+                            placeholder="Rechercher un pays..."
+                            prepend-inner-icon="ri-global-line"
+                          >
+                            <template #item="{ props, item }">
+                              <VListItem v-bind="props">
+                                <template #prepend>
+                                  <span class="text-lg">{{ item.raw.flag || '🏳️' }}</span>
+                                </template>
+                                <VListItemTitle>{{ item.raw.title }}</VListItemTitle>
+                                <VListItemSubtitle>{{ item.raw.subtitle }}</VListItemSubtitle>
+                              </VListItem>
+                            </template>
+                          </VAutocomplete>
                         </VCol>
-                        <VCol cols="12" md="6">
+                        <VCol cols="12" md="4">
                           <VTextField v-model="editableAddresses.primary_address_city" label="Ville"
-                            variant="outlined" />
+                            variant="outlined" prepend-inner-icon="ri-building-2-line" />
                         </VCol>
-                        <VCol cols="12" md="6">
+                        <VCol cols="12" md="4">
                           <VTextField v-model="editableAddresses.primary_address_street" label="Rue"
-                            variant="outlined" />
+                            variant="outlined" prepend-inner-icon="ri-road-map-line" />
                         </VCol>
-                        <VCol cols="12" md="6">
+                        <VCol cols="12" md="4">
                           <VTextField v-model="editableAddresses.primary_address_postal_code" label="Code postal"
-                            variant="outlined" />
+                            variant="outlined" prepend-inner-icon="ri-mail-line" />
                         </VCol>
-                        <VCol cols="12" md="6">
+                        <VCol cols="12" md="8">
                           <VTextField v-model="editableAddresses.primary_address_state" label="État/Région"
-                            variant="outlined" />
+                            variant="outlined" prepend-inner-icon="ri-map-pin-line" />
                         </VCol>
                         <VCol cols="12">
                           <h4 class="text-h6 mb-4 mt-4">Adresse de facturation</h4>
                         </VCol>
-                        <VCol cols="12" md="6">
-                          <VTextField v-model="editableAddresses.billing_address_country_code" label="Code pays"
-                            variant="outlined" />
+                        <VCol cols="12" md="4">
+                          <VAutocomplete
+                            v-model="editableAddresses.billing_address_country_code"
+                            :items="countryOptions"
+                            :loading="countriesLoading"
+                            label="Pays (Adresse de facturation)"
+                            variant="outlined"
+                            item-title="title"
+                            item-value="value"
+                            clearable
+                            placeholder="Rechercher un pays..."
+                            prepend-inner-icon="ri-global-line"
+                          >
+                            <template #item="{ props, item }">
+                              <VListItem v-bind="props">
+                                <template #prepend>
+                                  <span class="text-lg">{{ item.raw.flag || '🏳️' }}</span>
+                                </template>
+                                <VListItemTitle>{{ item.raw.title }}</VListItemTitle>
+                                <VListItemSubtitle>{{ item.raw.subtitle }}</VListItemSubtitle>
+                              </VListItem>
+                            </template>
+                          </VAutocomplete>
                         </VCol>
-                        <VCol cols="12" md="6">
+                        <VCol cols="12" md="4">
                           <VTextField v-model="editableAddresses.billing_address_city" label="Ville"
-                            variant="outlined" />
+                            variant="outlined" prepend-inner-icon="ri-building-2-line" />
                         </VCol>
-                        <VCol cols="12" md="6">
+                        <VCol cols="12" md="4">
                           <VTextField v-model="editableAddresses.billing_address_street" label="Rue"
-                            variant="outlined" />
+                            variant="outlined" prepend-inner-icon="ri-road-map-line" />
                         </VCol>
-                        <VCol cols="12" md="6">
+                        <VCol cols="12" md="4">
                           <VTextField v-model="editableAddresses.billing_address_postal_code" label="Code postal"
-                            variant="outlined" />
+                            variant="outlined" prepend-inner-icon="ri-mail-line" />
                         </VCol>
-                        <VCol cols="12" md="6">
+                        <VCol cols="12" md="8">
                           <VTextField v-model="editableAddresses.billing_address_state" label="État/Région"
-                            variant="outlined" />
+                            variant="outlined" prepend-inner-icon="ri-map-pin-line" />
                         </VCol>
                         <VCol cols="12">
                           <VBtn type="submit" color="primary" class="mr-2" :loading="loading">
-                            Sauvegarder les adresses
+                            Enregistrer
                           </VBtn>
                         </VCol>
                       </VRow>
@@ -401,36 +465,70 @@
 
               <!-- Upload d'image de profil -->
               <VSlideYTransition v-if="editMode">
-                <VCard class="mb-6 animate-card" elevation="1">
-                  <VCardTitle class="d-flex align-center">
-                    <VIcon color="primary" class="mr-2">ri-image-line</VIcon>
-                    <span class="text-h6">Photo de profil</span>
-                  </VCardTitle>
-                  <VDivider />
-                  <VCardText class="py-4">
-                    <VRow>
-                      <VCol cols="12" md="4">
-                        <div class="text-center">
-                          <VAvatar size="120" class="mb-4">
-                            <img v-if="user?.picture" :src="user.picture" :alt="`${user.first_name} ${user.last_name}`"
-                              style="width: 100%; height: 100%; object-fit: cover;" />
-                            <VIcon v-else icon="ri-user-line" size="60" />
-                          </VAvatar>
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="8">
-                        <VFileInput v-model="profileImage" label="Sélectionner une image" accept="image/*"
-                          prepend-icon="ri-upload-line" variant="outlined" @change="handleImageUpload" />
-                        <VBtn color="primary" @click="uploadProfileImage" :loading="uploadingImage" class="mt-2"
-                          :disabled="!profileImage">
-                          <VIcon icon="ri-upload-line" class="me-2" />
-                          Télécharger l'image
-                        </VBtn>
-                      </VCol>
-                    </VRow>
-                  </VCardText>
-                </VCard>
-              </VSlideYTransition>
+  <VCard class="mb-6 animate-card" elevation="2" rounded="lg">
+    <VCardTitle class="d-flex align-center">
+      <VIcon color="primary" class="mr-2">ri-image-line</VIcon>
+      <span class="text-h6 font-weight-medium">Photo de profil</span>
+    </VCardTitle>
+
+    <VDivider />
+
+    <VCardText class="py-6">
+      <VRow align="center" justify="center" class="gap-y-6">
+        <!-- Avatar à gauche -->
+        <VCol cols="12" md="4" class="d-flex justify-center">
+          <VAvatar size="140" class="elevation-2">
+            <img
+              v-if="user?.picture"
+              :src="user.picture"
+              :alt="`${user.first_name} ${user.last_name}`"
+              style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+            />
+            <VIcon v-else icon="ri-user-line" size="64" color="grey" />
+          </VAvatar>
+        </VCol>
+
+        <!-- Zone de chargement à droite -->
+        <VCol cols="12" md="8">
+          <VFileInput
+            v-model="profileImage"
+            label="Sélectionner une nouvelle photo"
+            accept="image/*"
+            variant="outlined"
+            prepend-icon="ri-upload-line"
+            density="comfortable"
+            hide-details
+            @change="handleImageUpload"
+          />
+
+          <div class="d-flex align-center mt-4">
+            <VBtn
+              color="primary"
+              @click="uploadProfileImage"
+              :loading="uploadingImage"
+              :disabled="!profileImage"
+              prepend-icon="ri-upload-cloud-line"
+            >
+              Télécharger l'image
+            </VBtn>
+
+            <VBtn
+              color="grey-lighten-2"
+              class="ml-4"
+              variant="text"
+              v-if="user?.picture"
+              @click="removeProfileImage"
+            >
+              <VIcon icon="ri-delete-bin-line" class="me-2" />
+              Supprimer
+            </VBtn>
+          </div>
+        </VCol>
+      </VRow>
+    </VCardText>
+  </VCard>
+</VSlideYTransition>
+
             </VCol>
 
            
@@ -485,9 +583,13 @@ import { useAuthStore } from '@/stores/auth'
 import { usersService } from '@/services/api/users'
 import { authService } from '@/services/api/auth'
 import { showToast } from '@/components/toast/toastManager'
+import { useCountries } from '@/composables/useCountries'
 
 // Store
 const authStore = useAuthStore()
+
+// Countries composable
+const { countryOptions, loadCountries, loading: countriesLoading } = useCountries()
 
 // State
 const user = ref<any>(null)
@@ -536,13 +638,7 @@ const civilityOptions = [
   { title: 'Mademoiselle', value: 'Mlle' }
 ]
 
-const countryOptions = [
-  { title: 'Cameroun', value: 'CM' },
-  { title: 'France', value: 'FR' },
-  { title: 'Canada', value: 'CA' },
-  { title: 'Belgique', value: 'BE' },
-  { title: 'Suisse', value: 'CH' }
-]
+// Les options de pays sont maintenant gérées par le composable useCountries
 
 const languageOptions = [
   { title: 'Français', value: 'fr' },
@@ -606,24 +702,69 @@ const fetchUserProfile = async () => {
       }
 
       // Populate addresses if available
-      if (user.value.addresses && user.value.addresses.length > 0) {
-        const primaryAddress = user.value.addresses.find((addr: any) => addr.id === 1) // Assuming primary address has id 1
-        const billingAddress = user.value.addresses.find((addr: any) => addr.id === 2) // Assuming billing address has id 2
+      console.log('Données utilisateur reçues:', user.value)
+      
+      // Vérifier différentes structures possibles pour les adresses
+      let addresses = null
+      if (user.value.addresses && Array.isArray(user.value.addresses)) {
+        addresses = user.value.addresses
+      } else if (user.value.address && Array.isArray(user.value.address)) {
+        addresses = user.value.address
+      } else if (user.value.user_addresses && Array.isArray(user.value.user_addresses)) {
+        addresses = user.value.user_addresses
+      }
+
+      console.log('Adresses trouvées:', addresses)
+
+      if (addresses && addresses.length > 0) {
+        // Chercher l'adresse principale (type: 'primary' ou id: 1 ou première adresse)
+        const primaryAddress = addresses.find((addr: any) => 
+          addr.type === 'primary' || 
+          addr.address_type === 'primary' || 
+          addr.id === 1 || 
+          addr.is_primary === true
+        ) || addresses[0] // Fallback sur la première adresse
+
+        // Chercher l'adresse de facturation (type: 'billing' ou id: 2)
+        const billingAddress = addresses.find((addr: any) => 
+          addr.type === 'billing' || 
+          addr.address_type === 'billing' || 
+          addr.id === 2 || 
+          addr.is_billing === true
+        ) || (addresses.length > 1 ? addresses[1] : null) // Fallback sur la deuxième adresse
+
+        console.log('Adresse principale trouvée:', primaryAddress)
+        console.log('Adresse de facturation trouvée:', billingAddress)
 
         if (primaryAddress) {
-          editableAddresses.value.primary_address_country_code = primaryAddress.country_code || ''
+          editableAddresses.value.primary_address_country_code = primaryAddress.country_code || primaryAddress.country || ''
           editableAddresses.value.primary_address_city = primaryAddress.city || ''
-          editableAddresses.value.primary_address_street = primaryAddress.street || ''
-          editableAddresses.value.primary_address_postal_code = primaryAddress.postal_code || ''
-          editableAddresses.value.primary_address_state = primaryAddress.state || ''
+          editableAddresses.value.primary_address_street = primaryAddress.street || primaryAddress.address || ''
+          editableAddresses.value.primary_address_postal_code = primaryAddress.postal_code || primaryAddress.zip_code || ''
+          editableAddresses.value.primary_address_state = primaryAddress.state || primaryAddress.region || ''
         }
 
         if (billingAddress) {
-          editableAddresses.value.billing_address_country_code = billingAddress.country_code || ''
+          editableAddresses.value.billing_address_country_code = billingAddress.country_code || billingAddress.country || ''
           editableAddresses.value.billing_address_city = billingAddress.city || ''
-          editableAddresses.value.billing_address_street = billingAddress.street || ''
-          editableAddresses.value.billing_address_postal_code = billingAddress.postal_code || ''
-          editableAddresses.value.billing_address_state = billingAddress.state || ''
+          editableAddresses.value.billing_address_street = billingAddress.street || billingAddress.address || ''
+          editableAddresses.value.billing_address_postal_code = billingAddress.postal_code || billingAddress.zip_code || ''
+          editableAddresses.value.billing_address_state = billingAddress.state || billingAddress.region || ''
+        }
+      } else {
+        console.log('Aucune adresse trouvée dans les données utilisateur')
+        // Réinitialiser les adresses si aucune n'est trouvée
+        editableAddresses.value = {
+          primary_address_country_code: '',
+          primary_address_city: '',
+          primary_address_street: '',
+          primary_address_postal_code: '',
+          primary_address_state: '',
+          billing_address_country_code: '',
+          billing_address_city: '',
+          billing_address_street: '',
+          billing_address_postal_code: '',
+          billing_address_state: ''
         }
       }
     }
@@ -724,15 +865,51 @@ const handleImageUpload = (event: any) => {
   }
 }
 
+const convertFileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      // Enlever le préfixe "data:image/...;base64,"
+      const base64 = result.split(',')[1]
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
 const uploadProfileImage = async () => {
   if (!profileImage.value) return
   
   try {
     uploadingImage.value = true
+    const file = profileImage.value as File
+    
+    if (!(file instanceof File)) {
+      throw new Error('Fichier invalide')
+    }
+    
+    console.log('Upload de l\'image:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type
+    })
+    
+    // Le backend attend un paramètre 'image' de type UploadFile
+    // FastAPI s'attend à un paramètre de formulaire nommé 'image'
     const formData = new FormData()
-    formData.append('image', profileImage.value) // Le backend attend 'image' et non 'file'
+    formData.append('image', file)
+    
+    console.log('Upload avec FormData - paramètre image:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      formDataKeys: Array.from(formData.keys())
+    })
     
     await authService.uploadProfileImage(formData)
+    
     showToast({
       message: 'Image de profil mise à jour avec succès',
       type: 'success'
@@ -741,22 +918,63 @@ const uploadProfileImage = async () => {
     // Refresh user data
     await fetchUserProfile()
     profileImage.value = null
+    
   } catch (error: any) {
     console.error('Erreur lors du téléchargement de l\'image:', error)
+    console.error('Détails de l\'erreur:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      headers: error.response?.headers
+    })
     
     // Afficher les erreurs de validation détaillées
     if (error.response?.data?.error && Array.isArray(error.response.data.error)) {
-      const validationErrors = error.response.data.error.map((err: any) => err.msg || err.message || err).join(', ')
+      const validationErrors = error.response.data.error.map((err: any) => {
+        console.log('Erreur de validation:', err)
+        return err.msg || err.message || err.detail || JSON.stringify(err)
+      }).join(', ')
+      
       showToast({
         message: `Erreurs de validation: ${validationErrors}`,
         type: 'error'
       })
+    } else if (error.response?.data?.message) {
+      showToast({
+        message: `Erreur: ${error.response.data.message}`,
+        type: 'error'
+      })
     } else {
       showToast({
-        message: error.response?.data?.message || 'Erreur lors du téléchargement de l\'image',
+        message: 'Erreur lors du téléchargement de l\'image',
         type: 'error'
       })
     }
+  } finally {
+    uploadingImage.value = false
+  }
+}
+
+const removeProfileImage = async () => {
+  try {
+    uploadingImage.value = true
+    
+    // Appeler l'API pour supprimer l'image
+    await authService.removeProfileImage()
+    showToast({
+      message: 'Image de profil supprimée avec succès',
+      type: 'success'
+    })
+    
+    // Refresh user data
+    await fetchUserProfile()
+    profileImage.value = null
+  } catch (error: any) {
+    console.error('Erreur lors de la suppression de l\'image:', error)
+    showToast({
+      message: error.response?.data?.message || 'Erreur lors de la suppression de l\'image',
+      type: 'error'
+    })
   } finally {
     uploadingImage.value = false
   }
@@ -768,6 +986,79 @@ const goBack = () => {
 
 const refreshProfile = async () => {
   await fetchUserProfile()
+}
+
+const loadUserAddresses = async () => {
+  try {
+    console.log('Chargement des adresses utilisateur...')
+    
+    // Essayer différentes API endpoints pour les adresses
+    const possibleEndpoints = [
+      '/auth/addresses',
+      '/user/addresses', 
+      '/profile/addresses',
+      '/addresses'
+    ]
+    
+    for (const endpoint of possibleEndpoints) {
+      try {
+        const response = await (authService as any).getUserAddresses(endpoint)
+        if (response && response.data) {
+          console.log('Adresses chargées depuis:', endpoint, response.data)
+          
+          // Mettre à jour les données utilisateur avec les adresses
+          if (user.value) {
+            user.value.addresses = response.data
+            // Re-populate les champs d'adresse
+            populateAddressFields(response.data)
+          }
+          break
+        }
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+        console.log(`Endpoint ${endpoint} non disponible:`, errorMessage)
+        continue
+      }
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des adresses:', error)
+  }
+}
+
+const populateAddressFields = (addresses: any[]) => {
+  if (!addresses || addresses.length === 0) return
+  
+  // Chercher l'adresse principale
+  const primaryAddress = addresses.find((addr: any) => 
+    addr.type === 'primary' || 
+    addr.address_type === 'primary' || 
+    addr.id === 1 || 
+    addr.is_primary === true
+  ) || addresses[0]
+
+  // Chercher l'adresse de facturation
+  const billingAddress = addresses.find((addr: any) => 
+    addr.type === 'billing' || 
+    addr.address_type === 'billing' || 
+    addr.id === 2 || 
+    addr.is_billing === true
+  ) || (addresses.length > 1 ? addresses[1] : null)
+
+  if (primaryAddress) {
+    editableAddresses.value.primary_address_country_code = primaryAddress.country_code || primaryAddress.country || ''
+    editableAddresses.value.primary_address_city = primaryAddress.city || ''
+    editableAddresses.value.primary_address_street = primaryAddress.street || primaryAddress.address || ''
+    editableAddresses.value.primary_address_postal_code = primaryAddress.postal_code || primaryAddress.zip_code || ''
+    editableAddresses.value.primary_address_state = primaryAddress.state || primaryAddress.region || ''
+  }
+
+  if (billingAddress) {
+    editableAddresses.value.billing_address_country_code = billingAddress.country_code || billingAddress.country || ''
+    editableAddresses.value.billing_address_city = billingAddress.city || ''
+    editableAddresses.value.billing_address_street = billingAddress.street || billingAddress.address || ''
+    editableAddresses.value.billing_address_postal_code = billingAddress.postal_code || billingAddress.zip_code || ''
+    editableAddresses.value.billing_address_state = billingAddress.state || billingAddress.region || ''
+  }
 }
 
 const goToSettings = () => {
@@ -873,8 +1164,17 @@ const formatExperience = (months: number | null | undefined) => {
 }
 
 // Lifecycle
-onMounted(() => {
-  fetchUserProfile()
+onMounted(async () => {
+  await Promise.all([
+    fetchUserProfile(),
+    loadCountries()
+  ])
+  
+  // Si aucune adresse n'a été chargée, essayer de les charger séparément
+  if (!user.value?.addresses && !user.value?.address && !user.value?.user_addresses) {
+    console.log('Aucune adresse trouvée dans le profil, tentative de chargement séparé...')
+    await loadUserAddresses()
+  }
 })
 </script>
 

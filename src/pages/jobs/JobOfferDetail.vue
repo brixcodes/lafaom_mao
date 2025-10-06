@@ -20,7 +20,7 @@
         <VBtn color="primary" variant="outlined" @click="shareOffer" class="action-btn mx-1" prepend-icon="ri-share-line">
           Partager
         </VBtn>
-        <VBtn v-if="jobOffer" color="primary" :to="{ name: 'job-offers-apply', params: { id: jobOffer.id } }" class="action-btn" prepend-icon="ri-send-plane-line">
+        <VBtn v-if="jobOffer && jobOffer.id" color="primary" :to="{ name: 'job-offers-apply', params: { id: jobOffer.id } }" class="action-btn" prepend-icon="ri-send-plane-line">
           Candidater
         </VBtn>
       </div>

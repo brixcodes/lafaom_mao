@@ -100,6 +100,28 @@ export class ApiService {
     }
   }
 
+  async postFormData<T>(url: string, formData: FormData, confirmOptions?: any): Promise<T> {
+    try {
+      console.log('[API Base] POST FormData request:', { url, formData })
+      
+      // Pour FormData, nous devons créer une requête avec les bons headers
+      const response = await this.api.post(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      
+      console.log('[API Base] POST FormData response:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('[API Base] POST FormData error:', error)
+      if (confirmOptions?.errorMessage) {
+        showToast({ message: confirmOptions.errorMessage, type: 'error' })
+      }
+      throw error
+    }
+  }
+
   async put<T>(url: string, data?: any, confirmOptions?: any): Promise<T | undefined> {
     try {
       const response = await this.api.put(url, data)
@@ -131,17 +153,6 @@ export class ApiService {
     return response.data
   }
 
-  async postFormData<T>(url: string, formData: FormData, confirmOptions?: any): Promise<T> {
-    try {
-      const response = await this.api.post(url, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      return response.data
-    } catch (error) {
-      if (confirmOptions?.errorMessage) showToast({ message: confirmOptions.errorMessage, type: 'error' })
-      throw error
-    }
-  }
 
   async putFormData<T>(url: string, formData: FormData, confirmOptions?: any): Promise<T> {
     try {
