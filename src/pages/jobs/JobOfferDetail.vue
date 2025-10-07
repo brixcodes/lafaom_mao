@@ -17,9 +17,9 @@
 
       <!-- Partie droite : bouton Postuler -->
       <div>
-        <VBtn color="primary" variant="outlined" @click="shareOffer" class="action-btn mx-1" prepend-icon="ri-share-line">
+        <!-- <VBtn color="primary" variant="outlined" @click="shareOffer" class="action-btn mx-1" prepend-icon="ri-share-line">
           Partager
-        </VBtn>
+        </VBtn> -->
         <VBtn v-if="jobOffer && jobOffer.id" color="primary" :to="{ name: 'job-offers-apply', params: { id: jobOffer.id } }" class="action-btn" prepend-icon="ri-send-plane-line">
           Candidater
         </VBtn>
@@ -104,10 +104,11 @@
                         <div class="font-weight-medium mb-2"><strong>Mission principale</strong> :</div>
                         <div style="margin-left: 10px; line-height: 1.8;" v-html="jobOffer.main_mission"></div>
                       </v-timeline-item>
-                      <v-timeline-item size="x-small">
+                      <!-- Section Responsabilités masquée -->
+                      <!-- <v-timeline-item size="x-small">
                         <div class="font-weight-medium mb-2"><strong>Responsabilités</strong> :</div>
                         <div style="margin-left: 22px; line-height: 1.8;" v-html="jobOffer.responsibilities"></div>
-                      </v-timeline-item>
+                      </v-timeline-item> -->
                       <v-timeline-item size="x-small">
                         <div class="font-weight-medium mb-2"><strong>Compétences requises</strong> :</div>
                         <div style="margin-left: 22px; line-height: 1.8;" v-html="jobOffer.competencies"></div>
@@ -125,7 +126,7 @@
                         <div>
                           <ul>
                             <li v-for="(file, index) in jobOffer.attachment" :key="index">
-                              {{ file }}
+                              {{ getDocumentLabel(file) }}
                             </li>
                             <li v-if="!jobOffer.attachment || jobOffer.attachment.length === 0">
                               Aucune pièce jointe
@@ -378,6 +379,7 @@
 
 <script>
 import { useJobOffersStore } from '@/stores/jobOffers'
+import { DOCUMENT_TYPES } from '@/types/jobOffers'
 
 import { PermissionEnum } from '@/types/permissions'
 import { useInstantPermissions } from '@/composables/useInstantPermissions'
@@ -490,6 +492,11 @@ export default {
         style: 'currency',
         currency: currency
       }).format(amount)
+    },
+
+    getDocumentLabel(docType) {
+      const doc = DOCUMENT_TYPES.find(d => d.value === docType)
+      return doc?.text || docType
     }
   }
 }

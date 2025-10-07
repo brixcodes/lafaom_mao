@@ -106,7 +106,7 @@
               <div v-if="offer.attachment && offer.attachment.length > 0">
                 <v-chip v-for="(doc, index) in offer.attachment.slice(0, 2)" :key="doc" size="x-small" class="mx-1"
                   style="font-size: 10px; font-weight: bold;">
-                  {{ doc }}
+                  {{ getDocumentLabel(doc) }}
                 </v-chip>
 
                 <v-chip v-if="offer.attachment.length > 2" size="x-small" class="mx-1"
@@ -122,12 +122,12 @@
               <!-- Actions -->
               <VCardActions>
                 <VSpacer />
-                <VBtn variant="flat" size="x-small" icon :ripple="false" @click="toggleOfferDetails(offer.id)"
+                <!-- <VBtn variant="flat" size="x-small" icon :ripple="false" @click="toggleOfferDetails(offer.id)"
                   aria-label="Toggle details">
                   <VIcon>
                     {{ expandedOffers.has(offer.id) ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line' }}
                   </VIcon>
-                </VBtn>
+                </VBtn> -->
 
                 <VMenu offset-y>
                   <template #activator="{ props }">
@@ -140,8 +140,8 @@
                     <VListItem prepend-icon="ri-edit-line" title="Modifier"
                       :to="{ name: 'job-offers-edit', params: { id: offer.id } }" v-if="hasPermissions([PermissionEnum.CAN_UPDATE_JOB_OFFER])"/>
 
-                    <VListItem prepend-icon="ri-booklet-line" title="Candidater"
-                      :to="{ name: 'job-offers-apply', params: { id: offer.id } }" />
+                    <!-- <VListItem prepend-icon="ri-booklet-line" title="Candidater"
+                      :to="{ name: 'job-offers-apply', params: { id: offer.id } }" /> -->
 
                     <VListItem prepend-icon="ri-group-2-line" title="Candidatures"
                       :to="{ name: 'job-applications', query: { job_offer_id: offer.id } }" v-if="hasPermissions([PermissionEnum.CAN_VIEW_STUDENT_APPLICATION])"/>
@@ -156,7 +156,7 @@
               </VCardActions>
 
               <!-- Expandable Details -->
-              <v-expand-transition>
+              <!-- <v-expand-transition>
                 <div v-show="expandedOffers.has(offer.id)">
                   <v-divider class="my-2"></v-divider>
                   <v-timeline align="start" density="compact" class="pa-3">
@@ -174,7 +174,7 @@
                     </v-timeline-item>
                   </v-timeline>
                 </div>
-              </v-expand-transition>
+              </v-expand-transition> -->
             </VCardText>
           </VCard>
         </VCol>
@@ -238,7 +238,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useJobOffersStore } from '@/stores/jobOffers'
-import { CONTRACT_TYPES } from '@/types/jobOffers'
+import { CONTRACT_TYPES, DOCUMENT_TYPES } from '@/types/jobOffers'
 import type { JobOfferOut } from '@/types/jobOffers'
 
 import { PermissionEnum } from '@/types/permissions'
@@ -403,6 +403,11 @@ const deleteOffer = async () => {
 const formatDate = (date: string) => new Date(date).toLocaleDateString('fr-FR')
 const formatSalary = (salary: number, currency: string) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: currency || 'EUR' }).format(salary)
+
+const getDocumentLabel = (docType: string) => {
+  const doc = DOCUMENT_TYPES.find(d => d.value === docType)
+  return doc?.text || docType
+}
 
 const clearError = () => {
   jobOffersStore.clearError()

@@ -164,8 +164,8 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 4: Responsabilités -->
-        <VWindowItem :value="3">
+        <!-- Étape 4: Responsabilités - MASQUÉE -->
+        <!-- <VWindowItem :value="3">
           <VForm ref="refStep4Form" @submit.prevent="validateStep4">
             <VRow class="pa-3">
               <VCol cols="12">
@@ -204,10 +204,10 @@
               </VCol>
             </VRow>
           </VForm>
-        </VWindowItem>
+        </VWindowItem> -->
 
-        <!-- Étape 5: Compétences -->
-        <VWindowItem :value="4">
+        <!-- Étape 4: Compétences -->
+        <VWindowItem :value="3">
           <VForm ref="refStep5Form" @submit.prevent="validateStep5">
             <VRow class="pa-3">
               <VCol cols="12">
@@ -248,8 +248,8 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 6: Profil recherché -->
-        <VWindowItem :value="5">
+        <!-- Étape 5: Profil recherché -->
+        <VWindowItem :value="4">
           <VForm ref="refStep6Form" @submit.prevent="validateStep6">
             <VRow class="pa-3">
               <VCol cols="12">
@@ -290,8 +290,8 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 7: Conditions de travail -->
-        <VWindowItem :value="6">
+        <!-- Étape 6: Conditions de travail -->
+        <VWindowItem :value="5">
           <VForm ref="refStep7Form" @submit.prevent="validateStep7">
             <VRow class="pa-3">
               <VCol cols="12">
@@ -329,8 +329,8 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 8: Rémunération et avantages -->
-        <VWindowItem :value="7">
+        <!-- Étape 7: Rémunération et avantages -->
+        <VWindowItem :value="6">
           <VForm ref="refStep8Form" @submit.prevent="validateStep8">
             <VRow class="pa-3">
               <!-- Salaire -->
@@ -389,8 +389,8 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 9: Documents requis -->
-        <VWindowItem :value="8">
+        <!-- Étape 8: Documents requis -->
+        <VWindowItem :value="7">
           <VForm ref="refStep9Form" @submit.prevent="validateStep9">
             <VRow class="pa-3">
               <VCol cols="12">
@@ -479,7 +479,7 @@ const stepperItems = [
 const refStep1Form = ref()
 const refStep2Form = ref()
 const refStep3Form = ref()
-const refStep4Form = ref()
+// refStep4Form supprimé (responsabilités masquées)
 const refStep5Form = ref()
 const refStep6Form = ref()
 const refStep7Form = ref()
@@ -615,26 +615,18 @@ const validateStep3 = () => {
   // Validation pour la mission principale
   const isValid = validateMainMission()
   if (isValid) {
-    currentStep.value++
+    // Passer directement à l'étape 4 (compétences) en sautant les responsabilités
+    currentStep.value = currentStep.value + 2
     isCurrentStepValid.value = true
   } else {
     isCurrentStepValid.value = false
   }
 }
 
-const validateStep4 = () => {
-  // Validation pour les responsabilités
-  const isValid = validateResponsibilities()
-  if (isValid) {
-    currentStep.value++
-    isCurrentStepValid.value = true
-  } else {
-    isCurrentStepValid.value = false
-  }
-}
+// Fonction validateStep4 supprimée (étape responsabilités masquée)
 
 const validateStep5 = () => {
-  // Validation pour les compétences
+  // Validation pour les compétences (ancienne étape 5)
   const isValid = validateCompetencies()
   if (isValid) {
     currentStep.value++
@@ -645,7 +637,7 @@ const validateStep5 = () => {
 }
 
 const validateStep6 = () => {
-  // Validation pour le profil recherché
+  // Validation pour le profil recherché (ancienne étape 6)
   const isValid = validateProfile()
   if (isValid) {
     currentStep.value++
@@ -656,13 +648,13 @@ const validateStep6 = () => {
 }
 
 const validateStep7 = () => {
-  // Conditions de travail (optionnel) - toujours valide
+  // Conditions de travail (optionnel) - toujours valide (ancienne étape 7)
   currentStep.value++
   isCurrentStepValid.value = true
 }
 
 const validateStep8 = () => {
-  // Validation pour la rémunération
+  // Validation pour la rémunération (ancienne étape 8)
   const isValid = validateSalary()
   if (isValid) {
     currentStep.value++
@@ -706,16 +698,17 @@ const validateMainMission = () => {
   return true
 }
 
-const validateResponsibilities = () => {
-  delete errors.value.responsibilities
-  const responsibilitiesText = cleanHtmlContent(form.value.responsibilities || '')
-  
-  if (!responsibilitiesText || responsibilitiesText.length < 5) {
-    errors.value.responsibilities = `Les responsabilités sont obligatoires (min. 5 caractères de texte).`
-    return false
-  }
-  return true
-}
+// Fonction validateResponsibilities supprimée (étape responsabilités masquée)
+// const validateResponsibilities = () => {
+//   delete errors.value.responsibilities
+//   const responsibilitiesText = cleanHtmlContent(form.value.responsibilities || '')
+//   
+//   if (!responsibilitiesText || responsibilitiesText.length < 5) {
+//     errors.value.responsibilities = `Les responsabilités sont obligatoires (min. 5 caractères de texte).`
+//     return false
+//   }
+//   return true
+// }
 
 const validateCompetencies = () => {
   delete errors.value.competencies
@@ -800,14 +793,14 @@ const validateAllForms = async () => {
   const step1Valid = await refStep1Form.value?.validate()
   const step2Valid = await refStep2Form.value?.validate()
   const step3Valid = validateMainMission()
-  const step4Valid = validateResponsibilities()
+  // step4Valid supprimé (responsabilités masquées)
   const step5Valid = validateCompetencies()
   const step6Valid = validateProfile()
   const step7Valid = true // Conditions optionnelles
   const step8Valid = validateSalary()
   const step9Valid = await refStep9Form.value?.validate()
 
-  return step1Valid?.valid && step2Valid?.valid && step3Valid && step4Valid && step5Valid && step6Valid && step7Valid && step8Valid && step9Valid?.valid
+  return step1Valid?.valid && step2Valid?.valid && step3Valid && step5Valid && step6Valid && step7Valid && step8Valid && step9Valid?.valid
 }
 
 const handleFinalSubmit = async () => {
@@ -895,7 +888,7 @@ const resetForm = () => {
   refStep1Form.value?.resetValidation()
   refStep2Form.value?.resetValidation()
   refStep3Form.value?.resetValidation()
-  refStep4Form.value?.resetValidation()
+  // refStep4Form supprimé (responsabilités masquées)
   refStep5Form.value?.resetValidation()
   refStep6Form.value?.resetValidation()
   refStep7Form.value?.resetValidation()
