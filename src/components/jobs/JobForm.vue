@@ -132,16 +132,10 @@
                   <h3 class="text-h5 mb-2">Mission Principale</h3>
                   <p class="text-body-2 text-medium-emphasis">Décrivez la mission principale de ce poste</p>
                 </div>
-                
-                <QuillEditor 
-                  key="main-mission-editor" 
-                  editor-id="main-mission-editor" 
-                  v-model="form.main_mission"
-                  theme="snow" 
-                  placeholder="Décrivez la mission principale de ce poste..." 
-                  min-height="200px"
-                  class="quill-editor-custom"
-                />
+
+                <QuillEditor key="main-mission-editor" editor-id="main-mission-editor" v-model="form.main_mission"
+                  theme="snow" placeholder="Décrivez la mission principale de ce poste..." min-height="200px"
+                  class="quill-editor-custom" />
                 <div v-if="errors.main_mission" class="v-messages v-messages--active mt-2">
                   <div class="v-messages__message text-error">{{ errors.main_mission }}</div>
                 </div>
@@ -172,18 +166,14 @@
                 <div class="text-center mb-4">
                   <VIcon size="48" color="primary" class="mb-3">ri-task-line</VIcon>
                   <h3 class="text-h5 mb-2">Responsabilités</h3>
-                  <p class="text-body-2 text-medium-emphasis">Listez les principales responsabilités du poste (optionnel)</p>
+                  <p class="text-body-2 text-medium-emphasis">Listez les principales responsabilités du poste
+                    (optionnel)</p>
                 </div>
-                
-                <QuillEditor 
-                  key="responsibilities-editor" 
-                  editor-id="responsibilities-editor"
-                  v-model="form.responsibilities" 
-                  theme="snow" 
-                  placeholder="Listez les principales responsabilités (optionnel)..."
-                  min-height="200px"
-                  class="quill-editor-custom"
-                />
+
+                <QuillEditor key="responsibilities-editor" editor-id="responsibilities-editor"
+                  v-model="form.responsibilities" theme="snow"
+                  placeholder="Listez les principales responsabilités (optionnel)..." min-height="200px"
+                  class="quill-editor-custom" />
                 <div v-if="errors.responsibilities" class="v-messages v-messages--active mt-2">
                   <div class="v-messages__message text-error">{{ errors.responsibilities }}</div>
                 </div>
@@ -216,16 +206,10 @@
                   <h3 class="text-h5 mb-2">Compétences Requises</h3>
                   <p class="text-body-2 text-medium-emphasis">Décrivez les compétences nécessaires pour ce poste</p>
                 </div>
-                
-                <QuillEditor 
-                  key="competencies-editor" 
-                  editor-id="competencies-editor" 
-                  v-model="form.competencies"
-                  theme="snow" 
-                  placeholder="Décrivez les compétences nécessaires..." 
-                  min-height="200px"
-                  class="quill-editor-custom"
-                />
+
+                <QuillEditor key="competencies-editor" editor-id="competencies-editor" v-model="form.competencies"
+                  theme="snow" placeholder="Décrivez les compétences nécessaires..." min-height="200px"
+                  class="quill-editor-custom" />
                 <div v-if="errors.competencies" class="v-messages v-messages--active mt-2">
                   <div class="v-messages__message text-error">{{ errors.competencies }}</div>
                 </div>
@@ -258,16 +242,10 @@
                   <h3 class="text-h5 mb-2">Profil Recherché</h3>
                   <p class="text-body-2 text-medium-emphasis">Décrivez le profil idéal du candidat</p>
                 </div>
-                
-                <QuillEditor 
-                  key="profile-editor" 
-                  editor-id="profile-editor" 
-                  v-model="form.profile" 
-                  theme="snow"
-                  placeholder="Décrivez le profil idéal du candidat..." 
-                  min-height="200px"
-                  class="quill-editor-custom"
-                />
+
+                <QuillEditor key="profile-editor" editor-id="profile-editor" v-model="form.profile" theme="snow"
+                  placeholder="Décrivez le profil idéal du candidat..." min-height="200px"
+                  class="quill-editor-custom" />
                 <div v-if="errors.profile" class="v-messages v-messages--active mt-2">
                   <div class="v-messages__message text-error">{{ errors.profile }}</div>
                 </div>
@@ -300,16 +278,10 @@
                   <h3 class="text-h5 mb-2">Conditions de Travail</h3>
                   <p class="text-body-2 text-medium-emphasis">Précisez les conditions de travail (optionnel)</p>
                 </div>
-                
-                <QuillEditor 
-                  key="conditions-editor" 
-                  editor-id="conditions-editor" 
-                  v-model="form.conditions"
-                  theme="snow" 
-                  placeholder="Précisez les conditions de travail..." 
-                  min-height="200px"
-                  class="quill-editor-custom"
-                />
+
+                <QuillEditor key="conditions-editor" editor-id="conditions-editor" v-model="form.conditions"
+                  theme="snow" placeholder="Précisez les conditions de travail..." min-height="200px"
+                  class="quill-editor-custom" />
               </VCol>
 
               <VCol cols="12">
@@ -360,16 +332,10 @@
                   <h3 class="text-h5 mb-2">Avantages</h3>
                   <p class="text-body-2 text-medium-emphasis">Décrivez les avantages offerts (optionnel)</p>
                 </div>
-                
-                <QuillEditor 
-                  key="benefits-editor" 
-                  editor-id="benefits-editor" 
-                  v-model="form.benefits" 
-                  theme="snow"
+
+                <QuillEditor key="benefits-editor" editor-id="benefits-editor" v-model="form.benefits" theme="snow"
                   placeholder="Décrivez les avantages offerts (mutuelle, tickets restaurant, formations...)"
-                  min-height="150px"
-                  class="quill-editor-custom"
-                />
+                  min-height="150px" class="quill-editor-custom" />
               </VCol>
 
               <VCol cols="12">
@@ -399,7 +365,7 @@
                   <h3 class="text-h5 mb-2">Documents Requis</h3>
                   <p class="text-body-2 text-medium-emphasis">Sélectionnez les types de documents à fournir</p>
                 </div>
-                
+
                 <VAutocomplete v-model="form.attachment" :items="documentTypes" prepend-inner-icon="ri-file-list-3-line"
                   label="Documents à fournir" variant="outlined" multiple chips closable-chips
                   :error-messages="errors.attachment" clearable placeholder="Sélectionnez les types de documents" />
@@ -412,9 +378,9 @@
                     Précédent
                   </VBtn>
 
-                  <VBtn type="submit" color="success" :loading="loading">
-                    <VIcon icon="ri-save-line" start />
-                    {{ isEditing ? 'Modifier l\'offre' : 'Enregistrer l\'offre' }}
+                  <VBtn type="submit" color="primary" :loading="loading">
+                    <!-- <VIcon icon="ri-save-line" start /> -->
+                    {{ isEditing ? 'Modifier' : 'Enregistrer' }}
                   </VBtn>
                 </div>
               </VCol>
@@ -693,18 +659,18 @@ const cleanHtmlContent = (htmlContent: string): string => {
 const validateMainMission = () => {
   delete errors.value.main_mission
   const mainMissionText = cleanHtmlContent(form.value.main_mission || '')
-  
-  if (!mainMissionText || mainMissionText.length < 10) {
-    errors.value.main_mission = `La mission principale est obligatoire (min. 10 caractères de texte).`
-    return false
-  }
+
+  // if (!mainMissionText || mainMissionText.length < 10) {
+  //   errors.value.main_mission = `La mission principale est obligatoire (min. 10 caractères de texte).`
+  //   return false
+  // }
   return true
 }
 
 const validateResponsibilities = () => {
   delete errors.value.responsibilities
   const responsibilitiesText = cleanHtmlContent(form.value.responsibilities || '')
-  
+
   // Responsabilités facultatives - toujours valide
   return true
 }
@@ -712,32 +678,32 @@ const validateResponsibilities = () => {
 const validateCompetencies = () => {
   delete errors.value.competencies
   const competenciesText = cleanHtmlContent(form.value.competencies || '')
-  
-  if (!competenciesText || competenciesText.length < 5) {
-    errors.value.competencies = `Les compétences sont obligatoires (min. 5 caractères de texte).`
-    return false
-  }
+
+  // if (!competenciesText || competenciesText.length < 5) {
+  //   errors.value.competencies = `Les compétences sont obligatoires (min. 5 caractères de texte).`
+  //   return false
+  // }
   return true
 }
 
 const validateProfile = () => {
   delete errors.value.profile
   const profileText = cleanHtmlContent(form.value.profile || '')
-  
-  if (!profileText || profileText.length < 5) {
-    errors.value.profile = `Le profil recherché est obligatoire (min. 5 caractères de texte).`
-    return false
-  }
+
+  // if (!profileText || profileText.length < 5) {
+  //   errors.value.profile = `Le profil recherché est obligatoire (min. 5 caractères de texte).`
+  //   return false
+  // }
   return true
 }
 
 const validateSalary = () => {
   delete errors.value.salary
-  
-  if (!form.value.salary || form.value.salary <= 0) {
-    errors.value.salary = 'Le salaire est obligatoire et doit être supérieur à 0.'
-    return false
-  }
+
+  // if (!form.value.salary || form.value.salary <= 0) {
+  //   errors.value.salary = 'Le salaire est obligatoire et doit être supérieur à 0.'
+  //   return false
+  // }
   return true
 }
 
@@ -895,31 +861,71 @@ const resetForm = () => {
   refStep9Form.value?.resetValidation()
 }
 
+// Fonction pour nettoyer le contenu HTML et éviter les doublons
+const cleanHtmlContentForForm = (htmlContent: string): string => {
+  if (!htmlContent) return ''
+  
+  // Nettoyer le contenu HTML
+  let cleaned = htmlContent
+    .replace(/<p><br><\/p>/g, '') // Supprimer les paragraphes vides
+    .replace(/<p><\/p>/g, '') // Supprimer les paragraphes vides
+    .replace(/\s+/g, ' ') // Remplacer les espaces multiples par un seul
+    .trim()
+  
+  // Détecter et supprimer les doublons de listes
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = cleaned
+  
+  // Nettoyer les listes dupliquées
+  const orderedLists = tempDiv.querySelectorAll('ol')
+  orderedLists.forEach((ol: HTMLOListElement) => {
+    const listItems = ol.querySelectorAll('li')
+    const seenItems = new Set()
+    
+    listItems.forEach((li: HTMLLIElement) => {
+      const textContent = li.textContent?.trim() || ''
+      if (seenItems.has(textContent)) {
+        li.remove()
+      } else {
+        seenItems.add(textContent)
+      }
+    })
+  })
+  
+  return tempDiv.innerHTML
+}
+
 const populateForm = (jobOffer: JobOfferOut) => {
-  form.value = {
-    reference: jobOffer.reference || '',
-    title: jobOffer.title || '',
-    location: jobOffer.location || '',
-    postal_code: jobOffer.postal_code || '',
-    contract_type: jobOffer.contract_type || '',
-    uncertain_term: jobOffer.uncertain_term || false,
-    start_date: jobOffer.start_date ? jobOffer.start_date.split('T')[0] : '',
-    end_date: jobOffer.end_date ? jobOffer.end_date.split('T')[0] : '',
-    deadline: jobOffer.deadline ? jobOffer.deadline.split('T')[0] : '',
-    weekly_hours: jobOffer.weekly_hours,
-    driving_license_required: jobOffer.driving_license_required || false,
-    submission_deadline: jobOffer.submission_deadline ? jobOffer.submission_deadline.split('T')[0] : '',
-    main_mission: jobOffer.main_mission || '',
-    responsibilities: jobOffer.responsibilities || '',
-    competencies: jobOffer.competencies || '',
-    profile: jobOffer.profile || '',
-    salary: jobOffer.salary,
-    benefits: jobOffer.benefits || '',
-    submission_fee: jobOffer.submission_fee || 0,
-    currency: jobOffer.currency || 'EUR',
-    attachment: jobOffer.attachment || [],
-    conditions: jobOffer.conditions || ''
-  }
+  // Réinitialiser d'abord le formulaire
+  resetForm()
+  
+  // Puis peupler avec les nouvelles données
+  setTimeout(() => {
+    form.value = {
+      reference: jobOffer.reference || '',
+      title: jobOffer.title || '',
+      location: jobOffer.location || '',
+      postal_code: jobOffer.postal_code || '',
+      contract_type: jobOffer.contract_type || '',
+      uncertain_term: jobOffer.uncertain_term || false,
+      start_date: jobOffer.start_date ? jobOffer.start_date.split('T')[0] : '',
+      end_date: jobOffer.end_date ? jobOffer.end_date.split('T')[0] : '',
+      deadline: jobOffer.deadline ? jobOffer.deadline.split('T')[0] : '',
+      weekly_hours: jobOffer.weekly_hours,
+      driving_license_required: jobOffer.driving_license_required || false,
+      submission_deadline: jobOffer.submission_deadline ? jobOffer.submission_deadline.split('T')[0] : '',
+      main_mission: cleanHtmlContentForForm(jobOffer.main_mission || ''),
+      responsibilities: cleanHtmlContentForForm(jobOffer.responsibilities || ''),
+      competencies: cleanHtmlContentForForm(jobOffer.competencies || ''),
+      profile: cleanHtmlContentForForm(jobOffer.profile || ''),
+      salary: jobOffer.salary,
+      benefits: cleanHtmlContentForForm(jobOffer.benefits || ''),
+      submission_fee: jobOffer.submission_fee || 0,
+      currency: jobOffer.currency || 'EUR',
+      attachment: jobOffer.attachment || [],
+      conditions: cleanHtmlContentForForm(jobOffer.conditions || '')
+    }
+  }, 50)
 }
 
 // Handle backend errors
@@ -955,7 +961,10 @@ watch(() => form.value.conditions, (newValue) => {
 // Watch for prop changes
 watch(() => props.jobOffer, (newJobOffer) => {
   if (newJobOffer) {
-    populateForm(newJobOffer)
+    // Délai pour éviter la duplication lors de l'initialisation
+    setTimeout(() => {
+      populateForm(newJobOffer)
+    }, 100)
   } else {
     resetForm()
   }

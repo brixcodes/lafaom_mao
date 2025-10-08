@@ -110,22 +110,67 @@ const onFocus = (quill: any) => {
 const onEditorReady = (quill: any) => {
   quillInstance.value = quill
 
+  // Éviter la duplication lors de l'initialisation
   if (props.modelValue && props.modelValue !== quill.root.innerHTML) {
-    quill.root.innerHTML = props.modelValue
-  }
-
-  if (content.value) {
-    quill.clipboard.dangerouslyPasteHTML(content.value)
+    // Nettoyer le contenu avant de l'insérer
+    const cleanedContent = cleanHtmlContentForInit(props.modelValue)
+    quill.root.innerHTML = cleanedContent
+    content.value = cleanedContent
+  } else if (content.value && content.value !== quill.root.innerHTML) {
+    const cleanedContent = cleanHtmlContentForInit(content.value)
+    quill.root.innerHTML = cleanedContent
+    content.value = cleanedContent
   }
 
   quill.on('text-change', () => {
     const htmlContent = quill.root.innerHTML || ''
     content.value = htmlContent
     emit('update:modelValue', htmlContent)
+    
+    // Maintenir la continuité des listes ordonnées et corriger les doublons
+    setTimeout(() => {
+      maintainOrderedListContinuity(quill)
+      fixDuplicateListItems(quill)
+      restructureToHierarchical(quill)
+    }, 50)
   })
 
   // Gestion intelligente des listes avec Tab/Shift+Tab
   setupSmartListNavigation(quill)
+}
+
+// Fonction pour nettoyer le contenu HTML lors de l'initialisation
+const cleanHtmlContentForInit = (htmlContent: string): string => {
+  if (!htmlContent) return ''
+  
+  // Nettoyer le contenu HTML
+  let cleaned = htmlContent
+    .replace(/<p><br><\/p>/g, '') // Supprimer les paragraphes vides
+    .replace(/<p><\/p>/g, '') // Supprimer les paragraphes vides
+    .replace(/\s+/g, ' ') // Remplacer les espaces multiples par un seul
+    .trim()
+  
+  // Détecter et supprimer les doublons de listes
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = cleaned
+  
+  // Nettoyer les listes dupliquées
+  const orderedLists = tempDiv.querySelectorAll('ol')
+  orderedLists.forEach((ol: HTMLOListElement) => {
+    const listItems = ol.querySelectorAll('li')
+    const seenItems = new Set()
+    
+    listItems.forEach((li: HTMLLIElement) => {
+      const textContent = li.textContent?.trim() || ''
+      if (seenItems.has(textContent)) {
+        li.remove()
+      } else {
+        seenItems.add(textContent)
+      }
+    })
+  })
+  
+  return tempDiv.innerHTML
 }
 
 // Fonction pour configurer la navigation intelligente des listes
@@ -153,8 +198,8 @@ const setupSmartListNavigation = (quill: any) => {
       event.preventDefault()
       
       if (isInOrderedList) {
-        // Tab dans une liste numérotée → passe à une liste à puces
-        convertToBulletList(quill, selection)
+        // Tab dans une liste numérotée → créer une sous-liste à puces
+        createHierarchicalStructure(quill, selection)
       } else if (isInBulletList) {
         // Tab dans une liste à puces → reste à puces (indentation)
         indentList(quill, selection)
@@ -166,8 +211,8 @@ const setupSmartListNavigation = (quill: any) => {
       event.preventDefault()
       
       if (isInBulletList) {
-        // Shift+Tab dans une liste à puces → revient à la liste numérotée
-        convertToOrderedList(quill, selection)
+        // Shift+Tab dans une liste à puces → créer une nouvelle liste ordonnée
+        createNewOrderedList(quill, selection)
       } else if (isInOrderedList) {
         // Shift+Tab dans une liste numérotée → désindente ou sort de la liste
         outdentList(quill, selection)
@@ -200,6 +245,9 @@ const convertToBulletList = (quill: any, selection: any) => {
     const newBulletList = document.createElement('UL')
     newBulletList.style.marginLeft = '24px'
     
+    // Marquer l'élément comme converti
+    listItem.setAttribute('data-converted', 'true')
+    
     // Déplacer l'élément de liste
     newBulletList.appendChild(listItem)
     orderedList.parentNode.insertBefore(newBulletList, orderedList.nextSibling)
@@ -226,6 +274,9 @@ const convertToOrderedList = (quill: any, selection: any) => {
     // Créer une nouvelle liste numérotée
     const newOrderedList = document.createElement('OL')
     newOrderedList.style.marginLeft = '24px'
+    
+    // Marquer l'élément comme converti
+    listItem.setAttribute('data-converted', 'true')
     
     // Déplacer l'élément de liste
     newOrderedList.appendChild(listItem)
@@ -291,6 +342,196 @@ const updateQuillContent = (quill: any) => {
   const htmlContent = quill.root.innerHTML
   content.value = htmlContent
   emit('update:modelValue', htmlContent)
+}
+
+// Fonction pour détecter et corriger les doublons dans les listes
+const fixDuplicateListItems = (quill: any) => {
+  const editor = quill.root
+  const orderedLists = editor.querySelectorAll('ol')
+  
+  orderedLists.forEach((ol: HTMLOListElement) => {
+    const listItems = ol.querySelectorAll('li')
+    const seenItems = new Set()
+    
+    listItems.forEach((li: HTMLLIElement) => {
+      const textContent = li.textContent?.trim() || ''
+      const itemKey = `${textContent}-${li.getAttribute('data-value') || ''}`
+      
+      if (seenItems.has(itemKey)) {
+        // Élément dupliqué détecté, le supprimer
+        li.remove()
+      } else {
+        seenItems.add(itemKey)
+      }
+    })
+  })
+}
+
+// Fonction pour restructurer le contenu en structure hiérarchique
+const restructureToHierarchical = (quill: any) => {
+  const editor = quill.root
+  const htmlContent = editor.innerHTML
+  
+  // Détecter les patterns de listes séparées et les restructurer
+  // Pattern général: ol-li-ul-li-ol
+  const pattern = /<ol><li[^>]*>([^<]*)<\/li><\/ol><ul><li[^>]*>([^<]*)<\/li><li[^>]*>([^<]*)<\/li><li[^>]*>([^<]*)<\/li><\/ul><ol><li[^>]*>([^<]*)<\/li><\/ol>/g
+  
+  let restructuredContent = htmlContent
+  
+  // Traiter le pattern général
+  if (pattern.test(restructuredContent)) {
+    restructuredContent = restructuredContent.replace(pattern, (match: string, p1: string, p2: string, p3: string, p4: string, p5: string) => {
+      return `<ol><li>${p1}<ul><li>${p2}</li><li>${p3}</li><li>${p4}</li></ul></li><li>${p5}</li></ol>`
+    })
+  }
+  
+  // Si le contenu a été modifié, le mettre à jour
+  if (restructuredContent !== htmlContent) {
+    editor.innerHTML = restructuredContent
+    updateQuillContent(quill)
+  }
+}
+
+// Fonction pour maintenir la continuité des listes ordonnées
+const maintainOrderedListContinuity = (quill: any) => {
+  const editor = quill.root
+  const orderedLists = editor.querySelectorAll('ol')
+  
+  // Gérer la numérotation globale pour éviter les doublons
+  let globalCounter = 1
+  
+  orderedLists.forEach((ol: HTMLOListElement) => {
+    // Réinitialiser le compteur pour chaque liste
+    let counter = globalCounter
+    
+    // Parcourir tous les éléments de la liste
+    const listItems = ol.querySelectorAll('li')
+    listItems.forEach((li: HTMLLIElement) => {
+      // Vérifier si l'élément a un attribut value personnalisé
+      if (li.hasAttribute('data-value')) {
+        counter = parseInt(li.getAttribute('data-value') || '1')
+      }
+      
+      // Mettre à jour le compteur
+      li.setAttribute('data-value', counter.toString())
+      counter++
+    })
+    
+    // Mettre à jour le compteur global
+    globalCounter = counter
+  })
+}
+
+// Fonction pour créer une structure hiérarchique correcte
+const createHierarchicalStructure = (quill: any, selection: any) => {
+  const [block] = quill.getLine(selection.index)
+  if (!block) return
+
+  const listItem = block.domNode
+  const currentList = listItem.parentElement
+  
+  // Si on est dans une liste ordonnée, créer une sous-liste à puces
+  if (currentList.tagName === 'OL') {
+    // Vérifier s'il y a déjà une sous-liste
+    let existingSubList = listItem.querySelector('ul')
+    
+    if (!existingSubList) {
+      // Créer une nouvelle sous-liste à puces
+      const newSubList = document.createElement('UL')
+      newSubList.style.marginLeft = '24px'
+      newSubList.style.marginTop = '8px'
+      
+      // Ajouter un élément de liste vide
+      const newListItem = document.createElement('LI')
+      newListItem.textContent = 'Nouveau sous-élément'
+      newSubList.appendChild(newListItem)
+      
+      // Insérer la sous-liste après le contenu de l'élément principal
+      listItem.appendChild(newSubList)
+      
+      // Mettre à jour le contenu
+      updateQuillContent(quill)
+    }
+  }
+}
+
+// Fonction pour créer une nouvelle liste ordonnée après une liste à puces
+const createNewOrderedList = (quill: any, selection: any) => {
+  const [block] = quill.getLine(selection.index)
+  if (!block) return
+
+  const listItem = block.domNode
+  const currentList = listItem.parentElement
+  
+  // Si on est dans une liste à puces, créer une nouvelle liste ordonnée
+  if (currentList.tagName === 'UL') {
+    // Trouver la liste ordonnée parente
+    let parentOrderedList = currentList.parentElement
+    while (parentOrderedList && parentOrderedList.tagName !== 'OL') {
+      parentOrderedList = parentOrderedList.parentElement
+    }
+    
+    if (parentOrderedList) {
+      // Créer un nouvel élément dans la liste ordonnée parente
+      const newOrderedItem = document.createElement('LI')
+      newOrderedItem.textContent = 'Nouveau point'
+      
+      // Insérer après l'élément parent
+      parentOrderedList.insertBefore(newOrderedItem, currentList.nextSibling)
+      
+      // Mettre à jour le contenu
+      updateQuillContent(quill)
+    } else {
+      // Créer une nouvelle liste ordonnée
+      const newOrderedList = document.createElement('OL')
+      newOrderedList.style.marginLeft = '0px'
+      newOrderedList.style.marginTop = '8px'
+      
+      // Ajouter un élément de liste vide
+      const newListItem = document.createElement('LI')
+      newListItem.textContent = 'Nouveau point'
+      newOrderedList.appendChild(newListItem)
+      
+      // Insérer la nouvelle liste après la liste actuelle
+      currentList.parentNode.insertBefore(newOrderedList, currentList.nextSibling)
+      
+      // Mettre à jour le contenu
+      updateQuillContent(quill)
+    }
+  }
+}
+
+// Fonction pour gérer la conversion intelligente des listes
+const smartListConversion = (quill: any, selection: any, targetType: 'ul' | 'ol') => {
+  const [block] = quill.getLine(selection.index)
+  if (!block) return
+
+  const listItem = block.domNode
+  const currentList = listItem.parentElement
+  
+  if (currentList.tagName === targetType.toUpperCase()) {
+    // Même type de liste, juste indenter
+    indentList(quill, selection)
+    return
+  }
+  
+  // Conversion entre types de listes
+  if (currentList.tagName === 'OL' && targetType === 'ul') {
+    convertToBulletList(quill, selection)
+  } else if (currentList.tagName === 'UL' && targetType === 'ol') {
+    convertToOrderedList(quill, selection)
+  }
+  
+  // Maintenir la continuité après conversion avec un délai plus long
+  setTimeout(() => {
+    maintainOrderedListContinuity(quill)
+    // Détecter et corriger les doublons
+    fixDuplicateListItems(quill)
+    // Restructurer en structure hiérarchique
+    restructureToHierarchical(quill)
+    // Forcer la mise à jour du contenu
+    updateQuillContent(quill)
+  }, 200)
 }
 
 // Synchronise content si modelValue change
@@ -431,6 +672,65 @@ onUnmounted(() => {
 :deep(.ql-editor ol li::marker) {
   color: rgba(var(--v-theme-primary), 0.7);
   font-weight: 600;
+}
+
+/* Gestion de la numérotation personnalisée pour les listes ordonnées */
+:deep(.ql-editor ol li[data-value]) {
+  counter-reset: none;
+}
+
+:deep(.ql-editor ol li[data-value]::marker) {
+  content: counter(list-item) ". ";
+  counter-increment: list-item;
+}
+
+/* Amélioration de l'espacement pour les listes imbriquées */
+:deep(.ql-editor ol ol) {
+  counter-reset: list-item;
+}
+
+:deep(.ql-editor ol ol li) {
+  counter-increment: list-item;
+}
+
+/* Styles pour les listes mixtes (ordonnées + à puces) */
+:deep(.ql-editor ol + ul) {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+:deep(.ql-editor ul + ol) {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* Styles pour les structures hiérarchiques */
+:deep(.ql-editor ol li ul) {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  margin-left: 24px;
+}
+
+:deep(.ql-editor ul li ol) {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  margin-left: 24px;
+}
+
+/* Amélioration de l'espacement pour les listes imbriquées */
+:deep(.ql-editor ol li) {
+  margin-bottom: 8px;
+}
+
+:deep(.ql-editor ul li) {
+  margin-bottom: 4px;
+}
+
+/* Indication visuelle pour les conversions de listes */
+:deep(.ql-editor ol li[data-converted="true"]) {
+  border-left: 2px solid rgba(var(--v-theme-primary), 0.3);
+  padding-left: 8px;
+  margin-left: 4px;
 }
 
 :deep(.ql-editor strong) {
