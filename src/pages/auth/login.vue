@@ -12,6 +12,7 @@ import { showToast } from '@/components/toast/toastManager'
 import { validateEmail, validateMinLength } from '@/utils/validation'
 import { getRedirectPathAfterLogin } from '@/utils/redirectUtils'
 
+
 const form = ref({
   email: '',
   password: '',
@@ -76,8 +77,31 @@ const onSubmit = async () => {
       showToast({ message: 'Vérification 2FA requise.', type: 'info' })
       router.push({ path: '/two-factor', query: { email: result.email || form.value.email } })
     }
+
   } catch (err: any) {
-    showToast({ message: authStore.error || 'Erreur de connexion', type: 'error' })
+    console.error('[Login Page] Login error:', err)
+
+    // Gestion spécifique des erreurs de connexion
+    let errorMessage = 'Erreur de connexion'
+
+    // Gestion des erreurs de réseau/CORS
+    if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+      errorMessage = 'Impossible de se connecter au serveur. Vérifiez votre connexion internet.'
+    }
+    // Gestion des erreurs HTTP
+    else if (err.response?.status === 401) {
+      errorMessage = 'Email ou mot de passe incorrect'
+    } else if (err.response?.status === 403) {
+      errorMessage = 'Compte bloqué ou non autorisé'
+    } else if (err.response?.status === 404) {
+      errorMessage = 'Utilisateur non trouvé'
+    } else if (err.response?.data?.message) {
+      errorMessage = err.response.data.message
+    } else if (authStore.error) {
+      errorMessage = authStore.error
+    }
+
+    showToast({ message: errorMessage, type: 'error' })
   }
 }
 </script>

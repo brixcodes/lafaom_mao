@@ -15,13 +15,20 @@
         </div>
       </div>
 
-      <!-- Partie droite : bouton Postuler -->
-      <div>
-        <!-- <VBtn color="primary" variant="outlined" @click="shareOffer" class="action-btn mx-1" prepend-icon="ri-share-line">
-          Partager
-        </VBtn> -->
-        <VBtn v-if="jobOffer && jobOffer.id" color="primary" :to="{ name: 'job-offers-apply', params: { id: jobOffer.id } }" class="action-btn" prepend-icon="ri-send-plane-line">
+      <!-- Partie droite : boutons d'action -->
+      <div class="d-flex gap-2">
+        <!-- Bouton Candidater -->
+        <VBtn v-if="jobOffer && jobOffer.id" color="primary"
+          :to="{ name: 'job-offers-apply', params: { id: jobOffer.id } }" class="action-btn"
+          prepend-icon="ri-send-plane-line">
           Candidater
+        </VBtn>
+
+        <!-- Bouton Modifier -->
+        <VBtn v-if="jobOffer && jobOffer.id" color="primary" variant="flat"
+          :to="{ name: 'job-offers-edit', params: { id: jobOffer.id } }" class="action-btn"
+          prepend-icon="ri-edit-line">
+          Modifier
         </VBtn>
       </div>
     </div>
@@ -92,7 +99,7 @@
             <VCol cols="12" md="8">
               <!-- Missions et responsabilités -->
               <VSlideYTransition>
-                <VCard v-if="jobOffer.responsibilities" class="mb-6 animate-card" elevation="1">
+                <VCard class="mb-6 animate-card" elevation="1">
                   <VCardTitle class="d-flex align-center">
                     <VIcon color="primary" class="mr-2">ri-file-edit-line</VIcon>
                     <span class="text-h6">Description de l'offre</span>
@@ -104,22 +111,24 @@
                         <div class="font-weight-medium mb-2"><strong>Mission principale</strong> :</div>
                         <div style="margin-left: 10px; line-height: 1.8;" v-html="jobOffer.main_mission"></div>
                       </v-timeline-item>
-                      <!-- Section Responsabilités masquée -->
-                      <!-- <v-timeline-item size="x-small">
+                      <v-timeline-item
+                        v-if="jobOffer.responsibilities && jobOffer.responsibilities.trim().replace(/<[^>]*>/g, '').trim() !== ''"
+                        size="x-small">
                         <div class="font-weight-medium mb-2"><strong>Responsabilités</strong> :</div>
                         <div style="margin-left: 22px; line-height: 1.8;" v-html="jobOffer.responsibilities"></div>
-                      </v-timeline-item> -->
+                      </v-timeline-item>
+
                       <v-timeline-item size="x-small">
                         <div class="font-weight-medium mb-2"><strong>Compétences requises</strong> :</div>
                         <div style="margin-left: 22px; line-height: 1.8;" v-html="jobOffer.competencies"></div>
                       </v-timeline-item>
                       <v-timeline-item size="x-small">
                         <div class="font-weight-medium mb-2"><strong>Profil recherché</strong> :</div>
-                        <div style="margin-left: 10px; line-height: 1.8;" v-html="jobOffer.profile"></div>
+                        <div style="margin-left: 22px; line-height: 1.8;" v-html="jobOffer.profile"></div>
                       </v-timeline-item>
                       <v-timeline-item size="x-small">
                         <div class="font-weight-medium mb-2"><strong>Avantages</strong> :</div>
-                        <div style="margin-left: 22px; line-height: 1.8;" v-html="jobOffer.benefits"></div>
+                        <div style="margin-left: 9px; line-height: 1.8;" v-html="jobOffer.benefits"></div>
                       </v-timeline-item>
                       <v-timeline-item size="x-small">
                         <div class="font-weight-medium mb-2"><strong>Pièces à joindre</strong> :</div>
@@ -306,7 +315,7 @@
                 </VCard>
               </VSlideXReverseTransition>
 
-              
+
               <!-- Contact recruteur -->
               <VSlideXReverseTransition>
                 <VCard v-if="jobOffer.contact_email || jobOffer.contact_phone" class="animate-card" elevation="1">

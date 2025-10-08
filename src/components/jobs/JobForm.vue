@@ -164,15 +164,15 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 4: Responsabilités - MASQUÉE -->
-        <!-- <VWindowItem :value="3">
+        <!-- Étape 4: Responsabilités (Facultatif) -->
+        <VWindowItem :value="3">
           <VForm ref="refStep4Form" @submit.prevent="validateStep4">
             <VRow class="pa-3">
               <VCol cols="12">
                 <div class="text-center mb-4">
                   <VIcon size="48" color="primary" class="mb-3">ri-task-line</VIcon>
                   <h3 class="text-h5 mb-2">Responsabilités</h3>
-                  <p class="text-body-2 text-medium-emphasis">Listez les principales responsabilités du poste</p>
+                  <p class="text-body-2 text-medium-emphasis">Listez les principales responsabilités du poste (optionnel)</p>
                 </div>
                 
                 <QuillEditor 
@@ -180,7 +180,7 @@
                   editor-id="responsibilities-editor"
                   v-model="form.responsibilities" 
                   theme="snow" 
-                  placeholder="Listez les principales responsabilités..."
+                  placeholder="Listez les principales responsabilités (optionnel)..."
                   min-height="200px"
                   class="quill-editor-custom"
                 />
@@ -204,10 +204,10 @@
               </VCol>
             </VRow>
           </VForm>
-        </VWindowItem> -->
+        </VWindowItem>
 
-        <!-- Étape 4: Compétences -->
-        <VWindowItem :value="3">
+        <!-- Étape 5: Compétences -->
+        <VWindowItem :value="4">
           <VForm ref="refStep5Form" @submit.prevent="validateStep5">
             <VRow class="pa-3">
               <VCol cols="12">
@@ -248,8 +248,8 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 5: Profil recherché -->
-        <VWindowItem :value="4">
+        <!-- Étape 6: Profil recherché -->
+        <VWindowItem :value="5">
           <VForm ref="refStep6Form" @submit.prevent="validateStep6">
             <VRow class="pa-3">
               <VCol cols="12">
@@ -290,8 +290,8 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 6: Conditions de travail -->
-        <VWindowItem :value="5">
+        <!-- Étape 7: Conditions de travail -->
+        <VWindowItem :value="6">
           <VForm ref="refStep7Form" @submit.prevent="validateStep7">
             <VRow class="pa-3">
               <VCol cols="12">
@@ -329,8 +329,8 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 7: Rémunération et avantages -->
-        <VWindowItem :value="6">
+        <!-- Étape 8: Rémunération et avantages -->
+        <VWindowItem :value="7">
           <VForm ref="refStep8Form" @submit.prevent="validateStep8">
             <VRow class="pa-3">
               <!-- Salaire -->
@@ -389,8 +389,8 @@
           </VForm>
         </VWindowItem>
 
-        <!-- Étape 8: Documents requis -->
-        <VWindowItem :value="7">
+        <!-- Étape 9: Documents requis -->
+        <VWindowItem :value="8">
           <VForm ref="refStep9Form" @submit.prevent="validateStep9">
             <VRow class="pa-3">
               <VCol cols="12">
@@ -479,7 +479,7 @@ const stepperItems = [
 const refStep1Form = ref()
 const refStep2Form = ref()
 const refStep3Form = ref()
-// refStep4Form supprimé (responsabilités masquées)
+const refStep4Form = ref()
 const refStep5Form = ref()
 const refStep6Form = ref()
 const refStep7Form = ref()
@@ -615,15 +615,18 @@ const validateStep3 = () => {
   // Validation pour la mission principale
   const isValid = validateMainMission()
   if (isValid) {
-    // Passer directement à l'étape 4 (compétences) en sautant les responsabilités
-    currentStep.value = currentStep.value + 2
+    currentStep.value++
     isCurrentStepValid.value = true
   } else {
     isCurrentStepValid.value = false
   }
 }
 
-// Fonction validateStep4 supprimée (étape responsabilités masquée)
+const validateStep4 = () => {
+  // Validation pour les responsabilités (facultatif) - toujours valide
+  currentStep.value++
+  isCurrentStepValid.value = true
+}
 
 const validateStep5 = () => {
   // Validation pour les compétences (ancienne étape 5)
@@ -698,17 +701,13 @@ const validateMainMission = () => {
   return true
 }
 
-// Fonction validateResponsibilities supprimée (étape responsabilités masquée)
-// const validateResponsibilities = () => {
-//   delete errors.value.responsibilities
-//   const responsibilitiesText = cleanHtmlContent(form.value.responsibilities || '')
-//   
-//   if (!responsibilitiesText || responsibilitiesText.length < 5) {
-//     errors.value.responsibilities = `Les responsabilités sont obligatoires (min. 5 caractères de texte).`
-//     return false
-//   }
-//   return true
-// }
+const validateResponsibilities = () => {
+  delete errors.value.responsibilities
+  const responsibilitiesText = cleanHtmlContent(form.value.responsibilities || '')
+  
+  // Responsabilités facultatives - toujours valide
+  return true
+}
 
 const validateCompetencies = () => {
   delete errors.value.competencies
@@ -793,14 +792,14 @@ const validateAllForms = async () => {
   const step1Valid = await refStep1Form.value?.validate()
   const step2Valid = await refStep2Form.value?.validate()
   const step3Valid = validateMainMission()
-  // step4Valid supprimé (responsabilités masquées)
+  const step4Valid = true // Responsabilités facultatives
   const step5Valid = validateCompetencies()
   const step6Valid = validateProfile()
   const step7Valid = true // Conditions optionnelles
   const step8Valid = validateSalary()
   const step9Valid = await refStep9Form.value?.validate()
 
-  return step1Valid?.valid && step2Valid?.valid && step3Valid && step5Valid && step6Valid && step7Valid && step8Valid && step9Valid?.valid
+  return step1Valid?.valid && step2Valid?.valid && step3Valid && step4Valid && step5Valid && step6Valid && step7Valid && step8Valid && step9Valid?.valid
 }
 
 const handleFinalSubmit = async () => {
@@ -888,7 +887,7 @@ const resetForm = () => {
   refStep1Form.value?.resetValidation()
   refStep2Form.value?.resetValidation()
   refStep3Form.value?.resetValidation()
-  // refStep4Form supprimé (responsabilités masquées)
+  refStep4Form.value?.resetValidation()
   refStep5Form.value?.resetValidation()
   refStep6Form.value?.resetValidation()
   refStep7Form.value?.resetValidation()
