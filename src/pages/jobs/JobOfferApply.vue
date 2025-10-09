@@ -452,6 +452,7 @@ const isExpired = computed(() => {
 })
 
 const requiredDocuments = computed(() => {
+  // Utiliser directement les noms complets tels qu'ils sont stockés dans l'offre
   return jobOffersStore.currentJobOffer?.attachment || []
 })
 
@@ -524,8 +525,18 @@ const loadJobOffer = async () => {
 }
 
 const getDocumentLabel = (docType: string) => {
-  const doc = DOCUMENT_TYPES.find(d => d.value === docType)
-  return doc?.text || docType
+  // Si c'est déjà un nom complet, le retourner tel quel
+  const doc = DOCUMENT_TYPES.find(d => d.text === docType)
+  if (doc) return docType
+  
+  // Sinon, chercher par code court
+  const docByCode = DOCUMENT_TYPES.find(d => d.value === docType)
+  return docByCode?.text || docType
+}
+
+const getDocumentCode = (docLabel: string) => {
+  const doc = DOCUMENT_TYPES.find(d => d.text === docLabel)
+  return doc?.value || docLabel
 }
 
 const getUploadedFile = (docType: string) => {
@@ -793,9 +804,9 @@ const submitApplication = async () => {
       return
     }
 
-    // Préparer les attachments avec URLs
+    // Préparer les attachments avec URLs (utiliser les noms tels qu'ils sont stockés)
     const attachments = requiredDocuments.value.map(docType => ({
-      name: docType,
+      name: docType, // Utiliser le nom tel qu'il est stocké dans l'offre
       url: uploadedAttachments.value[docType].url
     }))
 
@@ -823,6 +834,11 @@ const submitApplication = async () => {
       submission_deadline: jobOffersStore.currentJobOffer?.submission_deadline,
       attachment: jobOffersStore.currentJobOffer?.attachment
     })
+    
+    console.log('🔍 Debug mapping des documents:')
+    console.log('  Documents requis par l\'offre (bruts):', jobOffersStore.currentJobOffer?.attachment)
+    console.log('  Documents requis (après mapping):', requiredDocuments.value)
+    console.log('  Noms envoyés au backend:', attachments.map(a => a.name))
 
     // Vérifier la cohérence avec les documents requis
     if (jobOffersStore.currentJobOffer?.attachment) {

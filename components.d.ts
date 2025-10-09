@@ -105,6 +105,7 @@ declare module 'vue' {
     ThemeSwitcher: typeof import('./src/@core/components/ThemeSwitcher.vue')['default']
     Toast: typeof import('./src/components/toast/Toast.vue')['default']
     ToastContainer: typeof import('./src/components/toast/ToastContainer.vue')['default']
+    ToastManager: typeof import('./src/components/toast/ToastManager.vue')['default']
     TrainingCard: typeof import('./src/components/Training/TrainingCard.vue')['default']
     TrainingForm: typeof import('./src/components/Training/TrainingForm.vue')['default']
     TrainingSessionCard: typeof import('./src/components/Training/TrainingSessionCard.vue')['default']

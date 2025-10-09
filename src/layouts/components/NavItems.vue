@@ -132,6 +132,25 @@ const canViewPayments = computed(() => canAccessStaffSections.value)
     }" />
   </VerticalNavGroup>
 
+  <!-- Candidatures Cabinet -->
+  <VerticalNavGroup v-if="canAccessAdminSections && hasPermissions([PermissionEnum.CAN_VIEW_JOB_APPLICATION])" :item="{
+    title: 'Candidatures Cabinet',
+    icon: 'ri-building-line',
+  }">
+    <VerticalNavLink :item="{
+      title: 'Liste des candidatures',
+      to: '/cabinet/applications',
+    }" />
+    <VerticalNavLink :item="{
+      title: 'Nouvelle candidature',
+      to: '/cabinet/applications/create',
+    }" />
+    <VerticalNavLink :item="{
+      title: 'Candidatures payées',
+      to: '/cabinet/applications/paid',
+    }" />
+  </VerticalNavGroup>
+
   <!-- Réclamations -->
   <VerticalNavGroup :item="{
     title: 'Réclamations',
@@ -189,25 +208,48 @@ const canViewPayments = computed(() => canAccessStaffSections.value)
   <!-- ============================================ -->
   <!-- SECTION 5: ÉTUDIANTS (Étudiants uniquement) -->
   <!-- ============================================ -->
-  <VerticalNavSectionTitle v-if="canAccessStudentSections" :item="{ heading: 'Mes Formations' }" />
+  <VerticalNavSectionTitle  :item="{ heading: 'Mes Formations' }" />
 
   <!-- Candidatures d'Étudiants -->
-  <VerticalNavGroup v-if="canAccessAdminSections || canAccessStudentSections" :item="{
+  <VerticalNavGroup  :item="{
     title: 'Candidatures',
     icon: 'ri-file-list-3-line',
   }">
-    <VerticalNavLink v-if="canAccessAdminSections" :item="{
+    <VerticalNavLink :item="{
       title: 'Toutes les candidatures',
       to: '/student-applications',
     }" />
-    <VerticalNavLink v-if="canAccessStudentSections" :item="{
+    <VerticalNavLink  :item="{
       title: 'Mes candidatures',
       to: '/my-student-applications',
     }" />
   </VerticalNavGroup>
 
+  <!-- Candidature Cabinet (pour tous) -->
+  <!-- <VerticalNavGroup :item="{
+    title: 'Cabinet',
+    icon: 'ri-building-line',
+  }">
+    <VerticalNavLink :item="{
+      title: 'Mes candidatures Cabinet',
+      to: '/cabinet/applications/my-applications',
+    }" />
+    <VerticalNavLink :item="{
+      title: 'Mes candidatures Cabinet',
+      to: '/cabinet/applications/my-applications',
+    }" />
+    <VerticalNavLink :item="{
+      title: 'Mes candidatures Cabinet',
+      to: '/cabinet/applications/my-applications',
+    }" />
+    <VerticalNavLink :item="{
+      title: 'Nouvelle candidature',
+      to: '/cabinet/applications/create',
+    }" />
+  </VerticalNavGroup> -->
+
   <!-- Candidatures d'Emploi -->
-  <!-- <VerticalNavGroup v-if="canAccessStudentSections" :item="{
+  <VerticalNavGroup v-if="canAccessStudentSections" :item="{
     title: 'Emploi',
     icon: 'ri-briefcase-line',
   }">
@@ -219,7 +261,7 @@ const canViewPayments = computed(() => canAccessStaffSections.value)
       title: 'Mes candidatures d\'emploi',
       to: '/jobs/applications/my-applications',
     }" />
-  </VerticalNavGroup> -->
+  </VerticalNavGroup>
 
   <!-- ============================================ -->
   <!-- SECTION 6: PROFIL (Accessible à tous) -->

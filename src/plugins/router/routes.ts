@@ -99,6 +99,56 @@ export const routes = [
         path: '/blog/categories/create',
         component: () => import('@/pages/blog/categories/create.vue'),
       },
+      // Cabinet Applications - Module de candidatures de cabinet
+      {
+        path: 'cabinet/applications',
+        name: 'cabinet-applications',
+        component: () => import('@/pages/cabinet/CabinetApplicationsList.vue'),
+        meta: {
+          title: 'Candidatures Cabinet',
+          requiresAuth: true,
+          permissions: ['job_applications.view']
+        }
+      },
+      {
+        path: 'cabinet/applications/create',
+        name: 'cabinet-application-create',
+        component: () => import('@/pages/cabinet/CabinetApplicationCreate.vue'),
+        meta: {
+          title: 'Nouvelle candidature cabinet',
+          requiresAuth: false
+        }
+      },
+      {
+        path: 'cabinet/applications/:id',
+        name: 'cabinet-application-detail',
+        component: () => import('@/pages/cabinet/CabinetApplicationDetail.vue'),
+        meta: {
+          title: 'Détails de la candidature',
+          requiresAuth: true,
+          permissions: ['job_applications.view']
+        },
+        props: true
+      },
+      {
+        path: 'cabinet/applications/paid',
+        name: 'cabinet-applications-paid',
+        component: () => import('@/pages/cabinet/CabinetPaidApplicationsList.vue'),
+        meta: {
+          title: 'Candidatures payées',
+          requiresAuth: true,
+          permissions: ['job_applications.view']
+        }
+      },
+      {
+        path: 'cabinet/applications/my-applications',
+        name: 'cabinet-my-applications',
+        component: () => import('@/pages/cabinet/CabinetMyApplicationsList.vue'),
+        meta: {
+          title: 'Mes candidatures Cabinet',
+          requiresAuth: true
+        }
+      },
       // Job Offers - Module d'emploi complet
       {
         path: 'jobs/offers',
