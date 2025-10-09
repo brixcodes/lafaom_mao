@@ -99,11 +99,17 @@
                         :error-messages="fieldErrors.phone_number" required />
                     </VCol>
 
-                    <!-- Sélection pays -->
+                    <!-- Sélection pays - BLOQUÉ À SENEGAL -->
                     <VCol cols="12" md="6">
-                      <CountryAutocomplete v-model="selectedCountry" label="Pays"
-                        placeholder="Sélectionnez votre pays..." prepend-icon="ri-earth-line" variant="outlined"
-                        @change="handleCountryChange" :error-messages="fieldErrors.country_code" />
+                      <VTextField 
+                        v-model="form.country_code" 
+                        label="Pays" 
+                        value="SN"
+                        readonly
+                        prepend-inner-icon="ri-earth-line" 
+                        variant="outlined"
+                        hint="Pays fixé à Sénégal"
+                        persistent-hint />
                     </VCol>
 
                     <!-- Date de naissance -->
@@ -420,14 +426,18 @@ const form = reactive<Omit<JobApplicationCreateInput, 'attachments'>>({
   first_name: '',
   last_name: '',
   civility: '',
-  country_code: '',
+  country_code: 'SN', // Fixé à Sénégal
   city: '',
   address: '',
   date_of_birth: ''
 })
 
-// Pays sélectionné via l'autocomplétion
-const selectedCountry = ref<Country | null>(null)
+// Pays sélectionné - Fixé à Sénégal
+const selectedCountry = ref<Country | null>({
+  name: 'Sénégal',
+  code: 'SN',
+  flag: '🇸🇳'
+})
 
 const fileInputs = ref<Record<string, File[]>>({})
 
@@ -501,22 +511,6 @@ const rules = {
 }
 
 // Methods
-const handleCountryChange = (country: Country | null) => {
-  selectedCountry.value = country
-  // Mettre à jour le code pays dans le formulaire
-  form.country_code = country ? country.code : ''
-
-  console.log('🌍 Pays sélectionné:', {
-    name: country?.name,
-    code: country?.code,
-    flag: country?.flag
-  })
-
-  // Effacer les erreurs de pays si présentes
-  if (country && fieldErrors.value.country_code) {
-    delete fieldErrors.value.country_code
-  }
-}
 
 const loadJobOffer = async () => {
   try {

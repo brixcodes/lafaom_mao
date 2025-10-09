@@ -107,9 +107,9 @@ export class JobOffersService {
   async uploadJobAttachment(file: File, docType: string): Promise<{ data: { file_path: string } }> {
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('document_type', docType)
+    formData.append('name', docType)
     
-    const response = await apiService.upload('/job-attachments/upload', formData)
+    const response = await apiService.upload('/job-attachments', formData)
     return response
   }
 
