@@ -109,7 +109,11 @@ export class JobOffersService {
     formData.append('file', file)
     formData.append('name', docType)
     
-    const response = await apiService.upload('/job-attachments', formData)
+    const response = await apiService.post('/job-attachments', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
     return response
   }
 
