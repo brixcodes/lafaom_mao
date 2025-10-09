@@ -17,6 +17,7 @@ import type {
   UpdateJobOfferStatusInput,
   JobAttachmentOut,
   JobAttachmentListOutSuccess,
+  PaymentJobApplicationOutSuccess,
 } from '@/types/job-offers'
 import type { BaseOutSuccess } from '@/types'
 
@@ -284,7 +285,7 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
   /**
    * Créer une nouvelle candidature
    */
-  const createJobApplication = async (applicationData: JobApplicationCreateInput) => {
+  const createJobApplication = async (applicationData: JobApplicationCreateInput): Promise<PaymentJobApplicationOutSuccess> => {
     try {
       isLoading.value = true
       error.value = null

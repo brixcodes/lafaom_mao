@@ -143,7 +143,7 @@ export const VALIDATION_CONFIG = {
 export const ENV_CONFIG = {
   isDevelopment: import.meta.env.MODE === 'development',
   isProduction: import.meta.env.MODE === 'production',
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://lafaom.vertex-cam.com/api',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api',
   enableDebugLogs: import.meta.env.VITE_DEBUG_LOGS === 'true',
   enableMockData: import.meta.env.VITE_ENABLE_MOCK_DATA === 'true'
 } as const

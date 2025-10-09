@@ -111,6 +111,18 @@
                       <VTextField v-model="form.date_of_birth" prepend-inner-icon="ri-calendar-line"
                         label="Date de naissance" variant="outlined" type="date" />
                     </VCol>
+
+                    <!-- Ville -->
+                    <VCol cols="12" md="6">
+                      <VTextField v-model="form.city" prepend-inner-icon="ri-map-pin-line"
+                        label="Ville *" variant="outlined" :rules="rules.city" :error-messages="fieldErrors.city" required />
+                    </VCol>
+
+                    <!-- Adresse -->
+                    <VCol cols="12" md="6">
+                      <VTextField v-model="form.address" prepend-inner-icon="ri-home-line"
+                        label="Adresse *" variant="outlined" :rules="rules.address" :error-messages="fieldErrors.address" required />
+                    </VCol>
                   </VRow>
                 </div>
 
@@ -317,6 +329,8 @@
               <div><strong>Nom :</strong> {{ form.first_name }} {{ form.last_name }}</div>
               <div><strong>Email :</strong> {{ form.email }}</div>
               <div><strong>Téléphone :</strong> {{ form.phone_number }}</div>
+              <div><strong>Ville :</strong> {{ form.city }}</div>
+              <div><strong>Adresse :</strong> {{ form.address }}</div>
               <div><strong>Documents transmis :</strong> {{ uploadedFilesCount }} fichier(s)</div>
             </div>
           </div>
@@ -407,6 +421,8 @@ const form = reactive<Omit<JobApplicationCreateInput, 'attachments'>>({
   last_name: '',
   civility: '',
   country_code: '',
+  city: '',
+  address: '',
   date_of_birth: ''
 })
 
@@ -442,7 +458,7 @@ const uploadedFilesCount = computed(() => {
 })
 
 const isFormValid = computed(() => {
-  const hasRequiredFields = form.first_name && form.last_name && form.email && form.phone_number
+  const hasRequiredFields = form.first_name && form.last_name && form.email && form.phone_number && form.city && form.address
   const hasAllFiles = requiredDocuments.value.every(doc =>
     fileInputs.value[doc] && fileInputs.value[doc].length > 0
   )
@@ -473,6 +489,14 @@ const rules = {
   phone_number: [
     (v: string) => !!v || 'Le numéro de téléphone est obligatoire',
     (v: string) => (v && v.length >= 8) || 'Le numéro doit contenir au moins 8 chiffres'
+  ],
+  city: [
+    (v: string) => !!v || 'La ville est obligatoire',
+    (v: string) => (v && v.length >= 2) || 'La ville doit contenir au moins 2 caractères'
+  ],
+  address: [
+    (v: string) => !!v || 'L\'adresse est obligatoire',
+    (v: string) => (v && v.length >= 5) || 'L\'adresse doit contenir au moins 5 caractères'
   ]
 }
 
@@ -684,6 +708,16 @@ const handleSubmit = async () => {
     hasErrors = true
   }
 
+  if (!form.city?.trim()) {
+    fieldErrors.value.city = 'La ville est obligatoire'
+    hasErrors = true
+  }
+
+  if (!form.address?.trim()) {
+    fieldErrors.value.address = 'L\'adresse est obligatoire'
+    hasErrors = true
+  }
+
   // Validate required files
   let fileValidationErrors: string[] = []
 
@@ -780,8 +814,8 @@ const submitApplication = async () => {
       last_name: form.last_name,
       civility: form.civility || undefined,
       country_code: form.country_code || undefined,
-      city: undefined, // Requis pour le paiement
-      address: undefined, // Requis pour le paiement
+      city: form.city,
+      address: form.address,
       date_of_birth: form.date_of_birth || undefined,
       attachments: attachments.length > 0 ? attachments : []
     }
@@ -918,6 +952,8 @@ const populateUserInfo = () => {
     form.phone_number = user.mobile_number || user.fix_number || ''
     form.civility = user.civility || ''
     form.country_code = user.country_code || ''
+    form.city = (user as any).city || ''
+    form.address = (user as any).address || ''
     form.date_of_birth = user.birth_date || ''
 
     // Si l'utilisateur a un pays, le sélectionner dans l'autocomplétion

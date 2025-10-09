@@ -17,7 +17,8 @@ import type {
   JobApplicationOTPRequestInput,
   JobApplicationUpdateByCandidateInput,
   UpdateJobOfferStatusInput,
-  InitPaymentOutSuccess
+  InitPaymentOutSuccess,
+  PaymentJobApplicationOutSuccess
 } from '@/types/job-offers'
 
 export class JobOffersService {
@@ -95,9 +96,21 @@ export class JobOffersService {
   /**
    * Créer une candidature
    */
-  async createJobApplication(applicationData: JobApplicationCreateInput): Promise<InitPaymentOutSuccess> {
+  async createJobApplication(applicationData: JobApplicationCreateInput): Promise<PaymentJobApplicationOutSuccess> {
     const response = await apiService.post('/job-applications', applicationData)
-    return response as InitPaymentOutSuccess
+    return response as PaymentJobApplicationOutSuccess
+  }
+
+  /**
+   * Uploader un fichier joint pour une candidature
+   */
+  async uploadJobAttachment(file: File, docType: string): Promise<{ data: { file_path: string } }> {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('document_type', docType)
+    
+    const response = await apiService.upload('/job-attachments/upload', formData)
+    return response
   }
 
   /**

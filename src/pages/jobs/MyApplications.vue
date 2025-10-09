@@ -564,7 +564,7 @@ const processPayment = async () => {
     processingPayment.value = true
 
     // Construire l'URL de paiement avec les paramètres nécessaires
-    const paymentUrl = `https://lafaom.vertex-cam.com/api/v1/payments/initiate-payment`
+    const paymentUrl = `http://127.0.0.1:8000/api/v1/payments/initiate-payment`
 
     // Paramètres pour l'initiation du paiement
     const paymentParams = {

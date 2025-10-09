@@ -463,7 +463,7 @@ export default {
 
       // Test avec appel direct
       try {
-        const response = await fetch('https://lafaom.vertex-cam.com/api/v1/job-applications/change-status', {
+        const response = await fetch('http://127.0.0.1:8000/api/v1/job-applications/change-status', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
