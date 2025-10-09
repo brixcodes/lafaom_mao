@@ -935,27 +935,27 @@ const handleBackendErrors = (backendErrors: Record<string, string>) => {
 
 // Watch for QuillEditor changes to ensure they're captured
 watch(() => form.value.main_mission, (newValue) => {
-  console.log('Main mission changed:', newValue)
+  // Supprimé le log pour éviter les boucles infinies
 })
 
 watch(() => form.value.responsibilities, (newValue) => {
-  console.log('Responsibilities changed:', newValue)
+  // Supprimé le log pour éviter les boucles infinies
 })
 
 watch(() => form.value.competencies, (newValue) => {
-  console.log('Competencies changed:', newValue)
+  // Supprimé le log pour éviter les boucles infinies
 })
 
 watch(() => form.value.profile, (newValue) => {
-  console.log('Profile changed:', newValue)
+  // Supprimé le log pour éviter les boucles infinies
 })
 
 watch(() => form.value.benefits, (newValue) => {
-  console.log('Benefits changed:', newValue)
+  // Supprimé le log pour éviter les boucles infinies
 })
 
 watch(() => form.value.conditions, (newValue) => {
-  console.log('Conditions changed:', newValue)
+  // Supprimé le log pour éviter les boucles infinies
 })
 
 // Watch for prop changes
