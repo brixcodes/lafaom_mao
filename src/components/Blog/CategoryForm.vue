@@ -19,7 +19,7 @@ const isSubmitting = ref(false)
 
 // Proxy réactif : permet d'écrire directement v-model="form.title"
 const form = computed({
-  get: () => props.modelValue,
+  get: () => props.modelValue || { title: '', slug: '', description: '' },
   set: (val) => emit('update:modelValue', val),
 })
 
@@ -75,10 +75,17 @@ const clearForm = () => {
 const handleSubmit = async () => {
   isSubmitting.value = true
   try {
+    // Vérifier que form.value existe et a les propriétés nécessaires
+    if (!form.value || typeof form.value !== 'object') {
+      console.error('Form data is not properly initialized')
+      return
+    }
+
     // Générer le slug automatiquement
     const formData = {
-      ...form.value,
-      slug: generateSlug(form.value.title)
+      title: form.value.title || '',
+      description: form.value.description || '',
+      slug: generateSlug(form.value.title || '')
     }
 
     emit('submit', formData)
@@ -95,23 +102,36 @@ const handleSubmit = async () => {
         <!-- Titre -->
         <VRow dense>
           <VCol cols="12">
-            <VTextField v-model="form.title" label="Titre de la catégorie *" :rules="titleRules" required clearable
-              variant="outlined" prepend-inner-icon="ri-bookmark-line"
-              placeholder="Ex: Actualités, Tutoriels, Guides..." autofocus />
+            <VTextField 
+              v-model="form.title" 
+              label="Titre de la catégorie *" 
+              :rules="titleRules" 
+              required 
+              clearable
+              variant="outlined" 
+              prepend-inner-icon="ri-bookmark-line"
+              placeholder="Ex: Actualités, Tutoriels, Guides..." 
+              autofocus />
           </VCol>
         </VRow>
 
         <!-- Description -->
         <VRow dense>
           <VCol cols="12">
-            <VTextarea v-model="form.description" label="Description" :rules="descriptionRules" clearable
-              variant="outlined" rows="4" prepend-inner-icon="ri-align-left"
+            <VTextarea 
+              v-model="form.description" 
+              label="Description" 
+              :rules="descriptionRules" 
+              clearable
+              variant="outlined" 
+              rows="4" 
+              prepend-inner-icon="ri-align-left"
               placeholder="Décrivez brièvement cette catégorie..." />
           </VCol>
         </VRow>
 
         <!-- Aperçu du slug (si le titre existe) -->
-        <VRow v-if="form.title" dense>
+        <VRow v-if="form && form.title" dense>
           <VCol cols="12">
             <VAlert type="info" variant="tonal" class="mb-4">
               <template #prepend>
