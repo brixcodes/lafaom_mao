@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { validateRequired, validateMinLength } from '@/utils/validation'
 
 const props = defineProps({
@@ -17,11 +17,17 @@ const emit = defineEmits(['update:modelValue', 'submit', 'cancel'])
 // Local state
 const isSubmitting = ref(false)
 
-// Proxy réactif : permet d'écrire directement v-model="form.title"
-const form = computed({
-  get: () => props.modelValue || { title: '', slug: '', description: '' },
-  set: (val) => emit('update:modelValue', val),
+// Utiliser des refs réactifs simples
+const form = ref({
+  title: props.modelValue?.title || '',
+  slug: props.modelValue?.slug || '',
+  description: props.modelValue?.description || ''
 })
+
+// Émettre les changements vers le parent quand nécessaire
+const updateParent = () => {
+  emit('update:modelValue', { ...form.value })
+}
 
 // ✅ Règles personnalisées
 const titleRules = [
@@ -111,7 +117,8 @@ const handleSubmit = async () => {
               variant="outlined" 
               prepend-inner-icon="ri-bookmark-line"
               placeholder="Ex: Actualités, Tutoriels, Guides..." 
-              autofocus />
+              autofocus 
+              @input="updateParent" />
           </VCol>
         </VRow>
 
@@ -126,7 +133,8 @@ const handleSubmit = async () => {
               variant="outlined" 
               rows="4" 
               prepend-inner-icon="ri-align-left"
-              placeholder="Décrivez brièvement cette catégorie..." />
+              placeholder="Décrivez brièvement cette catégorie..." 
+              @input="updateParent" />
           </VCol>
         </VRow>
 

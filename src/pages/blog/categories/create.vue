@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBlogCategories } from '@/composables/useBlogCategories'
-import { usePermissions } from '@/composables/usePermissions'
 import { confirmAction } from '@/utils/confirm'
 import { showToast } from '@/components/toast/toastManager'
 import CategoryForm from '@/components/Blog/CategoryForm.vue'
@@ -14,9 +13,6 @@ const router = useRouter()
 // Utiliser le composable pour les catégories
 const { createCategory, generateSlug } = useBlogCategories()
 
-// Permissions
-const { canCreateBlogs } = usePermissions()
-
 const isLoading = ref(false)
 const form = ref({
   title: '',
@@ -24,8 +20,16 @@ const form = ref({
   slug: '',
 })
 
-// Vérification des permissions d'accès
-const hasAccess = computed(() => canCreateBlogs.value)
+// S'assurer que le form est toujours initialisé
+onMounted(() => {
+  if (!form.value) {
+    form.value = {
+      title: '',
+      description: '',
+      slug: '',
+    }
+  }
+})
 
 const titleRules = [
   (v: string) => {
@@ -65,15 +69,6 @@ const validate = () => {
 }
 
 const handleSubmit = async (data: any) => {
-  // Vérifier les permissions
-  if (!canCreateBlogs.value) {
-    showToast({
-      message: 'Vous n\'avez pas les permissions nécessaires pour créer une catégorie',
-      type: 'error'
-    })
-    return
-  }
-
   const confirmed = await confirmAction({
     title: 'Êtes vous sûres?',
     text: 'Souhaitez-vous réellement enregistrer cette catégorie ?',
