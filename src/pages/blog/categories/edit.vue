@@ -46,7 +46,7 @@ const handleSubmit = async (data: any) => {
   // Vérifier les permissions
   if (!canUpdateBlogs.value) {
     showToast({
-      message: 'Vous n\'avez pas les permissions nécessaires pour modifier une catégorie',
+      message: "Vous n'avez pas les permissions nécessaires pour modifier une catégorie",
       type: 'error'
     })
     return
