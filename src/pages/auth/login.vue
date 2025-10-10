@@ -120,7 +120,9 @@ const onSubmit = async () => {
 
 
       <VCardText class="pt-2 text-center">
-        <p class="mb-0">Institution de formation et d'intervention sociale en milieu carcéral</p>
+        <p class="mb-0">
+          Institut de formation  des auxiliaires  de vie  en univers judiciaire
+        </p>
       </VCardText>
 
       <VCardText>
