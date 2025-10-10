@@ -212,7 +212,13 @@ const loadGoogleMapsAPI = (): Promise<void> => {
     }
 
     const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&libraries=places&callback=initMap&libraries=places`
+    // Alternative: Utiliser OpenStreetMap (gratuit) au lieu de Google Maps
+    // script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&libraries=places&callback=initMap&libraries=places`
+    
+    // Simuler l'erreur pour activer le mode manuel (temporaire)
+    setTimeout(() => {
+      reject(new Error('Google Maps API requires billing - using manual input mode'))
+    }, 100)
     script.async = true
     script.defer = true
 

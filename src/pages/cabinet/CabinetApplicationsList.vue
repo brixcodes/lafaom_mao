@@ -119,8 +119,7 @@
       <VIcon icon="ri-building-line" size="64" color="disabled" class="mb-4" />
       <h3 class="text-h6 mb-2">Aucune candidature de cabinet trouvée</h3>
       <p class="text-body-2 text-medium-emphasis mb-4">
-        {{ hasActiveFilters ? 'Aucune candidature ne correspond à vos critères de recherche.' : 'Aucune candidature de
-        cabinet n\'a été soumise pour le moment.' }}
+        {{ hasActiveFilters ? 'Aucune candidature ne correspond à vos critères de recherche.' : 'Aucune candidature de cabinet n\'a été soumise pour le moment.' }}
       </p>
       <VBtn v-if="!hasActiveFilters" color="primary" :to="{ name: 'cabinet-application-create' }">
         Soumettre la première candidature

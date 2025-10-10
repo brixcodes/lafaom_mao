@@ -1,7 +1,5 @@
 <template>
   <div class="organization-center-create-page">
-
-    
     <!-- En-tête -->
     <div class="d-flex align-center mb-6">
       <VBtn icon="ri-arrow-left-line" variant="text" @click="handleBack" class="me-3" />
@@ -458,7 +456,7 @@ const countryOptions = [
 
 // Methods
 const handleBack = () => {
-  router.push('/organization-centers')
+  router.back()
 }
 
 const handleSubmit = async () => {
@@ -501,7 +499,7 @@ const handleSubmit = async () => {
     clearForm()
     
     // Rediriger vers la liste
-    router.push({ name: 'organization-centers-index' })
+    router.push('/organization-centers')
   } catch (err) {
     console.error('Erreur lors de la création:', err)
     showToast({ message: 'Erreur lors de la création du centre', type: 'error' })
