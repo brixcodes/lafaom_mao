@@ -11,24 +11,34 @@ export function useInstantPermissions() {
 
   // Vérification de permission réactive
   const hasPermission = computed(() => (permission: string | PermissionEnum) => {
-    if (!authStore.isAuthenticated || !authStore.user) {
+    try {
+      if (!authStore.isAuthenticated || !authStore.user) {
+        return false
+      }
+
+      // Utiliser les permissions déjà chargées (depuis localStorage ou API)
+      return authStore.hasPermission(permission.toString())
+    } catch (error) {
+      console.warn('Erreur lors de la vérification de permission:', error)
       return false
     }
-
-    // Utiliser les permissions déjà chargées (depuis localStorage ou API)
-    return authStore.hasPermission(permission.toString())
   })
 
   // Vérification de plusieurs permissions
   const hasPermissions = computed(() => (permissions: (string | PermissionEnum)[], requireAll = false) => {
-    if (!permissions.length) return true
-    if (!authStore.isAuthenticated || !authStore.user) return false
+    try {
+      if (!permissions.length) return true
+      if (!authStore.isAuthenticated || !authStore.user) return false
 
-    const hasPermissions = permissions.map(p => hasPermission.value(p))
-    
-    return requireAll 
-      ? hasPermissions.every(Boolean)
-      : hasPermissions.some(Boolean)
+      const hasPermissions = permissions.map(p => hasPermission.value(p))
+      
+      return requireAll 
+        ? hasPermissions.every(Boolean)
+        : hasPermissions.some(Boolean)
+    } catch (error) {
+      console.warn('Erreur lors de la vérification de permissions:', error)
+      return false
+    }
   })
 
   // Vérification de rôle (RoleEnum)
