@@ -110,7 +110,6 @@ declare module 'vue' {
     TrainingForm: typeof import('./src/components/Training/TrainingForm.vue')['default']
     TrainingSessionCard: typeof import('./src/components/Training/TrainingSessionCard.vue')['default']
     TrainingSessionForm: typeof import('./src/components/Training/TrainingSessionForm.vue')['default']
-    TranslationDemo: typeof import('./src/components/Permission/TranslationDemo.vue')['default']
     UserActionGuard: typeof import('./src/components/Permission/UserActionGuard.vue')['default']
     UserBulkActionsGuard: typeof import('./src/components/Permission/UserBulkActionsGuard.vue')['default']
     UserDeleteDialog: typeof import('./src/components/User/UserDeleteDialog.vue')['default']
@@ -119,7 +118,6 @@ declare module 'vue' {
     UserFilterGuard: typeof import('./src/components/Permission/UserFilterGuard.vue')['default']
     UserForm: typeof import('./src/components/User/UserForm.vue')['default']
     UserFormGuard: typeof import('./src/components/Permission/UserFormGuard.vue')['default']
-    UserList: typeof import('./src/components/users/UserList.vue')['default']
     UserModuleGuard: typeof import('./src/components/Permission/UserModuleGuard.vue')['default']
     UserNavigationGuard: typeof import('./src/components/Permission/UserNavigationGuard.vue')['default']
     UserPermissionManager: typeof import('./src/components/Permission/UserPermissionManager.vue')['default']
@@ -129,6 +127,5 @@ declare module 'vue' {
     UserTable: typeof import('./src/components/User/UserTable.vue')['default']
     UserTableGuard: typeof import('./src/components/Permission/UserTableGuard.vue')['default']
     VCard: typeof import('./src/@core/components/VCard.vue')['default']
-    VueApexCharts: typeof import('vue3-apexcharts')['default']
   }
 }

@@ -152,7 +152,7 @@
       <VIcon icon="ri-money-euro-circle-line" size="64" color="disabled" class="mb-4" />
       <h3 class="text-h6 mb-2">Aucune candidature payée trouvée</h3>
       <p class="text-body-2 text-medium-emphasis mb-4">
-        {{ hasActiveFilters ? "Aucune candidature ne correspond à vos critères de recherche." : "Aucune candidature de cabinet n'a encore effectué de paiement." }}
+        {{ hasActiveFilters ? "Aucune candidature ne correspond à vos critères de recherche." : "Aucune candidature de cabinet soumise pour le moment." }}
       </p>
     </div>
 
