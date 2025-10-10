@@ -151,7 +151,7 @@
       <VIcon icon="ri-building-line" size="64" color="disabled" class="mb-4" />
       <h3 class="text-h6 mb-2">Aucune candidature de cabinet trouvée</h3>
       <p class="text-body-2 text-medium-emphasis mb-4">
-        {{ hasActiveFilters ? 'Aucune candidature ne correspond à vos critères de recherche.' : 'Vous n\'avez pas encore soumis de candidature de cabinet.' }}
+        {{ hasActiveFilters ? "Aucune candidature ne correspond à vos critères de recherche." : "Vous n'avez pas encore soumis de candidature de cabinet." }}
       </p>
       <VBtn 
         v-if="!hasActiveFilters" 
