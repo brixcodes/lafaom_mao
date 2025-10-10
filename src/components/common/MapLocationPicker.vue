@@ -196,29 +196,38 @@ const initializeMap = async () => {
 
     mapLoaded.value = true
   } catch (error) {
-    console.error('Erreur lors de l\'initialisation de la carte:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+    console.error('Erreur lors de l\'initialisation de la carte:', errorMessage)
     mapError.value = true
     mapLoaded.value = true // Pour éviter le loading infini
     showToast({ message: 'Google Maps non disponible, utilisez la saisie manuelle', type: 'warning' })
   }
 }
 
+// Déclarer les types pour window
+declare global {
+  interface Window {
+    initMap: () => void
+  }
+}
+
+// Fonction de callback globale pour Google Maps
+window.initMap = () => {
+  console.log('Google Maps API chargée avec succès')
+  // Déclencher l'événement de chargement
+  window.dispatchEvent(new CustomEvent('googleMapsLoaded'))
+}
+
 // Load Google Maps API
 const loadGoogleMapsAPI = (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    if (window.google) {
+    if (window.google && window.google.maps) {
       resolve()
       return
     }
 
     const script = document.createElement('script')
-    // Alternative: Utiliser OpenStreetMap (gratuit) au lieu de Google Maps
-    // script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&libraries=places&callback=initMap&libraries=places`
-    
-    // Simuler l'erreur pour activer le mode manuel (temporaire)
-    setTimeout(() => {
-      reject(new Error('Google Maps API requires billing - using manual input mode'))
-    }, 100)
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&libraries=places&callback=initMap`
     script.async = true
     script.defer = true
 
@@ -227,9 +236,18 @@ const loadGoogleMapsAPI = (): Promise<void> => {
       reject(new Error('Timeout loading Google Maps API'))
     }, 10000)
 
-    script.onload = () => {
+    // Écouter l'événement de chargement de Google Maps
+    const handleGoogleMapsLoaded = () => {
       clearTimeout(timeout)
+      window.removeEventListener('googleMapsLoaded', handleGoogleMapsLoaded)
       resolve()
+    }
+    
+    window.addEventListener('googleMapsLoaded', handleGoogleMapsLoaded)
+    
+    script.onload = () => {
+      // Le script est chargé, mais on attend le callback initMap
+      console.log('Script Google Maps chargé, en attente du callback...')
     }
     script.onerror = () => {
       clearTimeout(timeout)
