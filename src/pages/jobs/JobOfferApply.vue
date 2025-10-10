@@ -158,6 +158,15 @@
                     </VCardText>
                   </VCard>
 
+                  <!-- Indicateur de progression des uploads -->
+                  <VAlert v-if="uploadingCount > 0" type="info" variant="tonal" class="mb-4" prepend-icon="ri-upload-line">
+                    <template #title>Upload en cours</template>
+                    <div class="text-body-2">
+                      {{ uploadingCount }} fichier(s) en cours d'upload... 
+                      <VProgressLinear :model-value="uploadProgress" color="primary" class="mt-2" />
+                    </div>
+                  </VAlert>
+
                   <!-- Upload de fichiers -->
                   <div class="file-upload-section">
                     <VRow>
@@ -229,8 +238,18 @@
                     Annuler
                   </VBtn>
 
-                  <VBtn type="submit" variant="flat" color="primary" :loading="submitting">
-                    Candidater
+                  <VBtn type="submit" variant="flat" color="primary" :loading="submitting" :disabled="!isFormValid">
+                    <template v-if="uploadingCount > 0">
+                      <VIcon icon="ri-loader-line" class="me-2" />
+                      Upload en cours ({{ uploadingCount }})
+                    </template>
+                    <template v-else-if="uploadProgress < 100 && uploadProgress > 0">
+                      <VIcon icon="ri-upload-line" class="me-2" />
+                      Upload {{ uploadProgress }}%
+                    </template>
+                    <template v-else>
+                      Candidater
+                    </template>
                   </VBtn>
                 </div>
               </VForm>
@@ -468,12 +487,33 @@ const uploadedFilesCount = computed(() => {
   ).length
 })
 
+const uploadingCount = computed(() => {
+  return Object.values(uploadedAttachments.value).filter(attachment => 
+    attachment.uploading
+  ).length
+})
+
+const uploadProgress = computed(() => {
+  const total = requiredDocuments.value.length
+  const completed = Object.values(uploadedAttachments.value).filter(attachment => 
+    attachment && !attachment.uploading && attachment.url
+  ).length
+  return total > 0 ? Math.round((completed / total) * 100) : 0
+})
+
 const isFormValid = computed(() => {
   const hasRequiredFields = form.first_name && form.last_name && form.email && form.phone_number && form.city && form.address
   const hasAllFiles = requiredDocuments.value.every(doc =>
     fileInputs.value[doc] && fileInputs.value[doc].length > 0
   )
-  return hasRequiredFields && hasAllFiles && fileErrors.value.length === 0
+  const allUploadsCompleted = requiredDocuments.value.every(doc => {
+    const attachment = uploadedAttachments.value[doc]
+    return attachment && !attachment.uploading && attachment.url
+  })
+  const hasUploadErrors = Object.values(uploadedAttachments.value).some(attachment => 
+    attachment.uploading === false && !attachment.url
+  )
+  return hasRequiredFields && hasAllFiles && allUploadsCompleted && !hasUploadErrors && fileErrors.value.length === 0
 })
 
 // Options
@@ -807,7 +847,7 @@ const submitApplication = async () => {
     // Préparer les attachments avec URLs (utiliser les noms tels qu'ils sont stockés)
     const attachments = requiredDocuments.value.map(docType => ({
       name: docType, // Utiliser le nom tel qu'il est stocké dans l'offre
-      url: uploadedAttachments.value[docType].url
+      type: docType // Ajouter le type pour la cohérence avec le backend
     }))
 
     // Données de candidature avec attachments URLs
