@@ -5,7 +5,7 @@
         <VIcon icon="ri-arrow-left-line" color="primary" />
       </VBtn>
       <div>
-        <h1 class="font-weight-bold mb-1">Modifier l'article</h1>
+        <h1 class="font-weight-bold mb-1">Modifier l'actualité</h1>
         <p class="text-body-2 text-secondary mb-0">
           Modifiez les informations de l'article puis enregistrez les changements.
         </p>

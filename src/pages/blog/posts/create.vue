@@ -5,7 +5,7 @@
         <VIcon icon="ri-arrow-left-line" color="primary" />
       </VBtn>
       <div>
-        <h1 class="font-weight-bold mb-1">Créer une actualitée</h1>
+        <h1 class="font-weight-bold mb-1">Créer une actualité</h1>
         <p class="text-body-2 text-secondary mb-0">
           Remplissez le formulaire pour ajouter une nouvelle actualitée à votre blog.
         </p>

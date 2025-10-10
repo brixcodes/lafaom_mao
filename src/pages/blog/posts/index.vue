@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="d-flex align-center justify-space-between mb-6">
       <div>
-        <h2 class="text-h4 font-weight-bold">Gestion des Actualitées</h2>
+        <h2 class="text-h4 font-weight-bold">Gestion des Actualités</h2>
         <p class="text-body-1 text-medium-emphasis">
           Gérez et organisez vos contenus éditoriaux
         </p>

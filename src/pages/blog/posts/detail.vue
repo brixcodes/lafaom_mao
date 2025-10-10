@@ -5,9 +5,9 @@
         <VIcon icon="ri-arrow-left-line" color="primary" />
       </VBtn>
       <div>
-        <h1 class="font-weight-bold mb-1">Détails d'un article</h1>
+        <h1 class="font-weight-bold mb-1">Détails d'une actualité</h1>
         <p class="text-body-2 text-secondary mb-0">
-          Consultez les détails de l'article et ajoutez de nouvelles sections.
+          Consultez les détails de l'actualité et ajoutez de nouvelles sections.
         </p>
       </div>
     </div>
