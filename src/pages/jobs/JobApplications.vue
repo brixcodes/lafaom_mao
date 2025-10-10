@@ -211,7 +211,7 @@
       <VIcon icon="ri-file-user-line" size="80" class="text-medium-emphasis mb-6" />
       <h3 class="text-h5 mb-4">Aucune candidature trouvée</h3>
       <p class="text-body-1 text-medium-emphasis mb-6">
-        {{ hasActiveFilters ? "Aucune candidature ne correspond à vos critères de recherche." : "Vous n'avez pas encore reçu de candidatures." }}
+        {{ hasActiveFilters ? "Aucune candidature ne correspond à vos critères de recherche." : "Aucune candidature reçue." }}
       </p>
 
       <div class="d-flex justify-center gap-3">
