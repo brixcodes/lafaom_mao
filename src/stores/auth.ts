@@ -41,7 +41,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Vérification des permissions
   const hasPermission = computed(() => (permission: string) => {
     try {
-      if (!user.value || !userPermissions.value.length) return false
+      if (!user.value || !userPermissions.value || !userPermissions.value.length) return false
       return userPermissions.value.includes(permission)
     } catch (error) {
       console.warn('Erreur lors de la vérification de permission:', error)

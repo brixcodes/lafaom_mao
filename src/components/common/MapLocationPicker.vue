@@ -197,10 +197,10 @@ const initializeMap = async () => {
     mapLoaded.value = true
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
-    console.error('Erreur lors de l\'initialisation de la carte:', errorMessage)
+    console.warn('Google Maps non disponible, passage en mode manuel:', errorMessage)
     mapError.value = true
     mapLoaded.value = true // Pour éviter le loading infini
-    showToast({ message: 'Google Maps non disponible, utilisez la saisie manuelle', type: 'warning' })
+    // Pas de toast pour éviter de spammer l'utilisateur
   }
 }
 
@@ -227,7 +227,7 @@ const loadGoogleMapsAPI = (): Promise<void> => {
     }
 
     const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&libraries=places&callback=initMap`
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&libraries=places&callback=initMap&loading=async`
     script.async = true
     script.defer = true
 

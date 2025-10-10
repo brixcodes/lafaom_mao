@@ -16,7 +16,7 @@
 
         <VBtn color="primary" @click="goToCreate" v-if="hasPermissions([PermissionEnum.CAN_CREATE_BLOG])">
           <VIcon icon="ri-add-line" class="me-2" />
-          Nouvel actualitée
+          Nouvel actualitée 
         </VBtn>
       </div>
     </div>

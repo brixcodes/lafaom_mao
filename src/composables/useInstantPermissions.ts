@@ -8,6 +8,29 @@ import type { PermissionEnum } from '@/types/permissions'
  */
 export function useInstantPermissions() {
   const authStore = useAuthStore()
+  
+  // Protection contre les erreurs de réactivité
+  if (!authStore) {
+    console.warn('AuthStore non disponible dans useInstantPermissions')
+    return {
+      hasPermission: () => false,
+      hasPermissions: () => false,
+      hasRole: () => false,
+      hasRoles: () => false,
+      hasUserType: () => false,
+      isAdmin: false,
+      isManager: false,
+      isVisitor: false,
+      isUserTypeAdmin: false,
+      isUserTypeStaff: false,
+      isUserTypeTeacher: false,
+      isUserTypeStudent: false,
+      accessLevel: 'none',
+      canManageUsers: false,
+      canManagePermissions: false,
+      canManageRoles: false
+    }
+  }
 
   // Vérification de permission réactive
   const hasPermission = computed(() => (permission: string | PermissionEnum) => {
