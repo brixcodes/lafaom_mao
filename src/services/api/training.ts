@@ -217,6 +217,16 @@ class TrainingService {
   }
 
   /**
+   * Récupérer plusieurs formations par leurs IDs
+   */
+  async getTrainingByIds(trainingIds: string[]): Promise<TrainingsPageOutSuccess> {
+    const response = await apiService.get('/trainings/batch', { 
+      params: { ids: trainingIds.join(',') } 
+    })
+    return response as TrainingsPageOutSuccess
+  }
+
+  /**
    * Mettre à jour une formation
    */
   async updateTraining(trainingId: string, data: TrainingUpdateInput): Promise<TrainingOutSuccess> {

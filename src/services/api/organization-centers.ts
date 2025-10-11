@@ -163,6 +163,14 @@ class OrganizationCentersService {
     })
     return response as OrganizationCenterListOutSuccess
   }
+
+  /**
+   * Récupérer les centres d'organisation actifs de l'organisation courante
+   */
+  async getActiveOrganizationCenters(): Promise<OrganizationCenterListOutSuccess> {
+    const response = await apiService.get('/system/organization-centers/active')
+    return response as OrganizationCenterListOutSuccess
+  }
 }
 
 export const organizationCentersService = new OrganizationCentersService()
