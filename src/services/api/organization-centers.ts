@@ -168,7 +168,10 @@ class OrganizationCentersService {
    * Récupérer les centres d'organisation actifs de l'organisation courante
    */
   async getActiveOrganizationCenters(): Promise<OrganizationCenterListOutSuccess> {
-    const response = await apiService.get('/system/organization-centers/active')
+    // Utiliser l'endpoint existant avec filtre status=active
+    const response = await apiService.get('/system/organization-centers', { 
+      params: { status: 'active', page_size: 100 } 
+    })
     return response as OrganizationCenterListOutSuccess
   }
 }

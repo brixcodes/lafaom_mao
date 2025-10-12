@@ -219,11 +219,19 @@ class TrainingService {
   /**
    * Récupérer plusieurs formations par leurs IDs
    */
-  async getTrainingByIds(trainingIds: string[]): Promise<TrainingsPageOutSuccess> {
-    const response = await apiService.get('/trainings/batch', { 
-      params: { ids: trainingIds.join(',') } 
-    })
-    return response as TrainingsPageOutSuccess
+  async getTrainingByIds(trainingIds: string[] | number[]): Promise<TrainingsPageOutSuccess> {
+    try {
+      // S'assurer que c'est un tableau
+      const ids = Array.isArray(trainingIds) ? trainingIds : [trainingIds]
+      const response = await apiService.get('/trainings/batch', { 
+        params: { ids: ids.join(',') } 
+      })
+      return response as TrainingsPageOutSuccess
+    } catch (error) {
+      // Fallback: récupérer toutes les formations si l'endpoint batch n'existe pas
+      console.warn('Endpoint batch non disponible, récupération de toutes les formations')
+      return await this.getTrainings({ page_size: 100 })
+    }
   }
 
   /**
@@ -297,6 +305,30 @@ class TrainingService {
   async deleteTrainingSession(sessionId: string): Promise<TrainingSessionOutSuccess> {
     const response = await apiService.delete(`/training-sessions/${sessionId}`)
     return response as TrainingSessionOutSuccess
+  }
+
+  /**
+   * Récupérer les sessions d'une formation par son ID
+   */
+  async getTrainingSessionsByTrainingId(trainingId: string, filters: {
+    page?: number
+    page_size?: number
+    status?: string
+    center_id?: number
+    order_by?: 'created_at' | 'registration_deadline' | 'start_date'
+    asc?: 'asc' | 'desc'
+  } = {}): Promise<TrainingSessionsPageOutSuccess> {
+    try {
+      // Essayer d'abord la route directe
+      const response = await apiService.get(`/trainings/${trainingId}/sessions`, { params: filters })
+      return response as TrainingSessionsPageOutSuccess
+    } catch (error) {
+      // Fallback: utiliser la route générale avec filtre training_id
+      console.warn(`Route /trainings/${trainingId}/sessions non disponible, utilisation du fallback`)
+      const fallbackFilters = { ...filters, training_id: trainingId }
+      const response = await apiService.get('/training-sessions', { params: fallbackFilters })
+      return response as TrainingSessionsPageOutSuccess
+    }
   }
 
   // === SPECIALTIES ===

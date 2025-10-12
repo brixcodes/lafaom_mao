@@ -121,7 +121,7 @@ const onSubmit = async () => {
 
       <VCardText class="pt-2 text-center">
         <p class="mb-0">
-          Institut de formation  des auxiliaires  de vie  en univers judiciaire
+          Institut de formation des auxiliaires de vie en univers judiciaire
         </p>
       </VCardText>
 
@@ -158,10 +158,11 @@ const onSubmit = async () => {
                 Connexion
               </VBtn>
               <VCol cols="12" class="text-center mt-2">
-                <RouterLink to="/login" class="text-primary">
-                  Revenir au siteweb
-                </RouterLink>
+                <a href="https://lafaom-mao.org/" class="text-primary" rel="noopener">
+                  Revenir au site web
+                </a>
               </VCol>
+
 
             </VCol>
           </VRow>
