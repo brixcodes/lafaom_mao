@@ -47,7 +47,19 @@ export class ApiService {
         const status = error.response?.status
 
         if (status === 401) {
-          // gestion token expired...
+          // Token expiré ou invalide - redirection silencieuse vers login
+          console.log('[API] Token invalide détecté, redirection silencieuse vers login')
+          
+          // Nettoyer les données d'authentification
+          this.clearAuthData()
+          
+          // Rediriger silencieusement vers la page de connexion
+          if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+            // Attendre un petit délai pour que l'utilisateur ne remarque pas la redirection
+            setTimeout(() => {
+              window.location.href = '/login'
+            }, 100)
+          }
         } else if (status === 403) {
           showToast({ message: "Accès refusé. Vous n'avez pas les permissions nécessaires.", type: 'error' })
         } else if (status === 422) {

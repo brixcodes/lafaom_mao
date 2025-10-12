@@ -194,8 +194,10 @@ export const useAuthStore = defineStore('auth', () => {
         }
       } catch (error) {
         console.error('[Auth] Erreur lors du rechargement de l\'utilisateur:', error)
-        // Si le token est invalide, nettoyer les données
+        // Si le token est invalide, nettoyer les données et rediriger silencieusement
         clearAuthData()
+        // Redirection silencieuse vers login
+        await redirectToLoginSilently()
       } finally {
         isLoading.value = false
       }
@@ -207,6 +209,21 @@ export const useAuthStore = defineStore('auth', () => {
       // Token et utilisateur présents, marquer comme initialisé
       isInitialized.value = true
       console.log('[Auth] Utilisateur déjà chargé')
+    }
+  }
+
+  // Fonction pour rediriger silencieusement vers la page de connexion
+  async function redirectToLoginSilently() {
+    try {
+      // Attendre un petit délai pour que l'utilisateur ne remarque pas la redirection
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Rediriger vers la page de connexion sans notification
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
+    } catch (error) {
+      console.error('[Auth] Erreur lors de la redirection silencieuse:', error)
     }
   }
 
@@ -596,5 +613,6 @@ export const useAuthStore = defineStore('auth', () => {
     resetTwoFactor,
     initialize,
     initializeAuth,
+    redirectToLoginSilently,
   }
 })

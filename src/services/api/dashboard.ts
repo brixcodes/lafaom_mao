@@ -93,14 +93,14 @@ class DashboardService {
    * Récupérer les statistiques générales du dashboard
    */
   async getStats(): Promise<DashboardStats> {
-    return await apiService.get('/stats')
+    return await apiService.get('/dashboard/comprehensive-stats')
   }
 
   /**
    * Récupérer les données de graphiques
    */
   async getChartData(period: 'week' | 'month' | 'year' = 'month'): Promise<DashboardChartData> {
-    return await apiService.get('/charts', {
+    return await apiService.get('/dashboard/payment-stats', {
       params: { period }
     })
   }

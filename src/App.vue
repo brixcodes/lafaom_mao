@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import ToastManager from '@/components/toast/ToastManager.vue'
+import AuthLoader from '@/components/auth/AuthLoader.vue'
 
 // Main App component
 const authStore = useAuthStore()
@@ -14,6 +15,7 @@ onMounted(async () => {
 
 <template>
   <VApp>
+    <!-- <AuthLoader /> -->
     <RouterView />
     <ToastManager />
   </VApp>

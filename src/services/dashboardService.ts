@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { apiService } from './api/base'
 import { API_CONFIG } from '@/config/api'
 
 const API_BASE_URL = API_CONFIG.BASE_URL
@@ -110,8 +110,7 @@ class DashboardService {
 
   async getComprehensiveStats(): Promise<DashboardStats> {
     try {
-      const response = await axios.get(`${this.baseURL}/dashboard/comprehensive-stats`)
-      return response.data
+      return await apiService.get('/dashboard/comprehensive-stats')
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques:', error)
       throw error
@@ -120,8 +119,7 @@ class DashboardService {
 
   async getPaymentStats(): Promise<PaymentStats> {
     try {
-      const response = await axios.get(`${this.baseURL}/dashboard/payment-stats`)
-      return response.data
+      return await apiService.get('/dashboard/payment-stats')
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques de paiement:', error)
       throw error

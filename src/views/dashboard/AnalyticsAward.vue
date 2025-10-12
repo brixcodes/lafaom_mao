@@ -17,7 +17,7 @@ const welcomeMessage = computed(() => {
 })
 
 const userName = computed(() => {
-  return authStore.user?.first_name && authStore.user?.last_name 
+  return authStore.user?.first_name && authStore.user?.last_name
     ? `${authStore.user.first_name} ${authStore.user.last_name}`
     : authStore.user?.email || 'Utilisateur'
 })
@@ -57,7 +57,7 @@ const onImageError = () => {
 const achievementMessage = computed(() => {
   const hour = new Date().getHours()
   const userRole = authStore.user?.roles?.[0]?.name || 'user'
-  
+
   if (userRole === 'admin') {
     if (hour < 12) return "Excellente gestion de l'académie !"
     if (hour < 18) return "Continuez votre excellent leadership !"
@@ -79,9 +79,9 @@ const achievementMessage = computed(() => {
 
 const getPerformanceMetric = () => {
   if (!paymentStats.value) return "Chargement..."
-  
+
   const userRole = authStore.user?.roles?.[0]?.name || 'user'
-  
+
   if (userRole === 'admin') {
     // Calculer le total en caisse (Offres d'emploi + Inscriptions + Formations)
     const jobPayments = paymentStats.value.job_payments?.APPROVED?.submission_fees?.total_amount || 0
@@ -109,9 +109,9 @@ const getPerformanceMetric = () => {
 
 const getProgressMessage = () => {
   if (!paymentStats.value) return "Chargement..."
-  
+
   const userRole = authStore.user?.roles?.[0]?.name || 'user'
-  
+
   if (userRole === 'admin') {
     // Utiliser les montants acceptés des statistiques globales
     const totalAmount = paymentStats.value.global_stats?.accepted?.amount || 0
@@ -160,29 +160,21 @@ onMounted(() => {
         </div>
       </div>
       <br>
-      <h4 class="text-h4 text-primary mt-2">
+      <br>
+      <h4 class="text-h4 text-primary mt-5">
         <VProgressCircular v-if="loading" size="20" indeterminate />
         <span v-else>{{ getPerformanceMetric() }}</span>
       </h4>
-      <div class="text-body-1 mb-2">
+      <!-- <div class="text-body-1 mb-2">
         <VProgressCircular v-if="loading" size="16" indeterminate />
         <span v-else>{{ getProgressMessage() }} <span class="text-high-emphasis">🚀</span></span>
-      </div>
+      </div> -->
     </VCardText>
 
     <!-- User Avatar -->
     <VAvatar :image="picture" size="80" class="trophy">
       <VIcon size="40">ri-user-line</VIcon>
     </VAvatar>
-    <!-- <VAvatar 
-      :src="userAvatar" 
-      :alt="userName"
-      class="trophy"
-      size="80"
-      @error="onImageError"
-    >
-      <VIcon size="40">ri-user-line</VIcon>
-    </VAvatar> -->
   </VCard>
 </template>
 

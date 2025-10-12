@@ -1,41 +1,40 @@
 <script setup lang="ts">
-import { dashboardService, type DashboardStats } from '@/services/dashboardService'
+import { usersService } from '@/services/api/users'
+import { trainingService } from '@/services/api/training'
+import { jobOffersService } from '@/services/api/job-offers'
+import { blogService } from '@/services/api/blog'
 
 // Données réactives
-const stats = ref<DashboardStats | null>(null)
+const usersCount = ref(0)
+const trainingsCount = ref(0)
+const jobOffersCount = ref(0)
+const blogPostsCount = ref(0)
 const loading = ref(true)
 
 // Statistiques générales
 const statistics = computed(() => {
-  if (!stats.value) return []
-
-  const users = stats.value.users || {}
-  const trainings = stats.value.trainings || {}
-  const jobOffers = stats.value.job_offers || {}
-  const blog = stats.value.blog || {}
-
   return [
     {
       title: 'Utilisateurs',
-      stats: users.total || 0,
+      stats: usersCount.value,
       icon: 'ri-group-line',
       color: 'primary',
     },
     {
       title: 'Formations',
-      stats: (trainings.total_active || 0) + (trainings.total_inactive || 0),
+      stats: trainingsCount.value,
       icon: 'ri-school-line',
       color: 'success',
     },
     {
       title: 'Offres d\'emploi',
-      stats: jobOffers.total || 0,
+      stats: jobOffersCount.value,
       icon: 'ri-briefcase-line',
       color: 'warning',
     },
     {
       title: 'Articles de blog',
-      stats: blog.total_posts || 0,
+      stats: blogPostsCount.value,
       icon: 'ri-file-text-line',
       color: 'info',
     },
@@ -48,13 +47,32 @@ const moreList = [
   { title: 'Mettre à jour', value: 'Mettre à jour' },
 ]
 
-// Charger les données
+// Charger les données depuis chaque service
 const fetchStats = async () => {
   try {
     loading.value = true
-    stats.value = await dashboardService.getComprehensiveStats()
+    
+    // Charger les données en parallèle depuis chaque service
+    const [usersData, trainingsData, jobOffersData, blogData] = await Promise.all([
+      usersService.getUsers({ page: 1, page_size: 1 }), // Récupérer juste le total
+      trainingService.getTrainings({ page: 1, page_size: 1 }), // Récupérer juste le total
+      jobOffersService.getJobOffers({ page: 1, page_size: 1 }), // Récupérer juste le total
+      blogService.getPosts({ page: 1, page_size: 1 }) // Récupérer juste le total
+    ])
+    
+    // Extraire les totaux
+    usersCount.value = usersData.total_number || 0
+    trainingsCount.value = trainingsData.total_number || 0
+    jobOffersCount.value = jobOffersData.total_number || 0
+    blogPostsCount.value = blogData.total_number || 0
+    
   } catch (error) {
     console.error('Erreur lors du chargement des statistiques:', error)
+    // En cas d'erreur, afficher 0 pour chaque statistique
+    usersCount.value = 0
+    trainingsCount.value = 0
+    jobOffersCount.value = 0
+    blogPostsCount.value = 0
   } finally {
     loading.value = false
   }

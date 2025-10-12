@@ -20,21 +20,16 @@
     <VCard class="mb-6">
       <VCardText>
         <VRow>
-          <VCol cols="12" md="6">
+          <VCol cols="12" md="12">
             <VTextField v-model="searchQuery" prepend-inner-icon="ri-search-line" label="Rechercher une spécialité..."
               variant="outlined" density="compact" clearable />
           </VCol>
-          <VCol cols="12" md="3">
+          <!-- <VCol cols="12" md="3">
             <VSelect v-model="sortBy" :items="sortOptions" label="Trier par" variant="outlined" density="compact" />
           </VCol>
           <VCol cols="12" md="3">
             <VSelect v-model="itemsPerPage" :items="itemsPerPageOptions" label="Par page" variant="outlined"
               density="compact" />
-          </VCol>
-          <!-- <VCol cols="12" md="1" class="d-flex align-center">
-            <VBtn variant="outlined" prepend-icon="ri-refresh-line" @click="resetFilters" :disabled="!hasActiveFilters">
-              Reset
-            </VBtn>
           </VCol> -->
         </VRow>
       </VCardText>

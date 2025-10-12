@@ -58,7 +58,13 @@ export function setupAuthGuard(
   
   if (requiresAuth && !authStore.isAuthenticated) {
     console.log('[Router Guard] Route requires auth, redirecting to login')
-    next('/login')
+    // Redirection silencieuse vers login
+    if (to.path !== '/login') {
+      // Utiliser replace pour éviter l'historique de navigation
+      next({ path: '/login', replace: true })
+    } else {
+      next()
+    }
     return
   }
 

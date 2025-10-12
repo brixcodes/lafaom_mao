@@ -17,6 +17,7 @@ declare module 'vue' {
     ArticleStats: typeof import('./src/components/Blog/ArticleStats.vue')['default']
     ArticleTable: typeof import('./src/components/Blog/ArticleTable.vue')['default']
     AuthExample: typeof import('./src/components/AuthExample.vue')['default']
+    AuthLoader: typeof import('./src/components/auth/AuthLoader.vue')['default']
     CardStatisticsHorizontal: typeof import('./src/@core/components/cards/CardStatisticsHorizontal.vue')['default']
     CardStatisticsVertical: typeof import('./src/@core/components/cards/CardStatisticsVertical.vue')['default']
     CardStatisticsWithImages: typeof import('./src/@core/components/cards/CardStatisticsWithImages.vue')['default']

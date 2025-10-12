@@ -1,46 +1,66 @@
 <template>
-  <VCard :class="{ 'list-view': viewMode === 'list' }" elevation="2" @click="goToDetail">
-    <!-- Image de couverture avec overlays -->
-    <div class="image-container">
-      <VImg :src="cleanImageUrl(post.cover_image) || placeholderImage" :height="viewMode === 'list' ? 120 : 200" cover
-        class="post-image">
-        <div class="image-overlay" />
-      </VImg>
-    </div>
+<VCard
+  :class="['post-card', { 'list-view': viewMode === 'list' }]"
+  elevation="3"
+  rounded="lg"
+  @click="goToDetail"
+>
 
-    <!-- Contenu principal -->
-    <VCardText class="post-content" :class="{ 'pa-3': viewMode === 'list', 'pa-4': viewMode !== 'list' }">
-      <!-- Titre -->
-      <h3 class="post-title mb-2" :class="viewMode === 'list' ? 'text-h6' : 'text-h5'">
-        {{ truncateText(post.title, viewMode === 'list' ? 100 : 35) || 'Titre non défini' }}
-      </h3>
-
-      <!-- Auteur et date -->
-      <div class="post-meta mb-3">
-        <div class="d-flex align-center mb-1">
-          <VIcon size="16" color="medium-emphasis" class="me-1">ri-user-line</VIcon>
-          <span class="text-body-2 text-medium-emphasis">{{ post.author_name }}</span>
+  <!-- Image avec overlay -->
+  <div class="image-container">
+    <VImg
+      :src="cleanImageUrl(post.cover_image) || placeholderImage"
+      :height="viewMode === 'list' ? 140 : 220"
+      class="post-image"
+      cover
+    >
+      <template #placeholder>
+        <div class="d-flex align-center justify-center fill-height">
+          <VProgressCircular indeterminate color="primary" />
         </div>
+      </template>
+      <div class="image-overlay" />
+    </VImg>
+  </div>
 
-        <div class="d-flex align-center mb-1">
-          <VIcon size="16" color="medium-emphasis" class="me-1">ri-calendar-line</VIcon>
-          <span class="text-body-2 text-medium-emphasis">Créé le {{ formatDate(post.created_at) }}</span>
-        </div>
+  <!-- Contenu -->
+  <VCardText :class="viewMode === 'list' ? 'pa-3' : 'pa-5'">
+    <!-- Titre -->
+    <h3
+      class="post-title mb-2 font-weight-bold"
+      :class="viewMode === 'list' ? 'text-subtitle-1' : 'text-h6'"
+    >
+      {{ truncateText(post.title, viewMode === 'list' ? 100 : 50) || 'Titre non défini' }}
+    </h3>
 
-        <div v-if="post.published_at" class="d-flex align-center mb-1">
-          <VIcon size="16" color="medium-emphasis" class="me-1">ri-checkbox-circle-line</VIcon>
-          <span class="text-body-2 text-medium-emphasis">Publié le {{ formatDate(post.published_at) }}</span>
-        </div>
-
-        <div v-if="!post.published_at" class="d-flex align-center mb-1">
-          <VIcon size="16" color="medium-emphasis" class="me-1">ri-close-circle-line</VIcon>
-          <span class="text-body-2 text-medium-emphasis">{{ formatDate(post.published_at) }}</span>
-        </div>
+    <!-- Métadonnées -->
+    <div class="post-meta text-body-2 text-medium-emphasis d-flex flex-column gap-1">
+      <div class="d-flex align-center">
+        <VIcon size="18" class="me-1" icon="ri-user-line" />
+        <span>{{ post.author_name || 'Auteur inconnu' }}</span>
       </div>
-    </VCardText>
-    <!-- Indicateur de hover -->
-    <div class="hover-indicator" />
-  </VCard>
+
+      <div class="d-flex align-center">
+        <VIcon size="18" class="me-1" icon="ri-calendar-line" />
+        <span>Créé le {{ formatDate(post.created_at) }}</span>
+      </div>
+
+      <div v-if="post.published_at" class="d-flex align-center">
+        <VIcon size="18" class="me-1" color="success" icon="ri-checkbox-circle-line" />
+        <span>Publié le {{ formatDate(post.published_at) }}</span>
+      </div>
+
+      <div v-else class="d-flex align-center">
+        <VIcon size="18" class="me-1" color="error" icon="ri-close-circle-line" />
+        <span>Non publié</span>
+      </div>
+    </div>
+  </VCardText>
+
+  <!-- Hover indicator -->
+  <div class="hover-indicator" />
+</VCard>
+
 </template>
 
 <script setup lang="ts">

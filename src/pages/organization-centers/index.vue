@@ -11,7 +11,8 @@
           Gérez et consultez tous les centres d'organisation disponibles
         </p>
       </div>
-      <VBtn prepend-icon="ri-add-line" color="primary" :to="{ name: 'organization-centers-create' }" v-if="hasPermissions([PermissionEnum.CAN_CREATE_ORGANIZATION_CENTER])">
+      <VBtn prepend-icon="ri-add-line" color="primary" :to="{ name: 'organization-centers-create' }"
+        v-if="hasPermissions([PermissionEnum.CAN_CREATE_ORGANIZATION_CENTER])">
         Créer un centre
       </VBtn>
     </div>
@@ -28,20 +29,16 @@
             <VSelect v-model="filterStatus" :items="statusOptions" label="Statut" variant="outlined" density="compact"
               clearable />
           </VCol>
-          <VCol cols="12" md="2">
+          <VCol cols="12" md="3">
             <VSelect v-model="filterType" :items="typeOptions" label="Type" variant="outlined" density="compact"
               clearable />
           </VCol>
-          <VCol cols="12" md="2">
-            <VSelect v-model="filterCountry" :items="countryOptions" label="Pays" variant="outlined" density="compact"
+          <VCol cols="12" md="3">
+            <VAutocomplete v-model="filterCountry" :items="countryOptions" label="Pays" variant="outlined" density="compact"
               clearable />
-          </VCol>
-          <VCol cols="12" md="2">
-            <VSelect v-model="sortBy" :items="sortOptions" label="Trier par" variant="outlined" density="compact" />
           </VCol>
           <VCol cols="12" md="1" class="d-flex align-center">
             <VBtn variant="outlined" prepend-icon="ri-refresh-line" @click="resetFilters" :disabled="!hasActiveFilters">
-              Reset
             </VBtn>
           </VCol>
         </VRow>
@@ -72,82 +69,100 @@
     <div v-else-if="hasCenters && hasPermissions([PermissionEnum.CAN_VIEW_ORGANIZATION_CENTER])">
       <VRow>
         <VCol v-for="center in centers" :key="center.id" cols="12" sm="6" md="6" lg="4">
-          <VCard class="mx-auto my-6">
+          <VCard class="mx-auto my-6 elevation-2" max-width="400">
             <!-- Header -->
             <VCardItem>
-              <VCardTitle class="text-h6 line-clamp-2">{{ truncateText(center.name, 45) }}</VCardTitle>
-              <VCardSubtitle class="d-flex align-center gap-1">
-                <VIcon size="small">ri-building-2-line</VIcon>
-                <span class="text-body-2">Type: {{ center.organization_type }}</span>
-              </VCardSubtitle>
+              <VCardTitle class="text-h6 font-weight-bold text-center text-uppercase">
+                {{ truncateText(center.name, 45) }}
+              </VCardTitle>
             </VCardItem>
 
-            <!-- Rating -->
-            <VCardText>
-              <!-- Details -->
-              <VRow class="text-body-2 ma-0 pa-0" no-gutters>
-                <VCol cols="12" md="12" class="d-flex align-center mb-2">
-                  <VIcon icon="ri-map-pin-line" size="small" class="me-2" />
-                  <span>Ville :{{ center.city }}</span>
-                </VCol>
-                <VCol cols="12" md="12" class="d-flex align-center mb-2">
-                  <VIcon icon="ri-map-pin-line" size="small" class="me-2" />
-                  <span>BP :{{ center.address }}</span>
-                </VCol>
+            <!-- Divider -->
+            <VDivider class="my-1" />
 
-                <VCol cols="12" md="12" class="d-flex align-center mb-2">
-                  <VIcon icon="ri-cellphone-line" size="small" class="me-2" />
-                  <span>{{ center.telephone_number }}</span>
-                </VCol>
-
-                <VCol cols="12" md="12" class="d-flex align-center mb-2">
-                  <VIcon icon="ri-phone-line" size="small" class="me-2" />
-                  <span>{{ center.mobile_number }}</span>
-                </VCol>
-
-                <VCol cols="12" md="12" class="d-flex align-center mb-2">
-                  <VIcon icon="ri-mail-line" size="small" class="me-2" />
-                  <span>{{ center.email }}</span>
-                </VCol>
-
-                <VCol cols="12" md="4" class="d-flex align-center mb-2">
-                  <VIcon icon="ri-global-line" size="small" class="me-2" />
-                  <span>{{ center.website || 'Aucun site web' }}</span>
-                </VCol>
-              </VRow>
-
-              <v-divider class="my-2"></v-divider>
-
-              <!-- Actions -->
-              <VCardActions>
-                <VSpacer />
-
-                <VMenu offset-y>
-                  <template #activator="{ props }">
-                    <VBtn icon="ri-more-2-line" variant="flat" size="x-small" v-bind="props" />
+            <!-- Details -->
+            <VCardText class="py-2">
+              <VList density="compact">
+                <VListItem>
+                  <template #prepend>
+                    <VIcon icon="ri-map-pin-line" size="20" class="me-2 text-primary" />
                   </template>
-                  <VList>
-                    <VListItem prepend-icon="ri-eye-line" title="Voir les détails"
-                      :to="{ name: 'organization-centers-detail', params: { id: center.id } }"  v-if="hasPermissions([PermissionEnum.CAN_VIEW_ORGANIZATION_CENTER])" />
-                      
-                    <VListItem  prepend-icon="ri-edit-line" title="Modifier"
-                      :to="{ name: 'organization-centers-edit', params: { id: center.id } }"  v-if="hasPermissions([PermissionEnum.CAN_UPDATE_ORGANIZATION_CENTER])" />
+                  <VListItemTitle>Ville : {{ center.city }}</VListItemTitle>
+                </VListItem>
 
-                    <VListItem  prepend-icon="ri-toggle-line" title="Changer le statut"
-                      @click="toggleStatus(center)" v-if="hasPermissions([PermissionEnum.CAN_UPDATE_ORGANIZATION_CENTER])"/>
+                <VListItem>
+                  <template #prepend>
+                    <VIcon icon="ri-home-4-line" size="20" class="me-2 text-primary" />
+                  </template>
+                  <VListItemTitle>Adresse : {{ center.address }}</VListItemTitle>
+                </VListItem>
 
-                    <span v-if="hasPermissions([PermissionEnum.CAN_DELETE_ORGANIZATION_CENTER])">
-                      <VDivider />
-                      <VListItem  prepend-icon="ri-delete-bin-line" title="Supprimer"
-                        class="text-error" @click="confirmDelete(center)" />
-                    </span>
-                  </VList>
-                </VMenu>
-              </VCardActions>
+                <VListItem v-if="center.telephone_number">
+                  <template #prepend>
+                    <VIcon icon="ri-cellphone-line" size="20" class="me-2 text-primary" />
+                  </template>
+                  <VListItemTitle>{{ center.telephone_number }}</VListItemTitle>
+                </VListItem>
+
+                <VListItem v-if="center.mobile_number">
+                  <template #prepend>
+                    <VIcon icon="ri-phone-line" size="20" class="me-2 text-primary" />
+                  </template>
+                  <VListItemTitle>{{ center.mobile_number }}</VListItemTitle>
+                </VListItem>
+
+                <VListItem v-if="center.email">
+                  <template #prepend>
+                    <VIcon icon="ri-mail-line" size="20" class="me-2 text-primary" />
+                  </template>
+                  <VListItemTitle>{{ center.email }}</VListItemTitle>
+                </VListItem>
+
+                <VListItem>
+                  <template #prepend>
+                    <VIcon icon="ri-global-line" size="20" class="me-2 text-primary" />
+                  </template>
+                  <VListItemTitle>
+                    <a v-if="center.website" :href="center.website" target="_blank" rel="noopener noreferrer"
+                      class="text-decoration-underline text-primary">
+                      {{ truncateText(center.website, 40) }}
+                    </a>
+                    <span v-else class="text-grey">Aucun site web</span>
+                  </VListItemTitle>
+                </VListItem>
+              </VList>
             </VCardText>
+
+            <!-- Divider -->
+            <VDivider class="my-1" />
+
+            <!-- Actions -->
+            <VCardActions class="justify-end">
+              <VMenu offset-y>
+                <template #activator="{ props }">
+                  <VBtn icon="ri-more-2-line" variant="flat" size="small" v-bind="props" />
+                </template>
+
+                <VList>
+                  <VListItem prepend-icon="ri-eye-line" title="Voir les détails"
+                    :to="{ name: 'organization-centers-detail', params: { id: center.id } }"
+                    v-if="hasPermissions([PermissionEnum.CAN_VIEW_ORGANIZATION_CENTER])" />
+                  <VListItem prepend-icon="ri-edit-line" title="Modifier"
+                    :to="{ name: 'organization-centers-edit', params: { id: center.id } }"
+                    v-if="hasPermissions([PermissionEnum.CAN_UPDATE_ORGANIZATION_CENTER])" />
+                  <VListItem prepend-icon="ri-toggle-line" title="Changer le statut" @click="toggleStatus(center)"
+                    v-if="hasPermissions([PermissionEnum.CAN_UPDATE_ORGANIZATION_CENTER])" />
+                  <VDivider v-if="hasPermissions([PermissionEnum.CAN_DELETE_ORGANIZATION_CENTER])" />
+                  <VListItem prepend-icon="ri-delete-bin-line" title="Supprimer" class="text-error"
+                    @click="confirmDelete(center)"
+                    v-if="hasPermissions([PermissionEnum.CAN_DELETE_ORGANIZATION_CENTER])" />
+                </VList>
+              </VMenu>
+            </VCardActions>
           </VCard>
         </VCol>
       </VRow>
+
 
       <!-- Pagination -->
       <div class="d-flex justify-center mt-6">
