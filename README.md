@@ -146,7 +146,7 @@ yarn install
 ### **2. Configuration**
 Créer un fichier `.env` :
 ```env
-VITE_API_BASE_URL=https://lafaom.vertex-cam.com/api/v1
+VITE_API_BASE_URL=http://194.238.25.170/api/v1
 ```
 
 ### **3. Démarrage**
