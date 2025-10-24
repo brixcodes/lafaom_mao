@@ -435,7 +435,7 @@ const loadApplications = async () => {
       asc: asc
     }
 
-    // Ajouter le filtre de paiement si sélectionné
+    // Ajouter le filtre de paiement si sélectionné.
     if (filters.payment_status === 'paid') {
       requestParams.is_paid = true
     } else if (filters.payment_status === 'unpaid') {
