@@ -115,91 +115,6 @@
                   </VCardText>
                 </VCard>
               </VSlideYTransition>
-
-              <!-- Documents joints -->
-              <VSlideYTransition>
-                <VCard v-if="application.attachments && application.attachments.length > 0" class="mb-6 animate-card"
-                  elevation="1">
-                  <VCardTitle class="d-flex align-center">
-                    <VIcon color="primary" class="mr-2">ri-attachment-line</VIcon>
-                    <span class="text-h6">Documents joints ({{ application.attachments.length }})</span>
-                  </VCardTitle>
-                  <VDivider />
-                  <VCardText class="py-4">
-                    <VRow>
-                      <VCol v-for="attachment in application.attachments" :key="attachment.id" cols="12" sm="6">
-                        <VCard variant="outlined" class="document-card hover-lift">
-                          <VCardText class="pa-4">
-                            <div class="d-flex align-center mb-4">
-                              <VAvatar :color="getFileColor(attachment.name)" size="48" class="me-3" variant="tonal">
-                                <VIcon :icon="getFileIcon(attachment.name)" size="24" />
-                              </VAvatar>
-                              <div class="flex-grow-1">
-                                <div class="text-subtitle-1 font-weight-medium mb-1">{{
-                                  getDocumentLabel(attachment.document_type) }}</div>
-                                <div class="text-caption text-medium-emphasis">{{ attachment.name }}</div>
-                                <div class="text-caption text-medium-emphasis mt-1">
-                                  <VIcon icon="ri-calendar-line" size="12" class="me-1" />
-                                  {{ formatDate(attachment.upload_date || application.created_at) }}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div class="d-flex gap-2">
-                              <VBtn color="primary" variant="outlined" size="small" prepend-icon="ri-eye-line"
-                                @click="previewDocument(attachment)" block>
-                                Prévisualiser
-                              </VBtn>
-                              <VBtn color="success" variant="elevated" size="small" prepend-icon="ri-download-line"
-                                @click="downloadDocument(attachment)" :loading="downloadingFiles[attachment.id]" block>
-                                Télécharger
-                              </VBtn>
-                            </div>
-
-                            <!-- Informations supplémentaires du fichier -->
-                            <div v-if="attachment.file_size" class="mt-3 pt-3 border-t">
-                              <div class="d-flex justify-space-between text-caption">
-                                <span class="text-medium-emphasis">Taille :</span>
-                                <span>{{ formatFileSize(attachment.file_size) }}</span>
-                              </div>
-                            </div>
-                          </VCardText>
-                        </VCard>
-                      </VCol>
-                    </VRow>
-                  </VCardText>
-                </VCard>
-              </VSlideYTransition>
-
-              <!-- Notes -->
-              <VSlideYTransition>
-                <VCard v-if="application.notes" class="mb-6 animate-card" elevation="1">
-                  <VCardTitle class="d-flex align-center">
-                    <VIcon color="primary" class="mr-2">ri-sticky-note-line</VIcon>
-                    <span class="text-h6">Notes</span>
-                  </VCardTitle>
-                  <VDivider />
-                  <VCardText class="py-4">
-                    <div class="notes-content">{{ application.notes }}</div>
-                  </VCardText>
-                </VCard>
-              </VSlideYTransition>
-
-              <!-- Raison de rejet -->
-              <VSlideYTransition>
-                <VCard v-if="application.refusal_reason" class="animate-card" elevation="1">
-                  <VCardTitle class="d-flex align-center">
-                    <VIcon color="error" class="mr-2">ri-close-circle-line</VIcon>
-                    <span class="text-h6">Raison du rejet</span>
-                  </VCardTitle>
-                  <VDivider />
-                  <VCardText class="py-4">
-                    <VAlert type="error" variant="tonal" class="mb-0">
-                      {{ application.refusal_reason }}
-                    </VAlert>
-                  </VCardText>
-                </VCard>
-              </VSlideYTransition>
             </VCol>
 
             <!-- Sidebar avec informations et actions -->
@@ -295,6 +210,95 @@
 
                 </VCard>
               </VSlideXReverseTransition>
+            </VCol>
+
+            
+
+            <VCol cols="12" md="12">
+              <!-- Documents joints -->
+              <VSlideYTransition>
+                <VCard v-if="application.attachments && application.attachments.length > 0" class="mb-6 animate-card"
+                  elevation="1">
+                  <VCardTitle class="d-flex align-center">
+                    <VIcon color="primary" class="mr-2">ri-attachment-line</VIcon>
+                    <span class="text-h6">Documents joints ({{ application.attachments.length }})</span>
+                  </VCardTitle>
+                  <VDivider />
+                  <VCardText class="py-4">
+                    <VRow>
+                      <VCol v-for="attachment in application.attachments" :key="attachment.id" cols="12" sm="6">
+                        <VCard variant="outlined" class="document-card hover-lift">
+                          <VCardText class="pa-4">
+                            <div class="d-flex align-center mb-4">
+                              <VAvatar :color="getFileColor(attachment.name)" size="48" class="me-3" variant="tonal">
+                                <VIcon :icon="getFileIcon(attachment.name)" size="24" />
+                              </VAvatar>
+                              <div class="flex-grow-1">
+                                <div class="text-subtitle-1 font-weight-medium mb-1">{{
+                                  getDocumentLabel(attachment.document_type) }}</div>
+                                <div class="text-caption text-medium-emphasis">{{ attachment.name }}</div>
+                                <div class="text-caption text-medium-emphasis mt-1">
+                                  <VIcon icon="ri-calendar-line" size="12" class="me-1" />
+                                  {{ formatDate(attachment.upload_date || application.created_at) }}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                              <VBtn color="primary" variant="outlined" size="small" prepend-icon="ri-eye-line"
+                                @click="previewDocument(attachment)" block>
+                                Prévisualiser
+                              </VBtn>
+                              <VBtn color="success" variant="elevated" size="small" prepend-icon="ri-download-line"
+                                @click="downloadDocument(attachment)" :loading="downloadingFiles[attachment.id]" block>
+                                Télécharger
+                              </VBtn>
+                            </div>
+
+                            <!-- Informations supplémentaires du fichier -->
+                            <div v-if="attachment.file_size" class="mt-3 pt-3 border-t">
+                              <div class="d-flex justify-space-between text-caption">
+                                <span class="text-medium-emphasis">Taille :</span>
+                                <span>{{ formatFileSize(attachment.file_size) }}</span>
+                              </div>
+                            </div>
+                          </VCardText>
+                        </VCard>
+                      </VCol>
+                    </VRow>
+                  </VCardText>
+                </VCard>
+              </VSlideYTransition>
+
+              <!-- Notes -->
+              <VSlideYTransition>
+                <VCard v-if="application.notes" class="mb-6 animate-card" elevation="1">
+                  <VCardTitle class="d-flex align-center">
+                    <VIcon color="primary" class="mr-2">ri-sticky-note-line</VIcon>
+                    <span class="text-h6">Notes</span>
+                  </VCardTitle>
+                  <VDivider />
+                  <VCardText class="py-4">
+                    <div class="notes-content">{{ application.notes }}</div>
+                  </VCardText>
+                </VCard>
+              </VSlideYTransition>
+
+              <!-- Raison de rejet -->
+              <VSlideYTransition>
+                <VCard v-if="application.refusal_reason" class="animate-card" elevation="1">
+                  <VCardTitle class="d-flex align-center">
+                    <VIcon color="error" class="mr-2">ri-close-circle-line</VIcon>
+                    <span class="text-h6">Raison du rejet</span>
+                  </VCardTitle>
+                  <VDivider />
+                  <VCardText class="py-4">
+                    <VAlert type="error" variant="tonal" class="mb-0">
+                      {{ application.refusal_reason }}
+                    </VAlert>
+                  </VCardText>
+                </VCard>
+              </VSlideYTransition>
             </VCol>
           </VRow>
         </VCol>
