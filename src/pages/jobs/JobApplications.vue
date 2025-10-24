@@ -32,9 +32,15 @@
               label="Statut" variant="outlined" density="compact" clearable @update:model-value="applyFilters" />
           </VCol>
 
-          <VCol cols="12" md="3">
+          <VCol cols="12" md="2">
             <VSelect v-model="filters.job_offer_id" :items="jobOfferOptions" prepend-inner-icon="ri-briefcase-line"
               label="Offre d'emploi" variant="outlined" density="compact" clearable
+              @update:model-value="applyFilters" />
+          </VCol>
+
+          <VCol cols="12" md="2">
+            <VSelect v-model="filters.payment_status" :items="paymentStatusOptions" prepend-inner-icon="ri-money-dollar-circle-line"
+              label="Paiement" variant="outlined" density="compact" clearable
               @update:model-value="applyFilters" />
           </VCol>
 
@@ -128,6 +134,17 @@
                 <VChip :color="getStatusColor1(application.status as any)" class="mx-1" size="small">
                   {{ getStatusLabel1(application.status as any) }}
                 </VChip>
+                </VCol>
+
+                <VCol cols="12" class="d-flex align-center mb-2">
+                  <VIcon :icon="application.payment_id ? 'ri-check-circle-line' : 'ri-close-circle-line'" 
+                         :color="application.payment_id ? 'success' : 'error'" 
+                         size="small" class="me-2" />
+                  <span class="text-body-2 font-weight-medium">Paiement :</span>
+                  <VChip :color="application.payment_id ? 'success' : 'error'" 
+                         size="x-small" class="mx-1">
+                    {{ application.payment_id ? 'Payé' : 'Non payé' }}
+                  </VChip>
                 </VCol>
 
               </VRow>
@@ -288,11 +305,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { useJobOffersStore } from '@/stores/jobOffers'
 import type { JobApplication, JobApplicationUpdateInput } from '@/types/jobOffers'
 import { APPLICATION_STATUSES } from '@/types/jobOffers'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 // Composables
 const router = useRouter()
@@ -346,13 +363,14 @@ const getStatusLabel1 = (status: LocalJobApplicationStatus) => statusLabels[stat
 const filters = reactive({
   search: '',
   status: '',
-  job_offer_id: ''
+  job_offer_id: '',
+  payment_status: ''
 })
 
 // Computed
 const applications = computed(() => {
-  // Filtrer uniquement les candidatures avec payment_id non vide
-  return jobOffersStore.jobApplications.filter(app => (app as any).payment_id && (app as any).payment_id !== null && (app as any).payment_id !== '')
+  // Retourner toutes les candidatures retournées par l'API (déjà filtrées côté serveur)
+  return jobOffersStore.jobApplications
 })
 
 const totalPages = computed(() => {
@@ -360,7 +378,7 @@ const totalPages = computed(() => {
 })
 
 const hasActiveFilters = computed(() => {
-  return filters.search !== '' || filters.status !== '' || filters.job_offer_id !== ''
+  return filters.search !== '' || filters.status !== '' || filters.job_offer_id !== '' || filters.payment_status !== ''
 })
 
 // Options
@@ -368,6 +386,12 @@ const statusOptions = APPLICATION_STATUSES.map(status => ({
   title: status.text,
   value: status.value
 }))
+
+const paymentStatusOptions = [
+  { title: 'Toutes', value: '' },
+  { title: 'Payées', value: 'paid' },
+  { title: 'Non payées', value: 'unpaid' }
+]
 
 const sortOptions = [
   { title: 'Plus récentes', value: 'created_at' },
@@ -401,16 +425,25 @@ const loadApplications = async () => {
       asc = 'asc'
     }
 
-    await jobOffersStore.getJobApplications({
+    const requestParams: any = {
       search: filters.search || undefined,
       status: filters.status || undefined as any,
       job_offer_id: filters.job_offer_id || undefined,
       page: currentPage.value,
       page_size: pageSize.value,
       order_by: orderBy as 'created_at' | 'application_number' | 'status',
-      asc: asc,
-      payment_id: true // ✅ récupère uniquement les candidatures avec payment_id défini
-    })
+      asc: asc
+    }
+
+    // Ajouter le filtre de paiement si sélectionné
+    if (filters.payment_status === 'paid') {
+      requestParams.is_paid = true
+    } else if (filters.payment_status === 'unpaid') {
+      requestParams.is_paid = false
+    }
+    // Si filters.payment_status est vide, on ne filtre pas (toutes les candidatures)
+
+    await jobOffersStore.getJobApplications(requestParams)
   } catch (error) {
     console.error('Erreur lors du chargement des candidatures:', error)
   }
@@ -436,6 +469,7 @@ const resetFilters = () => {
   filters.search = ''
   filters.status = ''
   filters.job_offer_id = ''
+  filters.payment_status = ''
   sortBy.value = 'created_at'
   applyFilters()
 }
