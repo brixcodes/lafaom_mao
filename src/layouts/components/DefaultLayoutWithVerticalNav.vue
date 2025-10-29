@@ -44,8 +44,8 @@ import VerticalNavLayout from '@layouts/components/VerticalNavLayout.vue'
         <VImg src="https://i.postimg.cc/P5MGxkBt/logo-lafaom.png" width="50" height="40" contain />
         <!-- eslint-enable -->
 
-        <h1 class="font-weight-bold leading-normal text-xl text-uppercase mt-4">
-          LAFAOM
+        <h1 class=" leading-normal text-lg text-uppercase text-primary ">
+          LAFAOM-MAO
         </h1>
       </RouterLink>
 
