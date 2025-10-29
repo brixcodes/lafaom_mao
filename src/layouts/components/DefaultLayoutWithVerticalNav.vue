@@ -41,7 +41,7 @@ import VerticalNavLayout from '@layouts/components/VerticalNavLayout.vue'
     <template #vertical-nav-header="{ toggleIsOverlayNavActive }">
       <RouterLink to="/" class="app-logo app-title-wrapper">
         <!-- eslint-disable vue/no-v-html -->
-        <VImg src="/logo_lafaom.png" width="50" height="40" contain />
+        <VImg src="https://i.postimg.cc/P5MGxkBt/logo-lafaom.png" width="50" height="40" contain />
         <!-- eslint-enable -->
 
         <h1 class="font-weight-bold leading-normal text-xl text-uppercase mt-4">

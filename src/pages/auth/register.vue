@@ -88,7 +88,7 @@ const onSubmit = async () => {
           class="d-flex align-center gap-3"
         >
           <!-- eslint-disable vue/no-v-html -->
-          <VImg src="logo_lafaom.png" width="90" height="90" contain />
+          <VImg src="https://i.postimg.cc/P5MGxkBt/logo-lafaom.png" width="90" height="90" contain />
         </RouterLink>
       </VCardItem>
 
