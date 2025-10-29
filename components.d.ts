@@ -101,7 +101,7 @@ declare module 'vue' {
     StatsCard: typeof import('./src/components/common/StatsCard.vue')['default']
     StatusChanger: typeof import('./src/components/reclamation/StatusChanger.vue')['default']
     StudentApplicationCard: typeof import('./src/components/student-application/StudentApplicationCard.vue')['default']
-    StudentApplicationForm: typeof import('./src/components/student-application/StudentApplicationForm.vue')['default']
+    StudentApplicationForm: typeof import('./src/components/Training/StudentApplicationForm.vue')['default']
     TagInput: typeof import('./src/components/Blog/TagInput.vue')['default']
     ThemeSwitcher: typeof import('./src/@core/components/ThemeSwitcher.vue')['default']
     Toast: typeof import('./src/components/toast/Toast.vue')['default']

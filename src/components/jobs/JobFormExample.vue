@@ -97,7 +97,7 @@
   </VCard>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useSimplePermissions } from '@/services/simplePermissions'
 import { useAuthStore } from '@/stores/auth'

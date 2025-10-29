@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import logo from '@images/logo.svg?raw'
-import VerticalNavLayout from '@layouts/components/VerticalNavLayout.vue'
-import NavItems from '@/layouts/components/NavItems.vue'
+import ToastContainer from '@/components/toast/ToastContainer.vue'
 import Footer from '@/layouts/components/Footer.vue'
 import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
+import NavItems from '@/layouts/components/NavItems.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
-import ToastContainer from '@/components/toast/ToastContainer.vue'
+import VerticalNavLayout from '@layouts/components/VerticalNavLayout.vue'
 </script>
 
 <template>
@@ -42,7 +41,7 @@ import ToastContainer from '@/components/toast/ToastContainer.vue'
     <template #vertical-nav-header="{ toggleIsOverlayNavActive }">
       <RouterLink to="/" class="app-logo app-title-wrapper">
         <!-- eslint-disable vue/no-v-html -->
-        <VImg src="logo_lafaom.png" width="50" height="40" contain />
+        <VImg src="/logo_lafaom.png" width="50" height="40" contain />
         <!-- eslint-enable -->
 
         <h1 class="font-weight-bold leading-normal text-xl text-uppercase mt-4">
