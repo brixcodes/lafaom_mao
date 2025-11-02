@@ -35,7 +35,7 @@
             </VSelect>
           </VCol>
           <VCol cols="12" md="2">
-            <VBtn variant="outlined" color="primary" @click="resetFilters" :disabled="!hasActiveFilters" block>
+            <VBtn variant="outlined" color="primary" @click="() => resetFilters(true)" :disabled="!hasActiveFilters" block>
               <VIcon class="mr-2">ri-refresh-line</VIcon>
               Réinitialiser
             </VBtn>
@@ -110,7 +110,7 @@
     </VRow>
 
     <!-- Bouton charger plus -->
-    <div v-if="!canLoadMore" class="text-center pa-4">
+    <div v-if="canLoadMore && !isLoading && hasApplications" class="text-center pa-4">
       <VBtn variant="outlined" color="primary" :loading="isLoading" @click="loadMoreApplications">
         <VIcon class="mr-2">ri-arrow-down-line</VIcon>
         Charger plus
@@ -118,7 +118,7 @@
     </div>
 
     <!-- État vide -->
-    <VCard v-else-if="!isLoading && !hasApplications" elevation="1">
+    <VCard v-if="!isLoading && !hasApplications" elevation="1">
       <VCardText class="text-center py-12">
         <VIcon size="64" color="grey-lighten-1" class="mb-4">ri-file-list-line</VIcon>
         <h3 class="text-h6 mb-2">Aucune candidature</h3>
@@ -233,18 +233,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useStudentApplication } from '@/composables/useStudentApplication'
-import StudentApplicationCard from '@/components/student-application/StudentApplicationCard.vue'
-// Plus besoin d'importer le formulaire car on utilise des pages séparées
-import type { StudentApplicationOut } from '@/types/student-application'
-import { ApplicationStatusEnum } from '@/types/student-application'
-import { showToast } from '@/components/toast/toastManager'
-import { confirmAction } from '@/utils/confirm'
-import { VForm } from 'vuetify/components'
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStudentApplication } from '@/composables/useStudentApplication';
+import StudentApplicationCard from '@/components/student-application/StudentApplicationCard.vue';
+import type { StudentApplicationOut } from '@/types/student-application';
+import { ApplicationStatusEnum } from '@/types/student-application';
+import { showToast } from '@/components/toast/toastManager';
+import { confirmAction } from '@/utils/confirm';
+import { VForm } from 'vuetify/components';
 
-const router = useRouter()
+const router = useRouter();
 
 // Composable
 const {
@@ -269,75 +268,75 @@ const {
   reset,
   getStatusChip,
   canDeleteApplication,
-  canSubmitApplication
-} = useStudentApplication()
+  canSubmitApplication,
+} = useStudentApplication();
 
 // Local state pour le modal de paiement
-const showPaymentModal = ref(false)
-const selectedApplication = ref<any>(null)
-const isProcessingPayment = ref(false)
-const acceptPaymentTerms = ref(false)
-const paymentFormRef = ref()
+const showPaymentModal = ref(false);
+const selectedApplication = ref<any>(null);
+const isProcessingPayment = ref(false);
+const acceptPaymentTerms = ref(false);
+const paymentFormRef = ref();
 
 // Options
 const statusOptions = [
+  { title: 'Reçue', value: ApplicationStatusEnum.RECEIVED },
   { title: 'Soumise', value: ApplicationStatusEnum.SUBMITTED },
   { title: 'Approuvée', value: ApplicationStatusEnum.APPROVED },
-  { title: 'Refusée', value: ApplicationStatusEnum.REFUSED }
-]
+  { title: 'Refusée', value: ApplicationStatusEnum.REFUSED },
+];
 
 const paymentOptions = [
   { title: 'Payée', value: true },
-  { title: 'Non payée', value: false }
-]
+  { title: 'Non payée', value: false },
+];
 
 // Computed
 const hasActiveFilters = computed(() => {
   return !!(
     searchQuery.value ||
-    filters.value.status ||
-    filters.value.is_paid !== undefined
-  )
-})
+    filters.value.status
+    //  ||
+    // filters.value.is_paid !== undefined
+  );
+});
 
 const totalPaymentAmount = computed(() => {
-  if (!selectedApplication.value) return 0
-  const registrationFee = selectedApplication.value.registration_fee || 0
-  const trainingFee = selectedApplication.value.training_fee || 0
-  return registrationFee + trainingFee
-})
+  if (!selectedApplication.value) return 0;
+  const registrationFee = selectedApplication.value.registration_fee || 0;
+  const trainingFee = selectedApplication.value.training_fee || 0;
+  return registrationFee + trainingFee;
+});
 
 // Statistiques basées sur toutes les candidatures
 const totalApplicationsCount = computed(() => {
-  return applications.value.length
-})
+  return applications.value.length;
+});
 
 const paidApplicationsCount = computed(() => {
-  return applications.value.filter(app => !!app.payment_id).length
-})
+  return applications.value.filter(app => !!app.payment_id).length;
+});
 
 const unpaidApplicationsCount = computed(() => {
-  return applications.value.filter(app => !app.payment_id).length
-})
+  return applications.value.filter(app => !app.payment_id).length;
+});
 
 // Methods
 const handleSearch = async (query: string) => {
-  await searchApplications(query)
-}
+  await searchApplications(query, true); // true = utiliser l'endpoint admin
+};
 
 const handleFilterChange = async () => {
-  await applyFilters(filters.value)
-}
+  await applyFilters(filters.value, true); // true = utiliser l'endpoint admin
+};
 
 const handleView = (id: number) => {
-  // Redirection vers la page de détails de la candidature
-  router.push({ name: 'student-applications-detail', params: { id: id.toString() } })
-}
-
+  router.push({ name: 'student-applications-detail', params: { id: id.toString() } });
+};
 
 const handleDelete = async (id: number) => {
-  const application = applications.value.find(app => app.id === id)
-  if (!application) return
+  const application = applications.value.find(app => app.id === id);
+  if (!application) return;
 
   const confirmed = await confirmAction({
     title: 'Supprimer la candidature',
@@ -350,20 +349,20 @@ const handleDelete = async (id: number) => {
       confirmButton: 'swal2-confirm-white',
       cancelButton: 'swal2-cancel-white',
     },
-  })
+  });
 
-  if (!confirmed) return
+  if (!confirmed) return;
 
   try {
-    await deleteApplication(id)
+    await deleteApplication(id);
   } catch (error) {
-    console.error('Erreur lors de la suppression:', error)
+    console.error('Erreur lors de la suppression:', error);
   }
-}
+};
 
 const handleSubmit = async (id: number) => {
-  const application = applications.value.find(app => app.id === id)
-  if (!application) return
+  const application = applications.value.find(app => app.id === id);
+  if (!application) return;
 
   const confirmed = await confirmAction({
     title: 'Soumettre la candidature',
@@ -376,48 +375,42 @@ const handleSubmit = async (id: number) => {
       confirmButton: 'swal2-confirm-white',
       cancelButton: 'swal2-cancel-white',
     },
-  })
+  });
 
-  if (!confirmed) return
+  if (!confirmed) return;
 
   try {
-    await submitApplication(id, application.target_session_id)
+    await submitApplication(id, application.target_session_id, true); // true = utiliser l'endpoint admin
   } catch (error) {
-    console.error('Erreur lors de la soumission:', error)
+    console.error('Erreur lors de la soumission:', error);
   }
-}
+};
 
 const handlePay = (id: number) => {
-  // Ouvrir le modal de paiement rapide
-  const application = applications.value.find(app => app.id === id)
+  const application = applications.value.find(app => app.id === id);
   if (application) {
-    selectedApplication.value = application
-    showPaymentModal.value = true
-    acceptPaymentTerms.value = false
+    selectedApplication.value = application;
+    showPaymentModal.value = true;
+    acceptPaymentTerms.value = false;
   }
-}
-
-// Ces méthodes ne sont plus nécessaires car on utilise des pages séparées
+};
 
 const clearError = () => {
-  reset()
-}
+  reset();
+};
 
-// Méthodes pour le modal de paiement
 const closePaymentModal = () => {
-  showPaymentModal.value = false
-  selectedApplication.value = null
-  acceptPaymentTerms.value = false
-}
+  showPaymentModal.value = false;
+  selectedApplication.value = null;
+  acceptPaymentTerms.value = false;
+};
 
 const handleQuickPayment = async () => {
-  if (!selectedApplication.value) return
+  if (!selectedApplication.value) return;
 
-  // Validation du formulaire
-  const { valid } = await paymentFormRef.value!.validate()
-  if (!valid) return
+  const { valid } = await paymentFormRef.value!.validate();
+  if (!valid) return;
 
-  // Confirmation avant paiement
   const confirmed = await confirmAction({
     title: 'Confirmer le paiement',
     html: `Voulez-vous procéder au paiement de <b>${formatCurrency(totalPaymentAmount.value)}</b> pour la candidature <b>${selectedApplication.value.application_number}</b> ?`,
@@ -429,56 +422,57 @@ const handleQuickPayment = async () => {
       confirmButton: 'swal2-confirm-white',
       cancelButton: 'swal2-cancel-white',
     },
-  })
+  });
 
-  if (!confirmed) return
+  if (!confirmed) return;
 
   try {
-    isProcessingPayment.value = true
+    isProcessingPayment.value = true;
 
     const paymentData = {
       training_session_id: selectedApplication.value.target_session_id,
-      amount: totalPaymentAmount.value
-    }
+      amount: totalPaymentAmount.value,
+    };
 
-    console.log('💳 Paiement rapide:', paymentData)
-    const response = await payTrainingFee(paymentData)
+    console.log('💳 Paiement rapide:', paymentData);
+    const response = await payTrainingFee(paymentData);
 
-    // Redirection vers la plateforme de paiement
-    if (response.data.payment_url) {
-      window.location.href = response.data.payment_url
+    if (response.data.payment_link) {
+      window.location.href = response.data.payment_link;
     } else {
       showToast({
         message: 'Redirection vers la plateforme de paiement...',
-        type: 'info'
-      })
+        type: 'info',
+      });
     }
-
   } catch (err: any) {
-    console.error('Erreur lors du paiement rapide:', err)
+    console.error('Erreur lors du paiement rapide:', err);
     showToast({
-      message: 'Erreur lors de l\'initialisation du paiement',
-      type: 'error'
-    })
+      message: "Erreur lors de l'initialisation du paiement",
+      type: 'error',
+    });
   } finally {
-    isProcessingPayment.value = false
+    isProcessingPayment.value = false;
   }
-}
+};
 
 const formatCurrency = (amount: number | undefined) => {
-  if (!amount) return '0,00 €'
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount)
-}
+  if (!amount) return '0,00 €';
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+};
 
 const getStatusCount = (status: string) => {
-  return applications.value.filter(app => app.status === status).length
-}
+  return applications.value.filter(app => app.status === status).length;
+};
 
 // Lifecycle
-onMounted(() => {
-  loadApplications(true)
-})
+onMounted(async () => {
+  await loadApplications(true);
+  console.log('Applications:', applications.value);
+  console.log('Filtered Applications:', filteredApplications.value);
+});
 </script>
+
 
 <style scoped>
 .student-applications-page {

@@ -9,8 +9,8 @@
         </VBtn>
         <div>
           <h1 class="font-weight-bold mb-1">Détails de la candidature</h1>
-          <p class="text-body-2 text-secondary mb-0">
-            {{ application?.application_number || 'Chargement...' }}
+          <p class="text-body-2 text-dark mb-0">
+            {{"Candidature " + application?.application_number || 'Chargement...' }}
           </p>
         </div>
       </div>
@@ -80,7 +80,7 @@
                     </VChip>
                     <VChip key="total-amount" color="white" variant="outlined" size="small"
                       class="mr-2 mb-2 animate-tag">
-                      {{ formatCurrency(application.registration_fee + application.training_fee) }}
+                      Nontant total à payer : {{ formatCurrency(application.registration_fee + application.training_fee) }}
                     </VChip>
                   </VSlideXTransition>
                 </div>
@@ -107,9 +107,8 @@
                           <div>Numéro: {{ application.application_number }}</div>
                           <div>Email: {{ application.user_email || application.email }}</div>
                           <div>Téléphone: {{ application.phone_number || 'Non renseigné' }}</div>
-                          <div>Formation: {{ application.training_title || 'Non définie' }}</div>
-                          <div>Session: {{ application.training_session_start_date ?
-                            formatDate(application.training_session_start_date) : 'Non définie' }}</div>
+                          <div>Formation: {{ application.training.title || 'Non définie' }}</div>
+                          <div>Session: {{ formatDate( application.training_session.start_date) + " à " + formatDate( application.training_session.end_date)}}</div>
                         </div>
                       </v-timeline-item>
                       <v-timeline-item size="x-small">
@@ -120,7 +119,7 @@
                           <div>Total: {{ formatCurrency(application.registration_fee + application.training_fee) }}
                           </div>
                           <div>Devise: {{ application.currency }}</div>
-                          <div>Statut paiement: {{ application.payment_id ? 'Payé' : 'En attente' }}</div>
+                          <div>Mode de paiement: {{ application.payment ? 'Payé' : 'En attente' }}</div>
                         </div>
                       </v-timeline-item>
                     </v-timeline>
@@ -178,10 +177,10 @@
                   <VDivider />
                   <VCardText class="pa-4">
                     <div class="d-flex flex-column gap-3">
-                      <VBtn v-if="application && !application.payment_id" color="success" @click="handlePay(application.id)"
+                      <VBtn v-if="application && !application.payment_id" color="primary" @click="handlePay(application.id)"
                         :loading="isProcessingPayment" block>
-                        <VIcon class="mr-2">ri-money-dollar-circle-line</VIcon>
-                        Payer
+                        <!-- <VIcon class="mr-2">ri-money-dollar-circle-line</VIcon> -->
+                        Consulter la pièce jointe
                       </VBtn>
 
                       <VBtn v-if="application && canSubmitApplication(application)" color="primary"
@@ -290,7 +289,9 @@ const goBack = () => {
 const refreshApplication = async () => {
   const applicationId = parseInt(props.id)
   if (applicationId) {
-    await loadApplication(applicationId)
+    // Détecter si on vient de la page admin ou utilisateur
+    const isAdminRoute = route.path.includes('/student-applications/') && !route.path.includes('/my-student-applications/')
+    await loadApplication(applicationId, isAdminRoute)
   }
 }
 
@@ -364,7 +365,10 @@ const handlePay = async (id: number) => {
 onMounted(async () => {
   const applicationId = parseInt(props.id)
   if (applicationId) {
-    await loadApplication(applicationId)
+    // Détecter si on vient de la page admin ou utilisateur
+    // En vérifiant le chemin de la route actuelle
+    const isAdminRoute = route.path.includes('/student-applications/') && !route.path.includes('/my-student-applications/')
+    await loadApplication(applicationId, isAdminRoute)
   }
 })
 </script>

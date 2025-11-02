@@ -29,7 +29,7 @@ export function useStudentApplication() {
   const pageSize = ref(20)
   const searchQuery = ref('')
   const filters = ref<StudentApplicationSearchFilters>({})
-  
+
   // ===== AUTH =====
   const { user } = useAuth()
 
@@ -37,112 +37,89 @@ export function useStudentApplication() {
   const hasApplications = computed(() => applications.value.length > 0)
   const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value))
   const canLoadMore = computed(() => currentPage.value < totalPages.value)
-  
+
   const filteredApplications = computed(() => {
-    if (!searchQuery.value && !Object.keys(filters.value).length) {
-      // Par défaut, afficher toutes les candidatures (payées et non payées)
-      return applications.value
-    }
-    
     return applications.value.filter(app => {
-      // Recherche textuelle
       if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase()
-        const matchesSearch = 
+        const query = searchQuery.value.toLowerCase();
+        const matchesSearch =
           app.application_number.toLowerCase().includes(query) ||
           (app.training_title?.toLowerCase().includes(query) || false) ||
           (app.user_email?.toLowerCase().includes(query) || false) ||
           (app.user_first_name?.toLowerCase().includes(query) || false) ||
-          (app.user_last_name?.toLowerCase().includes(query) || false)
-        
-        if (!matchesSearch) return false
+          (app.user_last_name?.toLowerCase().includes(query) || false);
+        if (!matchesSearch) return false;
       }
-      
-      // Filtres
-      if (filters.value.status && app.status !== filters.value.status) return false
-      if (filters.value.training_id && app.training_id !== filters.value.training_id) return false
-      if (filters.value.training_session_id && app.target_session_id !== filters.value.training_session_id) return false
-      if (filters.value.is_paid !== undefined) {
-        const isPaid = !!app.payment_id
-        if (filters.value.is_paid !== isPaid) return false
-      } else {
-        // Par défaut, afficher seulement les candidatures payées si aucun filtre de paiement n'est spécifié
-        if (!app.payment_id) return false
-      }
-      
-      return true
-    })
-  })
 
-  // Filtrage pour les candidatures de l'utilisateur (affiche toutes les candidatures)
+      if (filters.value.status && app.status !== filters.value.status) return false;
+      if (filters.value.training_id && app.training_id !== filters.value.training_id) return false;
+      if (filters.value.training_session_id && app.target_session_id !== filters.value.training_session_id) return false;
+      // Supprimé : filtre is_paid (laisser l'API gérer)
+
+      return true;
+    });
+  });
+
   const myFilteredApplications = computed(() => {
-    if (!searchQuery.value && !Object.keys(filters.value).length) {
-      // Afficher toutes les candidatures de l'utilisateur
-      return applications.value
-    }
-    
     return applications.value.filter(app => {
-      // Recherche textuelle
       if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase()
-        const matchesSearch = 
+        const query = searchQuery.value.toLowerCase();
+        const matchesSearch =
           app.application_number.toLowerCase().includes(query) ||
           (app.training_title?.toLowerCase().includes(query) || false) ||
           (app.user_email?.toLowerCase().includes(query) || false) ||
           (app.user_first_name?.toLowerCase().includes(query) || false) ||
-          (app.user_last_name?.toLowerCase().includes(query) || false)
-        
-        if (!matchesSearch) return false
+          (app.user_last_name?.toLowerCase().includes(query) || false);
+        if (!matchesSearch) return false;
       }
-      
-      // Filtres
-      if (filters.value.status && app.status !== filters.value.status) return false
-      if (filters.value.training_id && app.training_id !== filters.value.training_id) return false
-      if (filters.value.training_session_id && app.target_session_id !== filters.value.training_session_id) return false
-      if (filters.value.is_paid !== undefined) {
-        const isPaid = !!app.payment_id
-        if (filters.value.is_paid !== isPaid) return false
-      }
-      
-      return true
-    })
-  })
 
+      if (filters.value.status && app.status !== filters.value.status) return false;
+      if (filters.value.training_id && app.training_id !== filters.value.training_id) return false;
+      if (filters.value.training_session_id && app.target_session_id !== filters.value.training_session_id) return false;
+      // Déjà commenté : filtre is_paid
+
+      return true;
+    });
+  });
   // ===== METHODS =====
 
   /**
-   * Charger les candidatures
+   * Charger les candidatures (admin)
    */
   const loadApplications = async (reset = false) => {
     try {
-      isLoading.value = true
-      error.value = ''
-      
+      isLoading.value = true;
+      error.value = '';
+
       if (reset) {
-        currentPage.value = 1
-        applications.value = []
+        currentPage.value = 1;
+        applications.value = [];
       }
-      
+
       const params: StudentApplicationFilter = {
         page: currentPage.value,
         page_size: pageSize.value,
-        ...filters.value
+        ...filters.value,
+      };
+
+      // Ajouter le paramètre de recherche si présent
+      if (searchQuery.value) {
+        params.search = searchQuery.value;
       }
-      
-      console.log('🔍 Chargement des candidatures via /student-applications avec params:', params)
-      const response = await studentApplicationsService.getMyStudentApplications(params)
-      console.log('📋 Réponse API candidatures:', response)
-      applications.value = reset ? response.data : [...applications.value, ...response.data]
-      totalCount.value = response.total_number
-      
+
+      console.log('🔍 Envoi requête API admin avec params:', params);
+      const response = await studentApplicationsService.getStudentApplications(params);
+      console.log('📋 Réponse API admin:', response);
+      applications.value = reset ? response.data : [...applications.value, ...response.data];
+      totalCount.value = response.total_number;
     } catch (err: any) {
-      console.error('Erreur lors du chargement des candidatures:', err)
-      error.value = 'Erreur lors du chargement des candidatures'
-      showToast({ message: 'Erreur lors du chargement des candidatures', type: 'error' })
+      console.error('Erreur lors du chargement des candidatures:', err);
+      error.value = 'Erreur lors du chargement des candidatures';
+      showToast({ message: 'Erreur lors du chargement des candidatures', type: 'error' });
     } finally {
-      isLoading.value = false
+      isLoading.value = false;
     }
-  }
+  };
 
   /**
    * Charger plus de candidatures
@@ -161,12 +138,12 @@ export function useStudentApplication() {
     try {
       isLoading.value = true
       error.value = ''
-      
+
       if (reset) {
         currentPage.value = 1
         applications.value = []
       }
-      
+
       // Vérifier si l'utilisateur est connecté
       if (!user.value?.id) {
         console.warn('Utilisateur non connecté, impossible de charger les candidatures')
@@ -174,19 +151,24 @@ export function useStudentApplication() {
         totalCount.value = 0
         return
       }
-      
+
       const params: StudentApplicationFilter = {
         page: currentPage.value,
         page_size: pageSize.value,
         ...filters.value
       }
-      
+
+      // Ajouter le paramètre de recherche si présent
+      if (searchQuery.value) {
+        params.search = searchQuery.value
+      }
+
       console.log('🔍 Chargement des candidatures de l\'utilisateur connecté avec params:', params)
       const response = await studentApplicationsService.getMyStudentApplications(params)
       console.log('📋 Réponse API candidatures utilisateur:', response)
       applications.value = reset ? response.data : [...applications.value, ...response.data]
       totalCount.value = response.total_number
-      
+
     } catch (err: any) {
       console.error('Erreur lors du chargement des candidatures de l\'utilisateur:', err)
       error.value = 'Erreur lors du chargement de vos candidatures'
@@ -197,41 +179,58 @@ export function useStudentApplication() {
   }
 
   /**
-   * Rechercher des candidatures
+   * Rechercher des candidatures (utilise loadApplications pour admin par défaut)
    */
-  const searchApplications = async (query: string) => {
+  const searchApplications = async (query: string, useAdminEndpoint = false) => {
     searchQuery.value = query
-    await loadApplications(true)
+    if (useAdminEndpoint) {
+      await loadApplications(true)
+    } else {
+      await loadMyApplications(true)
+    }
   }
 
   /**
-   * Appliquer des filtres
+   * Appliquer des filtres (utilise loadApplications pour admin par défaut)
    */
-  const applyFilters = async (newFilters: StudentApplicationSearchFilters) => {
+  const applyFilters = async (newFilters: StudentApplicationSearchFilters, useAdminEndpoint = false) => {
     filters.value = { ...filters.value, ...newFilters }
-    await loadApplications(true)
+    if (useAdminEndpoint) {
+      await loadApplications(true)
+    } else {
+      await loadMyApplications(true)
+    }
   }
 
   /**
-   * Réinitialiser les filtres
+   * Réinitialiser les filtres (utilise loadApplications pour admin par défaut)
    */
-  const resetFilters = async () => {
+  const resetFilters = async (useAdminEndpoint = false) => {
     filters.value = {}
     searchQuery.value = ''
-    await loadApplications(true)
+    if (useAdminEndpoint) {
+      await loadApplications(true)
+    } else {
+      await loadMyApplications(true)
+    }
   }
 
   /**
    * Charger une candidature spécifique
    */
-  const loadApplication = async (id: number) => {
+  const loadApplication = async (id: number, useAdminEndpoint = false) => {
     try {
       isLoading.value = true
       error.value = ''
-      
-      const response = await studentApplicationsService.getMyStudentApplicationById(id)
+
+      let response
+      if (useAdminEndpoint) {
+        response = await studentApplicationsService.getStudentApplicationById(id)
+      } else {
+        response = await studentApplicationsService.getMyStudentApplicationById(id)
+      }
       currentApplication.value = response.data
-      
+
     } catch (err: any) {
       console.error('Erreur lors du chargement de la candidature:', err)
       error.value = 'Erreur lors du chargement de la candidature'
@@ -248,15 +247,15 @@ export function useStudentApplication() {
     try {
       isSubmitting.value = true
       error.value = ''
-      
+
       const response = await studentApplicationsService.createStudentApplication(data)
       currentApplication.value = response.data
-      
+
       showToast({ message: 'Candidature créée avec succès', type: 'success' })
       await loadApplications(true) // Recharger la liste
-      
+
       return response.data
-      
+
     } catch (err: any) {
       console.error('Erreur lors de la création de la candidature:', err)
       error.value = 'Erreur lors de la création de la candidature'
@@ -274,24 +273,24 @@ export function useStudentApplication() {
     try {
       isSubmitting.value = true
       error.value = ''
-      
+
       const response = await studentApplicationsService.updateMyStudentApplication(id, data)
-      
+
       // Mettre à jour la candidature dans la liste
       const index = applications.value.findIndex(app => app.id === id)
       if (index !== -1) {
         applications.value[index] = { ...applications.value[index], ...data }
       }
-      
+
       // Mettre à jour la candidature courante si c'est la même
       if (currentApplication.value?.id === id) {
         currentApplication.value = response.data
       }
-      
+
       showToast({ message: 'Candidature mise à jour avec succès', type: 'success' })
-      
+
       return response.data
-      
+
     } catch (err: any) {
       console.error('Erreur lors de la mise à jour de la candidature:', err)
       error.value = 'Erreur lors de la mise à jour de la candidature'
@@ -309,19 +308,19 @@ export function useStudentApplication() {
     try {
       isSubmitting.value = true
       error.value = ''
-      
+
       await studentApplicationsService.deleteMyStudentApplication(id)
-      
+
       // Retirer la candidature de la liste
       applications.value = applications.value.filter(app => app.id !== id)
-      
+
       // Vider la candidature courante si c'est la même
       if (currentApplication.value?.id === id) {
         currentApplication.value = null
       }
-      
+
       showToast({ message: 'Candidature supprimée avec succès', type: 'success' })
-      
+
     } catch (err: any) {
       console.error('Erreur lors de la suppression de la candidature:', err)
       error.value = 'Erreur lors de la suppression de la candidature'
@@ -337,22 +336,22 @@ export function useStudentApplication() {
     try {
       isSubmitting.value = true
       error.value = ''
-      
+
       const response = await studentApplicationsService.updateMyStudentApplication(id, data)
-      
+
       // Mettre à jour la candidature dans la liste
       const index = applications.value.findIndex(app => app.id === id)
       if (index !== -1) {
         applications.value[index] = response.data
       }
-      
+
       // Mettre à jour la candidature courante si c'est la même
       if (currentApplication.value?.id === id) {
         currentApplication.value = response.data
       }
-      
+
       showToast({ message: 'Candidature mise à jour avec succès', type: 'success' })
-      
+
       return response.data
     } catch (err: any) {
       console.error('Erreur lors de la mise à jour de la candidature:', err)
@@ -368,19 +367,19 @@ export function useStudentApplication() {
     try {
       isSubmitting.value = true
       error.value = ''
-      
+
       await studentApplicationsService.deleteMyStudentApplication(id)
-      
+
       // Retirer la candidature de la liste
       applications.value = applications.value.filter(app => app.id !== id)
-      
+
       // Vider la candidature courante si c'est la même
       if (currentApplication.value?.id === id) {
         currentApplication.value = null
       }
-      
+
       showToast({ message: 'Candidature supprimée avec succès', type: 'success' })
-      
+
     } catch (err: any) {
       console.error('Erreur lors de la suppression de la candidature:', err)
       error.value = 'Erreur lors de la suppression de la candidature'
@@ -394,16 +393,22 @@ export function useStudentApplication() {
   /**
    * Soumettre une candidature
    */
-  const submitApplication = async (applicationId: number, sessionId: string) => {
+  const submitApplication = async (applicationId: number, sessionId?: string, useAdminEndpoint = false) => {
     try {
       isSubmitting.value = true
       error.value = ''
-      
+
       await studentApplicationsService.submitStudentApplication(applicationId)
-      
+
       showToast({ message: 'Candidature soumise avec succès', type: 'success' })
-      await loadApplications(true) // Recharger la liste
       
+      // Recharger la liste avec le bon endpoint
+      if (useAdminEndpoint) {
+        await loadApplications(true)
+      } else {
+        await loadMyApplications(true)
+      }
+
     } catch (err: any) {
       console.error('Erreur lors de la soumission de la candidature:', err)
       error.value = 'Erreur lors de la soumission de la candidature'
@@ -421,10 +426,10 @@ export function useStudentApplication() {
     try {
       isSubmitting.value = true
       error.value = ''
-      
+
       const response = await studentApplicationsService.payTrainingFee(data)
       showToast({ message: 'Redirection vers la plateforme de paiement...', type: 'info' })
-      
+
       return response
     } catch (err: any) {
       console.error('Erreur lors du paiement:', err)
@@ -476,7 +481,7 @@ export function useStudentApplication() {
         icon: 'ri-inbox-line'
       }
     }
-    
+
     return statusConfig[status as ApplicationStatusEnum] || {
       text: status,
       color: 'grey',
@@ -524,9 +529,8 @@ export function useStudentApplication() {
   }
 
   // ===== WATCHERS =====
-  watch([searchQuery, filters], () => {
-    loadApplications(true)
-  }, { deep: true })
+  // Removed auto-watcher to prevent conflicts with manual loading
+  // Components should call loadMyApplications or loadApplications explicitly
 
   return {
     // State
@@ -540,14 +544,14 @@ export function useStudentApplication() {
     pageSize,
     searchQuery,
     filters,
-    
+
     // Computed
     hasApplications,
     totalPages,
     canLoadMore,
     filteredApplications,
     myFilteredApplications,
-    
+
     // Methods
     loadApplications,
     loadMyApplications,
@@ -564,7 +568,7 @@ export function useStudentApplication() {
     submitApplication,
     payTrainingFee,
     reset,
-    
+
     // Utility functions
     getStatusChip,
     canEditApplication,

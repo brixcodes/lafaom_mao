@@ -23,8 +23,7 @@
         <VRow>
           <VCol cols="12" md="4">
             <VTextField v-model="searchQuery" label="Rechercher" variant="outlined" density="comfortable"
-              prepend-inner-icon="ri-search-line" placeholder="Numéro, formation..." clearable
-              @input="handleSearch" />
+              prepend-inner-icon="ri-search-line" placeholder="Numéro, formation..." clearable @input="handleSearch" />
           </VCol>
           <VCol cols="12" md="3">
             <VSelect v-model="filters.status" :items="statusOptions" label="Statut" variant="outlined"
@@ -104,7 +103,7 @@
     </VRow>
 
     <!-- Bouton charger plus -->
-    <div v-if="!canLoadMore" class="text-center pa-4">
+    <div v-if="canLoadMore && !isLoading && hasApplications" class="text-center pa-4">
       <VBtn variant="outlined" color="primary" :loading="isLoading" @click="loadMoreApplications">
         <VIcon class="mr-2">ri-arrow-down-line</VIcon>
         Charger plus
@@ -112,7 +111,7 @@
     </div>
 
     <!-- État vide -->
-    <VCard v-else-if="!isLoading && !hasApplications" elevation="1">
+    <VCard v-if="!isLoading && !hasApplications" elevation="1">
       <VCardText class="text-center py-12">
         <VIcon size="64" color="grey-lighten-1" class="mb-4">ri-file-list-line</VIcon>
         <h3 class="text-h6 mb-2">Aucune candidature</h3>
@@ -174,7 +173,7 @@
             <VIcon class="mr-2">ri-information-line</VIcon>
             Vous devez payer les frais d'étude de dossier pour finaliser votre candidature.
           </VAlert>
-          
+
           <div class="mb-4">
             <h4 class="text-h6 mb-2">Détails de la candidature</h4>
             <p class="text-body-2 mb-1"><strong>Formation:</strong> {{ selectedApplication?.training_title }}</p>
@@ -189,19 +188,14 @@
                   <VIcon color="warning" class="mr-2">ri-file-text-line</VIcon>
                   <span class="text-h6">Frais d'étude de dossier</span>
                 </div>
-                <span class="text-h5 font-weight-bold text-warning">{{ formatCurrency(selectedApplication?.registration_fee || 0) }}</span>
+                <span class="text-h5 font-weight-bold text-warning">{{
+                  formatCurrency(selectedApplication?.registration_fee || 0) }}</span>
               </div>
               <p class="text-body-2 text-medium-emphasis mb-3">
                 Frais obligatoires pour l'étude de votre candidature
               </p>
-              <VBtn 
-                color="warning" 
-                variant="flat" 
-                @click="handlePayRegistrationFee"
-                :disabled="isProcessingPayment"
-                :loading="isProcessingPayment"
-                block
-              >
+              <VBtn color="warning" variant="flat" @click="handlePayRegistrationFee" :disabled="isProcessingPayment"
+                :loading="isProcessingPayment" block>
                 <VIcon class="mr-2">ri-bank-card-line</VIcon>
                 {{ isProcessingPayment ? 'Traitement...' : 'Payer les frais d\'étude' }}
               </VBtn>
@@ -216,19 +210,14 @@
                   <VIcon color="info" class="mr-2">ri-graduation-cap-line</VIcon>
                   <span class="text-h6">Frais de formation</span>
                 </div>
-                <span class="text-h5 font-weight-bold text-info">{{ formatCurrency(selectedApplication?.training_fee || 0) }}</span>
+                <span class="text-h5 font-weight-bold text-info">{{ formatCurrency(selectedApplication?.training_fee ||
+                  0) }}</span>
               </div>
               <p class="text-body-2 text-medium-emphasis mb-3">
                 Frais pour participer à la formation
               </p>
-              <VBtn 
-                color="info" 
-                variant="flat" 
-                @click="handlePayTrainingFee"
-                :disabled="isProcessingPayment"
-                :loading="isProcessingPayment"
-                block
-              >
+              <VBtn color="info" variant="flat" @click="handlePayTrainingFee" :disabled="isProcessingPayment"
+                :loading="isProcessingPayment" block>
                 <VIcon class="mr-2">ri-bank-card-line</VIcon>
                 {{ isProcessingPayment ? 'Traitement...' : 'Payer les frais de formation' }}
               </VBtn>
@@ -397,8 +386,7 @@ const handleDelete = async (id: number) => {
     title: 'Supprimer la candidature',
     text: `Êtes-vous sûr de vouloir supprimer la candidature ${application.application_number} ?`,
     confirmButtonText: 'Supprimer',
-    cancelButtonText: 'Annuler',
-    icon: 'error'
+    cancelButtonText: 'Annuler'
   })
 
   if (confirmed) {
@@ -422,8 +410,7 @@ const handleSubmit = async (id: number) => {
     title: 'Soumettre la candidature',
     text: `Êtes-vous sûr de vouloir soumettre la candidature ${application.application_number} ?`,
     confirmButtonText: 'Soumettre',
-    cancelButtonText: 'Annuler',
-    icon: 'info'
+    cancelButtonText: 'Annuler'
   })
 
   if (confirmed) {
@@ -458,13 +445,13 @@ const handlePayRegistrationFee = async () => {
 
   try {
     isProcessingPayment.value = true
-    
+
     console.log('Paiement des frais d\'étude pour la candidature:', selectedApplication.value.id)
-    
-    const paymentResponse = await studentApplicationsService.submitApplicationWithPayment(selectedApplication.value.id)
-    
+
+    const paymentResponse = await studentApplicationsService.submitStudentApplication(selectedApplication.value.id)
+
     console.log('Réponse du paiement des frais d\'étude:', paymentResponse)
-    
+
     // Rediriger vers la plateforme de paiement
     if (paymentResponse.data?.payment_link) {
       console.log('Redirection vers:', paymentResponse.data.payment_link)
@@ -476,7 +463,7 @@ const handlePayRegistrationFee = async () => {
         type: 'error'
       })
     }
-    
+
   } catch (error: any) {
     console.error('Erreur lors du paiement des frais d\'étude:', error)
     console.error('Détails de l\'erreur:', {
@@ -484,7 +471,7 @@ const handlePayRegistrationFee = async () => {
       data: error.response?.data,
       message: error.message
     })
-    
+
     if (error.response?.status === 400) {
       const errorMessage = error.response?.data?.message || 'Erreur lors de l\'initialisation du paiement des frais d\'étude'
       showToast({
@@ -507,13 +494,13 @@ const handlePayTrainingFee = async () => {
 
   try {
     isProcessingPayment.value = true
-    
+
     console.log('Paiement des frais de formation pour la candidature:', selectedApplication.value.id)
-    
-    const paymentResponse = await studentApplicationsService.submitApplicationWithPayment(selectedApplication.value.id)
-    
+
+    const paymentResponse = await studentApplicationsService.submitStudentApplication(selectedApplication.value.id)
+
     console.log('Réponse du paiement des frais de formation:', paymentResponse)
-    
+
     // Rediriger vers la plateforme de paiement
     if (paymentResponse.data?.payment_link) {
       console.log('Redirection vers:', paymentResponse.data.payment_link)
@@ -525,7 +512,7 @@ const handlePayTrainingFee = async () => {
         type: 'error'
       })
     }
-    
+
   } catch (error: any) {
     console.error('Erreur lors du paiement des frais de formation:', error)
     console.error('Détails de l\'erreur:', {
@@ -533,7 +520,7 @@ const handlePayTrainingFee = async () => {
       data: error.response?.data,
       message: error.message
     })
-    
+
     if (error.response?.status === 400) {
       const errorMessage = error.response?.data?.message || 'Erreur lors de l\'initialisation du paiement des frais de formation'
       showToast({
