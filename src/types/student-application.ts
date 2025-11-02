@@ -119,6 +119,7 @@ export interface StudentApplicationFullOut {
   created_at: string
   updated_at: string
   payment_id?: string
+  payment_method?: string
   training?: TrainingOut
   training_session?: TrainingSessionOut
   attachments?: StudentAttachmentOut[]

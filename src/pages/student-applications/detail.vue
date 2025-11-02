@@ -119,7 +119,7 @@
                           <div>Total: {{ formatCurrency(application.registration_fee + application.training_fee) }}
                           </div>
                           <div>Devise: {{ application.currency }}</div>
-                          <div>Mode de paiement: {{ application.payment ? 'Payé' : 'En attente' }}</div>
+                          <div>Mode de paiement: {{ application?.payment_method === 'TRANSFER' ? 'Par virement bancaire' : application?.payment_method === 'ONLINE' ? 'Paiement en ligne' : 'Non défini' }}</div>
                         </div>
                       </v-timeline-item>
                     </v-timeline>
