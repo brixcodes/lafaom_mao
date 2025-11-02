@@ -113,7 +113,7 @@ const onSubmit = async () => {
     <VCard class="auth-card pa-4 pt-7" max-width="448">
       <VCardItem class="justify-center">
         <RouterLink to="/" class="d-flex align-center gap-1">
-          <VImg src="logo_lafaom.png" width="60" height="40" contain />
+          <VImg src="https://i.postimg.cc/P5MGxkBt/logo-lafaom.png" width="60" height="40" contain />
           <h2 class="font-weight-medium text-2xl">LAFAOM-MAO</h2>
         </RouterLink>
       </VCardItem>
