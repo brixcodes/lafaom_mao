@@ -29,6 +29,10 @@ export const useAuthStore = defineStore('auth', () => {
     if (!user.value) return ''
     return `${user.value.first_name} ${user.value.last_name}`
   })
+  const userEmail = computed(() => {
+    if (!user.value) return null
+    return user.value.email
+  })
   const userInitials = computed(() => {
     if (!user.value) return ''
     return `${user.value.first_name[0]}${user.value.last_name[0]}`.toUpperCase()
@@ -591,6 +595,7 @@ export const useAuthStore = defineStore('auth', () => {
     // Getters
     isAuthenticated,
     userFullName,
+    userEmail,
     userInitials,
     hasPermission,
     
