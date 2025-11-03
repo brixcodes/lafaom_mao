@@ -151,13 +151,13 @@ console.log("Nom complet: ", userFullName.value)
   </VerticalNavGroup>
 
   <!-- ÉTUDIANTS -->
-  <VerticalNavSectionTitle v-if="isMarketingUser" :item="{ heading: 'Mes Formations' }" />
+  <VerticalNavSectionTitle v-if="canAccessTeacherSections || isMarketingUser" :item="{ heading: 'Mes Formations' }" />
   <VerticalNavGroup
-    v-if="isMarketingUser"
+    v-if="canAccessTeacherSections || isMarketingUser"
     :item="{ title: 'Candidatures', icon: 'ri-file-list-3-line' }"
   >
     <VerticalNavLink :item="{ title: 'Toutes les candidatures', to: '/student-applications' }" />
-    <VerticalNavLink v-if="!isMarketingUser" :item="{ title: 'Mes candidatures', to: '/my-student-applications' }" />
+    <VerticalNavLink v-if="!isMarketingUser":item="{ title: 'Mes candidatures', to: '/my-student-applications' }" />
   </VerticalNavGroup>
 
   <VerticalNavGroup
