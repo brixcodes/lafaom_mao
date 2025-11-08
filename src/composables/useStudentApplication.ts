@@ -1,21 +1,19 @@
 // Composable pour la gestion des candidatures d'étudiants
 
-import { ref, computed, watch } from 'vue'
-import { studentApplicationsService } from '@/services/api/student-applications'
+import { showToast } from '@/components/toast/toastManager'
 import { useAuth } from '@/composables/useAuth'
+import { studentApplicationsService } from '@/services/api/student-applications'
 import type {
-  StudentApplicationOut,
-  StudentApplicationFullOut,
   StudentApplicationCreateInput,
-  StudentApplicationUpdateInput,
   StudentApplicationFilter,
-  StudentApplicationSearchFilters,
   StudentApplicationFormData,
-  StudentApplicationStatusChip,
-  StudentApplicationComputed
+  StudentApplicationFullOut,
+  StudentApplicationOut,
+  StudentApplicationSearchFilters,
+  StudentApplicationStatusChip
 } from '@/types/student-application'
 import { ApplicationStatusEnum } from '@/types/student-application'
-import { showToast } from '@/components/toast/toastManager'
+import { computed, ref } from 'vue'
 
 export function useStudentApplication() {
   // ===== STATE =====
@@ -29,36 +27,98 @@ export function useStudentApplication() {
   const pageSize = ref(20)
   const searchQuery = ref('')
   const filters = ref<StudentApplicationSearchFilters>({})
+  const sortBy = ref('created_at')
+  const sortOrder = ref<'asc' | 'desc'>('desc')
+  
+  // Stocker toutes les candidatures chargées (sans filtre)
+  const allApplications = ref<StudentApplicationOut[]>([])
 
   // ===== AUTH =====
   const { user } = useAuth()
 
   // ===== COMPUTED =====
-  const hasApplications = computed(() => applications.value.length > 0)
-  const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value))
+  const hasApplications = computed(() => filteredApplications.value.length > 0)
+  const totalPages = computed(() => Math.ceil(filteredApplications.value.length / pageSize.value))
   const canLoadMore = computed(() => currentPage.value < totalPages.value)
 
+  // Computed pour filtrer et trier les candidatures côté frontend
   const filteredApplications = computed(() => {
-    return applications.value.filter(app => {
-      if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
+    let result = [...allApplications.value]
+
+    // Filtre par recherche
+    if (searchQuery.value && searchQuery.value.trim() !== '') {
+      const query = searchQuery.value.trim().toLowerCase()
+      result = result.filter(app => {
         const matchesSearch =
-          app.application_number.toLowerCase().includes(query) ||
-          (app.training_title?.toLowerCase().includes(query) || false) ||
-          (app.user_email?.toLowerCase().includes(query) || false) ||
-          (app.user_first_name?.toLowerCase().includes(query) || false) ||
-          (app.user_last_name?.toLowerCase().includes(query) || false);
-        if (!matchesSearch) return false;
+          app.application_number?.toLowerCase().includes(query) ||
+          app.training_title?.toLowerCase().includes(query) ||
+          app.user_email?.toLowerCase().includes(query) ||
+          app.user_first_name?.toLowerCase().includes(query) ||
+          app.user_last_name?.toLowerCase().includes(query)
+        return matchesSearch
+      })
+    }
+
+    // Filtre par statut
+    if (filters.value.status) {
+      result = result.filter(app => app.status === filters.value.status)
+    }
+
+    // Filtre par formation
+    if (filters.value.training_id) {
+      result = result.filter(app => app.training_id === filters.value.training_id)
+    }
+
+    // Filtre par session
+    if (filters.value.training_session_id) {
+      result = result.filter(app => app.target_session_id === filters.value.training_session_id)
+    }
+
+
+    // Tri
+    const sortField = sortBy.value === 'created_at_asc' ? 'created_at' : sortBy.value
+    const sortAsc = sortBy.value === 'created_at_asc' || sortBy.value === 'application_number' || sortBy.value === 'status' || sortBy.value === 'training_title'
+    
+    result.sort((a, b) => {
+      let aValue: any
+      let bValue: any
+
+      switch (sortField) {
+        case 'created_at':
+          aValue = new Date(a.created_at || 0).getTime()
+          bValue = new Date(b.created_at || 0).getTime()
+          break
+        case 'application_number':
+          aValue = a.application_number || ''
+          bValue = b.application_number || ''
+          break
+        case 'status':
+          aValue = a.status || ''
+          bValue = b.status || ''
+          break
+        case 'training_title':
+          aValue = a.training_title || ''
+          bValue = b.training_title || ''
+          break
+        default:
+          aValue = new Date(a.created_at || 0).getTime()
+          bValue = new Date(b.created_at || 0).getTime()
       }
 
-      if (filters.value.status && app.status !== filters.value.status) return false;
-      if (filters.value.training_id && app.training_id !== filters.value.training_id) return false;
-      if (filters.value.training_session_id && app.target_session_id !== filters.value.training_session_id) return false;
-      // Supprimé : filtre is_paid (laisser l'API gérer)
+      if (aValue < bValue) return sortAsc ? -1 : 1
+      if (aValue > bValue) return sortAsc ? 1 : -1
+      return 0
+    })
 
-      return true;
-    });
-  });
+    return result
+  })
+
+  // Computed pour la pagination côté frontend
+  const paginatedApplications = computed(() => {
+    const start = (currentPage.value - 1) * pageSize.value
+    const end = start + pageSize.value
+    return filteredApplications.value.slice(start, end)
+  })
 
   const myFilteredApplications = computed(() => {
     return applications.value.filter(app => {
@@ -85,6 +145,7 @@ export function useStudentApplication() {
 
   /**
    * Charger les candidatures (admin)
+   * Charge toutes les candidatures une seule fois pour le filtrage côté frontend
    */
   const loadApplications = async (reset = false) => {
     try {
@@ -93,25 +154,25 @@ export function useStudentApplication() {
 
       if (reset) {
         currentPage.value = 1;
-        applications.value = [];
+        allApplications.value = [];
       }
 
+      // Charger TOUTES les candidatures sans pagination ni filtres côté backend
       const params: StudentApplicationFilter = {
-        page: currentPage.value,
-        page_size: pageSize.value,
-        ...filters.value,
+        page: 1,
+        page_size: 10000, // Grande taille pour récupérer toutes les candidatures
       };
 
-      // Ajouter le paramètre de recherche si présent
-      if (searchQuery.value) {
-        params.search = searchQuery.value;
-      }
-
-      console.log('🔍 Envoi requête API admin avec params:', params);
+      console.log('🔍 Envoi requête API admin pour charger toutes les candidatures:', params);
       const response = await studentApplicationsService.getStudentApplications(params);
       console.log('📋 Réponse API admin:', response);
-      applications.value = reset ? response.data : [...applications.value, ...response.data];
+      
+      // Stocker toutes les candidatures dans allApplications
+      allApplications.value = [...response.data];
       totalCount.value = response.total_number;
+      
+      // Mettre à jour applications pour compatibilité
+      applications.value = allApplications.value;
     } catch (err: any) {
       console.error('Erreur lors du chargement des candidatures:', err);
       error.value = 'Erreur lors du chargement des candidatures';
@@ -122,17 +183,18 @@ export function useStudentApplication() {
   };
 
   /**
-   * Charger plus de candidatures
+   * Charger plus de candidatures (pagination côté frontend)
    */
   const loadMoreApplications = async () => {
     if (canLoadMore.value && !isLoading.value) {
       currentPage.value++
-      await loadApplications(false)
+      // La pagination se fait automatiquement via paginatedApplications
     }
   }
 
   /**
    * Charger les candidatures de l'utilisateur connecté
+   * Charge toutes les candidatures une seule fois pour le filtrage côté frontend
    */
   const loadMyApplications = async (reset = false) => {
     try {
@@ -141,33 +203,34 @@ export function useStudentApplication() {
 
       if (reset) {
         currentPage.value = 1
-        applications.value = []
+        allApplications.value = []
       }
 
       // Vérifier si l'utilisateur est connecté
       if (!user.value?.id) {
         console.warn('Utilisateur non connecté, impossible de charger les candidatures')
+        allApplications.value = []
         applications.value = []
         totalCount.value = 0
         return
       }
 
+      // Charger TOUTES les candidatures sans pagination ni filtres côté backend
       const params: StudentApplicationFilter = {
-        page: currentPage.value,
-        page_size: pageSize.value,
-        ...filters.value
+        page: 1,
+        page_size: 10000, // Grande taille pour récupérer toutes les candidatures
       }
 
-      // Ajouter le paramètre de recherche si présent
-      if (searchQuery.value) {
-        params.search = searchQuery.value
-      }
-
-      console.log('🔍 Chargement des candidatures de l\'utilisateur connecté avec params:', params)
+      console.log('🔍 Chargement de toutes les candidatures de l\'utilisateur connecté:', params)
       const response = await studentApplicationsService.getMyStudentApplications(params)
       console.log('📋 Réponse API candidatures utilisateur:', response)
-      applications.value = reset ? response.data : [...applications.value, ...response.data]
+      
+      // Stocker toutes les candidatures dans allApplications
+      allApplications.value = [...response.data]
       totalCount.value = response.total_number
+      
+      // Mettre à jour applications pour compatibilité
+      applications.value = allApplications.value
 
     } catch (err: any) {
       console.error('Erreur lors du chargement des candidatures de l\'utilisateur:', err)
@@ -179,40 +242,49 @@ export function useStudentApplication() {
   }
 
   /**
-   * Rechercher des candidatures (utilise loadApplications pour admin par défaut)
+   * Rechercher des candidatures (filtrage côté frontend)
    */
   const searchApplications = async (query: string, useAdminEndpoint = false) => {
     searchQuery.value = query
+    currentPage.value = 1 // Réinitialiser à la première page
+    // Le filtrage se fait automatiquement via filteredApplications
+    // Si on n'a pas encore chargé les données, les charger
+    if (allApplications.value.length === 0) {
     if (useAdminEndpoint) {
       await loadApplications(true)
     } else {
       await loadMyApplications(true)
+      }
     }
   }
 
   /**
-   * Appliquer des filtres (utilise loadApplications pour admin par défaut)
+   * Appliquer des filtres (filtrage côté frontend)
    */
   const applyFilters = async (newFilters: StudentApplicationSearchFilters, useAdminEndpoint = false) => {
     filters.value = { ...filters.value, ...newFilters }
+    currentPage.value = 1 // Réinitialiser à la première page
+    // Le filtrage se fait automatiquement via filteredApplications
+    // Si on n'a pas encore chargé les données, les charger
+    if (allApplications.value.length === 0) {
     if (useAdminEndpoint) {
       await loadApplications(true)
     } else {
       await loadMyApplications(true)
+      }
     }
   }
 
   /**
-   * Réinitialiser les filtres (utilise loadApplications pour admin par défaut)
+   * Réinitialiser les filtres (filtrage côté frontend)
    */
   const resetFilters = async (useAdminEndpoint = false) => {
     filters.value = {}
     searchQuery.value = ''
-    if (useAdminEndpoint) {
-      await loadApplications(true)
-    } else {
-      await loadMyApplications(true)
-    }
+    sortBy.value = 'created_at'
+    sortOrder.value = 'desc'
+    currentPage.value = 1
+    // Le filtrage se fait automatiquement via filteredApplications
   }
 
   /**
@@ -281,6 +353,12 @@ export function useStudentApplication() {
       if (index !== -1) {
         applications.value[index] = { ...applications.value[index], ...data }
       }
+      
+      // Mettre à jour aussi dans allApplications
+      const allIndex = allApplications.value.findIndex(app => app.id === id)
+      if (allIndex !== -1) {
+        allApplications.value[allIndex] = { ...allApplications.value[allIndex], ...data }
+      }
 
       // Mettre à jour la candidature courante si c'est la même
       if (currentApplication.value?.id === id) {
@@ -313,6 +391,7 @@ export function useStudentApplication() {
 
       // Retirer la candidature de la liste
       applications.value = applications.value.filter(app => app.id !== id)
+      allApplications.value = allApplications.value.filter(app => app.id !== id)
 
       // Vider la candidature courante si c'est la même
       if (currentApplication.value?.id === id) {
@@ -344,6 +423,12 @@ export function useStudentApplication() {
       if (index !== -1) {
         applications.value[index] = response.data
       }
+      
+      // Mettre à jour aussi dans allApplications
+      const allIndex = allApplications.value.findIndex(app => app.id === id)
+      if (allIndex !== -1) {
+        allApplications.value[allIndex] = response.data
+      }
 
       // Mettre à jour la candidature courante si c'est la même
       if (currentApplication.value?.id === id) {
@@ -372,6 +457,7 @@ export function useStudentApplication() {
 
       // Retirer la candidature de la liste
       applications.value = applications.value.filter(app => app.id !== id)
+      allApplications.value = allApplications.value.filter(app => app.id !== id)
 
       // Vider la candidature courante si c'est la même
       if (currentApplication.value?.id === id) {
@@ -544,12 +630,15 @@ export function useStudentApplication() {
     pageSize,
     searchQuery,
     filters,
+    sortBy,
+    sortOrder,
 
     // Computed
     hasApplications,
     totalPages,
     canLoadMore,
     filteredApplications,
+    paginatedApplications,
     myFilteredApplications,
 
     // Methods

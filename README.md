@@ -148,7 +148,7 @@ Créer un fichier `.env` :
 ```env
 VITE_API_BASE_URL=https://api.lafaom-mao.org/api/v1
 ```
-
+|| 'https://api.lafaom-mao.org/api/v1'
 ### **3. Démarrage**
 ```bash
 yarn dev

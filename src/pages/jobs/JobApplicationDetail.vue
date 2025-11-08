@@ -175,7 +175,7 @@
 
                   <VDivider />
 
-                  <!-- Actions principales : seulement consulter -->
+                  <!-- Actions principales -->
                   <VCardActions class="pa-4 d-flex flex-wrap gap-2">
                     <!-- Contact -->
                     <VBtn variant="outlined" prepend-icon="ri-mail-send-line" @click="sendEmail">
@@ -188,12 +188,42 @@
                       voir l'offre
                     </VBtn>
 
+                    <!-- Approuver (seulement si pas déjà approuvée ou refusée) -->
+                    <!-- <VBtn 
+                      v-if="application && application.status !== 'APPROVED' && application.status !== 'REFUSED'" 
+                      color="success" 
+                      prepend-icon="ri-check-line"
+                      @click="handleApprove"
+                      :loading="isChangingStatus">
+                      Approuver
+                    </VBtn> -->
+
+                    <!-- Rejeter (seulement si pas déjà approuvée ou refusée) -->
+                    <!-- <VBtn 
+                      v-if="application && application.status !== 'APPROVED' && application.status !== 'REFUSED'" 
+                      color="error" 
+                      prepend-icon="ri-close-line"
+                      @click="handleReject"
+                      :loading="isChangingStatus">
+                      Rejeter
+                    </VBtn> -->
+
+                    <!-- Supprimer -->
+                    <VBtn 
+                      color="error" 
+                      variant="outlined"
+                      prepend-icon="ri-delete-bin-line"
+                      @click="handleDelete"
+                      :loading="isDeleting">
+                      Supprimer
+                    </VBtn>
+
                     <!-- Télécharger tous les documents -->
-                    <VBtn v-if="application && application.attachments && application.attachments.length > 0"
+                    <!-- <VBtn v-if="application && application.attachments && application.attachments.length > 0"
                       variant="outlined" prepend-icon="ri-download-line" @click="downloadAllDocuments"
                       :loading="downloadingAll">
                       Télécharger
-                    </VBtn>
+                    </VBtn> -->
                   </VCardActions>
 
 
@@ -249,10 +279,10 @@
                                 @click="previewDocument(attachment)" block>
                                 Prévisualiser
                               </VBtn>
-                              <VBtn color="success" variant="elevated" size="small" prepend-icon="ri-download-line"
+                              <!-- <VBtn color="success" variant="elevated" size="small" prepend-icon="ri-download-line"
                                 @click="downloadDocument(attachment)" :loading="downloadingFiles[attachment.id]" block>
                                 Télécharger
-                              </VBtn>
+                              </VBtn> -->
                             </div>
 
                             <!-- Informations supplémentaires du fichier -->
@@ -330,6 +360,71 @@
       </VRow>
     </VFadeTransition>
 
+    <!-- Dialog pour la raison de rejet -->
+    <VDialog v-model="rejectDialog" max-width="500" persistent>
+      <VCard>
+        <VCardTitle class="d-flex align-center">
+          <VIcon color="error" class="mr-2">ri-close-circle-line</VIcon>
+          <span>Rejeter la candidature</span>
+        </VCardTitle>
+        <VDivider />
+        <VCardText class="pt-4">
+          <VAlert type="warning" variant="tonal" class="mb-4">
+            Vous êtes sur le point de rejeter la candidature <strong>{{ application?.application_number }}</strong>.
+            Veuillez indiquer la raison du rejet.
+          </VAlert>
+          <VTextarea
+            v-model="rejectReason"
+            label="Raison du rejet"
+            placeholder="Expliquez pourquoi cette candidature est rejetée..."
+            variant="outlined"
+            rows="4"
+            :rules="[(v) => !!v || 'La raison du rejet est obligatoire']"
+            required
+          />
+        </VCardText>
+        <VCardActions class="px-6 pb-4">
+          <VSpacer />
+          <VBtn variant="outlined" @click="rejectDialog = false; rejectReason = ''">
+            Annuler
+          </VBtn>
+          <VBtn color="error" @click="confirmReject" :disabled="!rejectReason || rejectReason.trim() === ''">
+            Confirmer le rejet
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Dialog de confirmation de suppression -->
+    <VDialog v-model="deleteDialog" max-width="500" persistent>
+      <VCard>
+        <VCardTitle class="d-flex align-center">
+          <VIcon color="error" class="mr-2">ri-delete-bin-line</VIcon>
+          <span>Supprimer la candidature</span>
+        </VCardTitle>
+        <VDivider />
+        <VCardText class="pt-4">
+          <VAlert type="error" variant="tonal" class="mb-4">
+            <strong>Attention !</strong> Cette action est irréversible.
+          </VAlert>
+          <p class="text-body-1">
+            Êtes-vous sûr de vouloir supprimer la candidature <strong>{{ application?.application_number }}</strong> ?
+          </p>
+          <p class="text-body-2 text-medium-emphasis mt-2">
+            Toutes les données associées à cette candidature seront définitivement supprimées.
+          </p>
+        </VCardText>
+        <VCardActions class="px-6 pb-4">
+          <VSpacer />
+          <VBtn variant="outlined" @click="deleteDialog = false">
+            Annuler
+          </VBtn>
+          <VBtn color="error" @click="confirmDelete" :loading="isDeleting">
+            Supprimer
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </VContainer>
 </template>
 
@@ -358,6 +453,11 @@ export default {
       error: null,
       downloadingFiles: {},
       downloadingAll: false,
+      isChangingStatus: false,
+      isDeleting: false,
+      rejectDialog: false,
+      rejectReason: '',
+      deleteDialog: false
     }
   },
   computed: {
@@ -496,7 +596,7 @@ export default {
       this.$set(this.downloadingFiles, attachment.id, true)
 
       try {
-        await this.jobApplicationsStore.downloadAttachment(attachment.id, attachment.name)
+        await this.jobApplicationsStore.downloadAttachment(attachment.id, attachment.name, attachment.file_path)
 
         if (this.$toast) {
           this.$toast.success(`Document ${attachment.name} téléchargé`)
@@ -536,18 +636,43 @@ export default {
     },
 
     async downloadAllDocuments() {
-      if (!this.application?.attachments?.length) return
+      if (!this.application?.attachments?.length) {
+        console.warn('Aucun document à télécharger')
+        return
+      }
 
       this.downloadingAll = true
+      let successCount = 0
+      let errorCount = 0
 
       try {
-        // Télécharger tous les documents un par un
-        for (const attachment of this.application.attachments) {
-          await this.jobApplicationsStore.downloadAttachment(attachment.id, attachment.name)
+        // Télécharger tous les documents un par un avec un petit délai entre chaque
+        for (let i = 0; i < this.application.attachments.length; i++) {
+          const attachment = this.application.attachments[i]
+          try {
+            console.log(`Téléchargement du document ${i + 1}/${this.application.attachments.length}: ${attachment.name}`)
+            await this.jobApplicationsStore.downloadAttachment(attachment.id, attachment.name, attachment.file_path)
+            successCount++
+            
+            // Petit délai entre les téléchargements pour éviter de surcharger le navigateur
+            if (i < this.application.attachments.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 300))
+            }
+          } catch (error) {
+            console.error(`Erreur lors du téléchargement de ${attachment.name}:`, error)
+            errorCount++
+          }
         }
 
+        // Afficher un message de résultat
         if (this.$toast) {
-          this.$toast.success('Tous les documents ont été téléchargés')
+          if (errorCount === 0) {
+            this.$toast.success(`Tous les documents (${successCount}) ont été téléchargés avec succès`)
+          } else if (successCount > 0) {
+            this.$toast.warning(`${successCount} document(s) téléchargé(s), ${errorCount} erreur(s)`)
+          } else {
+            this.$toast.error('Erreur lors du téléchargement des documents')
+          }
         }
       } catch (error) {
         console.error('Erreur téléchargement groupé:', error)
@@ -589,6 +714,92 @@ export default {
         hour: '2-digit',
         minute: '2-digit'
       })
+    },
+
+    // Actions de gestion du statut
+    async handleApprove() {
+      if (!this.application) return
+
+      // Utiliser un modal au lieu de confirm
+      // Pour l'instant, cette fonctionnalité est commentée
+      // this.approveDialog = true
+      return
+    },
+
+    async handleReject() {
+      if (!this.application) return
+
+      // Ouvrir un dialog pour demander la raison du rejet
+      this.rejectDialog = true
+    },
+
+    async confirmReject() {
+      if (!this.application) return
+
+      if (!this.rejectReason || this.rejectReason.trim() === '') {
+        if (this.$toast) {
+          this.$toast.warning('Veuillez indiquer une raison de rejet')
+        }
+        return
+      }
+
+      this.isChangingStatus = true
+      this.rejectDialog = false
+      
+      try {
+        await this.jobOffersStore.updateApplicationStatus({
+          application_id: this.application.id,
+          status: 'REFUSED',
+          reason: this.rejectReason.trim()
+        })
+        
+        if (this.$toast) {
+          this.$toast.success('Candidature rejetée avec succès')
+        }
+        
+        // Recharger la candidature pour mettre à jour le statut
+        await this.loadApplication()
+        this.rejectReason = ''
+      } catch (error) {
+        console.error('Erreur lors du rejet:', error)
+        if (this.$toast) {
+          this.$toast.error('Erreur lors du rejet de la candidature')
+        }
+      } finally {
+        this.isChangingStatus = false
+      }
+    },
+
+    async handleDelete() {
+      if (!this.application) return
+
+      // Ouvrir le modal de confirmation
+      this.deleteDialog = true
+    },
+
+    async confirmDelete() {
+      if (!this.application) return
+
+      this.isDeleting = true
+      this.deleteDialog = false
+      
+      try {
+        await this.jobApplicationsStore.deleteJobApplication(this.application.id.toString())
+        
+        if (this.$toast) {
+          this.$toast.success('Candidature supprimée avec succès')
+        }
+        
+        // Rediriger vers la liste des candidatures
+        this.$router.push({ name: 'job-applications' })
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error)
+        if (this.$toast) {
+          this.$toast.error('Erreur lors de la suppression de la candidature')
+        }
+      } finally {
+        this.isDeleting = false
+      }
     },
 
     formatPhoneNumber(phone, countryCode) {

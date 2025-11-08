@@ -1,22 +1,21 @@
 // Store Pinia pour les candidatures (Job Applications)
+import { jobOffersService } from '@/services/api/job-offers'
+import type { BaseOutSuccess } from '@/types'
+import type {
+    JobApplicationCreateInput,
+    JobApplicationFilter,
+    JobApplicationOTPRequestInput,
+    JobApplicationOut,
+    JobApplicationOutSuccess,
+    JobApplicationsPageOutSuccess,
+    JobApplicationStats,
+    JobApplicationUpdateByCandidateInput,
+    JobAttachmentListOutSuccess,
+    JobAttachmentOut,
+    UpdateJobApplicationStatusInput
+} from '@/types/jobApplications'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { jobOffersService } from '@/services/api/job-offers'
-import type {
-  JobApplicationOut,
-  JobApplicationCreateInput,
-  JobApplicationUpdateByCandidateInput,
-  JobApplicationOTPRequestInput,
-  JobApplicationOutSuccess,
-  JobApplicationsPageOutSuccess,
-  JobApplicationFilter,
-  UpdateJobApplicationStatusInput,
-  JobAttachmentOut,
-  JobAttachmentListOutSuccess,
-  JobApplicationStats,
-  JobApplicationStatus,
-} from '@/types/jobApplications'
-import type { BaseOutSuccess } from '@/types'
 
 export const useJobApplicationsStore = defineStore('jobApplications', () => {
   // === STATE ===
@@ -274,12 +273,16 @@ export const useJobApplicationsStore = defineStore('jobApplications', () => {
   /**
    * Télécharger une pièce jointe
    */
-  const downloadAttachment = async (attachmentId: number, filename: string) => {
+  const downloadAttachment = async (attachmentId: number, filename: string, filePath?: string) => {
     try {
-      await jobOffersService.downloadAttachment(attachmentId, filename)
+      isLoading.value = true
+      error.value = null
+      await jobOffersService.downloadAttachment(attachmentId, filename, filePath)
     } catch (err: any) {
-      error.value = 'Erreur lors du téléchargement du fichier'
+      error.value = err.response?.data?.message || 'Erreur lors du téléchargement du fichier'
       throw err
+    } finally {
+      isLoading.value = false
     }
   }
 

@@ -27,10 +27,10 @@
               density="comfortable" clearable @update:model-value="handleFilterChange" />
           </VCol>
           <VCol cols="12" md="3">
-            <VSelect v-model="filters.is_paid" :items="paymentOptions" label="Paiement" variant="outlined"
-              density="comfortable" clearable @update:model-value="handleFilterChange">
+            <VSelect v-model="sortBy" :items="sortOptions" label="Trier par" variant="outlined"
+              density="comfortable" @update:model-value="handleSortChange">
               <template #prepend-inner>
-                <VIcon v-if="filters.is_paid === undefined" color="success" size="small">ri-check-line</VIcon>
+                <VIcon icon="ri-sort-desc" size="small" />
               </template>
             </VSelect>
           </VCol>
@@ -104,7 +104,7 @@
     </VRow>
 
     <VRow>
-      <VCol v-for="application in filteredApplications" :key="application.id" cols="12" md="6" lg="4">
+      <VCol v-for="application in paginatedApplications" :key="application.id" cols="12" md="6" lg="4">
         <StudentApplicationCard :application="application" @view="handleView" @delete="handleDelete" />
       </VCol>
     </VRow>
@@ -254,9 +254,12 @@ const {
   totalCount,
   searchQuery,
   filters,
+  sortBy,
+  currentPage,
   hasApplications,
   canLoadMore,
   filteredApplications,
+  paginatedApplications,
   loadApplications,
   loadMoreApplications,
   searchApplications,
@@ -286,18 +289,20 @@ const statusOptions = [
   { title: 'Refusée', value: ApplicationStatusEnum.REFUSED },
 ];
 
-const paymentOptions = [
-  { title: 'Payée', value: true },
-  { title: 'Non payée', value: false },
+const sortOptions = [
+  { title: 'Plus récentes', value: 'created_at' },
+  { title: 'Plus anciennes', value: 'created_at_asc' },
+  { title: 'Numéro de candidature', value: 'application_number' },
+  { title: 'Statut', value: 'status' },
+  { title: 'Formation', value: 'training_title' },
 ];
 
 // Computed
 const hasActiveFilters = computed(() => {
   return !!(
     searchQuery.value ||
-    filters.value.status
-    //  ||
-    // filters.value.is_paid !== undefined
+    filters.value.status ||
+    (sortBy.value && sortBy.value !== 'created_at')
   );
 });
 
@@ -328,6 +333,12 @@ const handleSearch = async (query: string) => {
 
 const handleFilterChange = async () => {
   await applyFilters(filters.value, true); // true = utiliser l'endpoint admin
+};
+
+const handleSortChange = () => {
+  // Le tri se fait automatiquement via filteredApplications
+  // Réinitialiser à la première page lors du changement de tri
+  currentPage.value = 1
 };
 
 const handleView = (id: number) => {

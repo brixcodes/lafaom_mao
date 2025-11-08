@@ -49,7 +49,7 @@
                   </div>
 
                   <h1 class="text-h3 font-weight-bold text-white mb-4 animate-title">
-                    {{ application.training_title || 'Formation' }}
+                    {{ trainingTitle }}
                   </h1>
 
                   <div class="d-flex flex-wrap gap-3 mb-4">
@@ -80,7 +80,7 @@
                     </VChip>
                     <VChip key="total-amount" color="white" variant="outlined" size="small"
                       class="mr-2 mb-2 animate-tag">
-                      Nontant total à payer : {{ formatCurrency(application.registration_fee + application.training_fee) }}
+                      Montant total à payer : {{ formatCurrency(application.registration_fee + application.training_fee) }}
                     </VChip>
                   </VSlideXTransition>
                 </div>
@@ -107,7 +107,7 @@
                           <div>Numéro: {{ application.application_number }}</div>
                           <div>Email: {{ application.user_email || application.email }}</div>
                           <div>Téléphone: {{ application.phone_number || 'Non renseigné' }}</div>
-                          <div>Formation: {{ application.training.title || 'Non définie' }}</div>
+                          <div>Formation: {{ trainingTitle }}</div>
                           <div>Session: {{ formatDate( application.training_session.start_date) + " à " + formatDate( application.training_session.end_date)}}</div>
                         </div>
                       </v-timeline-item>
@@ -151,7 +151,7 @@
                         <VIcon color="primary">ri-school-line</VIcon>
                       </template>
                       <VListItemTitle>Formation</VListItemTitle>
-                      <VListItemSubtitle class="font-weight-medium">{{ application.training_title || 'Non définie' }}
+                      <VListItemSubtitle class="font-weight-medium">{{ trainingTitle }}
                       </VListItemSubtitle>
                     </VListItem>
 
@@ -280,6 +280,20 @@ const isProcessingPayment = ref(false)
 
 // Computed
 const application = computed(() => currentApplication.value)
+
+// Computed pour obtenir le titre de la formation (gère les deux cas possibles)
+const trainingTitle = computed(() => {
+  if (!application.value) return 'Non définie'
+  // Essayer d'abord training_title (pour StudentApplicationOut)
+  if (application.value.training_title) {
+    return application.value.training_title
+  }
+  // Sinon essayer training.title (pour StudentApplicationFullOut)
+  if (application.value.training?.title) {
+    return application.value.training.title
+  }
+  return 'Non définie'
+})
 
 // Methods
 const goBack = () => {

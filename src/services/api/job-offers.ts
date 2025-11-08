@@ -1,25 +1,21 @@
 // Service pour la gestion des offres d'emploi
-import { apiService } from './base'
 import type {
-  JobOfferCreateInput,
-  JobOfferUpdateInput,
-  JobOfferOut,
-  JobOfferOutSuccess,
-  JobOffersPageOutSuccess,
+  InitPaymentOutSuccess,
   JobApplicationCreateInput,
-  JobApplicationOut,
+  JobApplicationOTPRequestInput,
   JobApplicationOutSuccess,
   JobApplicationsPageOutSuccess,
-  JobAttachmentInput,
-  JobAttachmentOut,
-  JobAttachmentOutSuccess,
-  JobAttachmentListOutSuccess,
-  JobApplicationOTPRequestInput,
   JobApplicationUpdateByCandidateInput,
-  UpdateJobOfferStatusInput,
-  InitPaymentOutSuccess,
-  PaymentJobApplicationOutSuccess
+  JobAttachmentInput,
+  JobAttachmentListOutSuccess,
+  JobAttachmentOutSuccess,
+  JobOfferCreateInput,
+  JobOfferOutSuccess,
+  JobOffersPageOutSuccess,
+  JobOfferUpdateInput,
+  UpdateJobOfferStatusInput
 } from '@/types/job-offers'
+import { apiService } from './base'
 
 export class JobOffersService {
   // === JOB OFFERS ===
@@ -96,22 +92,22 @@ export class JobOffersService {
   /**
    * Créer une candidature
    */
-  async createJobApplication(applicationData: JobApplicationCreateInput): Promise<PaymentJobApplicationOutSuccess> {
+  async createJobApplication(applicationData: JobApplicationCreateInput): Promise<InitPaymentOutSuccess> {
     const response = await apiService.post('/job-applications', applicationData)
-    return response as PaymentJobApplicationOutSuccess
+    return response as InitPaymentOutSuccess
   }
 
   /**
    * Uploader un fichier joint pour une candidature
    */
-  async uploadJobAttachment(file: File, docType: string): Promise<{ data: { file_path: string } }> {
+  async uploadJobAttachment(file: File, docType: string): Promise<any> {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('name', docType)
     
     // Utiliser la méthode spécialisée pour FormData
     const response = await apiService.upload('/job-attachments', formData)
-    return response
+    return response as { data: { file_path: string } }
   }
 
   /**
@@ -130,6 +126,15 @@ export class JobOffersService {
     return response as JobApplicationOutSuccess
   }
 
+  /**
+   * Supprimer une candidature
+   */
+  async deleteJobApplication(applicationId: number): Promise<void> {
+    console.log('🗑️ Appel API DELETE pour supprimer la candidature:', applicationId)
+    await apiService.delete(`/job-applications/${applicationId}`)
+    console.log('✅ API DELETE réussie pour la candidature:', applicationId)
+  }
+
   // === JOB ATTACHMENTS ===
 
   /**
@@ -146,6 +151,167 @@ export class JobOffersService {
   async getJobApplicationAttachments(applicationId: number): Promise<JobAttachmentListOutSuccess> {
     const response = await apiService.get(`/job-applications/${applicationId}/attachments`)
     return response as JobAttachmentListOutSuccess
+  }
+
+  /**
+   * Télécharger un fichier joint
+   */
+  async downloadAttachment(attachmentId: number, filename: string, filePath?: string): Promise<void> {
+    try {
+      let downloadUrl: string
+      
+      // Si file_path est fourni et est une URL complète, l'utiliser directement
+      if (filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'))) {
+        downloadUrl = filePath
+      } else {
+        // Utiliser l'endpoint de téléchargement de l'API
+        // L'API retourne un JSON avec download_url, pas un blob directement
+        const apiResponse = await apiService.get(`/job-attachments/${attachmentId}/download`)
+        
+        console.log('Réponse API download (raw):', apiResponse)
+        console.log('Type de réponse:', typeof apiResponse)
+        
+        // La réponse peut être directement l'objet ou dans une propriété data
+        let responseData = apiResponse
+        if (apiResponse && typeof apiResponse === 'object' && 'data' in apiResponse) {
+          responseData = (apiResponse as any).data
+        }
+        
+        // Vérifier si la réponse contient download_url
+        if (responseData && typeof responseData === 'object' && 'download_url' in responseData) {
+          downloadUrl = (responseData as { download_url: string }).download_url
+          console.log('✅ URL de téléchargement extraite:', downloadUrl)
+        } else if (responseData && typeof responseData === 'string' && responseData.startsWith('http')) {
+          // Si c'est directement une URL string
+          downloadUrl = responseData
+          console.log('✅ URL directe trouvée:', downloadUrl)
+        } else if (filePath && filePath.startsWith('/')) {
+          // Fallback: utiliser file_path si disponible
+          const baseURL = import.meta.env.VITE_API_URL || 'https://api.lafaom-mao.org/api/v1'
+          downloadUrl = `${baseURL}${filePath}`
+          console.log('✅ Utilisation de file_path:', downloadUrl)
+        } else {
+          console.error('❌ Structure de réponse inattendue:', responseData)
+          throw new Error('Impossible de trouver l\'URL de téléchargement dans la réponse API')
+        }
+      }
+      
+      // Vérifier que downloadUrl est défini
+      if (!downloadUrl || typeof downloadUrl !== 'string') {
+        throw new Error('URL de téléchargement invalide')
+      }
+      
+      console.log('Téléchargement depuis:', downloadUrl)
+      console.log('Type de downloadUrl:', typeof downloadUrl)
+      
+      // Pour les URLs S3 publiques, utiliser window.open pour contourner CORS
+      const isPublicUrl = downloadUrl.includes('s3.') || 
+                          downloadUrl.includes('amazonaws.com') ||
+                          downloadUrl.includes('s3.amazonaws.com')
+      
+      console.log('isPublicUrl:', isPublicUrl, 'pour URL:', downloadUrl)
+      console.log('Vérifications:', {
+        'contient s3.': downloadUrl.includes('s3.'),
+        'contient amazonaws.com': downloadUrl.includes('amazonaws.com'),
+        'contient s3.amazonaws.com': downloadUrl.includes('s3.amazonaws.com')
+      })
+      
+      if (isPublicUrl) {
+        // Pour les URLs publiques S3, télécharger via fetch avec mode 'no-cors' ou utiliser un proxy
+        // Si CORS bloque, on essaie d'abord avec fetch, sinon on utilise un lien direct
+        console.log('✅ Téléchargement depuis URL publique S3:', downloadUrl)
+        
+        try {
+          // Essayer de télécharger via fetch (peut échouer à cause de CORS)
+          const response = await fetch(downloadUrl, { 
+            mode: 'cors',
+            cache: 'no-cache'
+          })
+          
+          if (response.ok) {
+            const blob = await response.blob()
+            const url = window.URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = filename || `attachment-${attachmentId}`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            window.URL.revokeObjectURL(url)
+            console.log('✅ Fichier téléchargé avec succès')
+            return
+          }
+        } catch (fetchError) {
+          console.warn('⚠️ Fetch échoué à cause de CORS, utilisation d\'un lien direct:', fetchError)
+          // Si fetch échoue à cause de CORS, utiliser un lien direct
+          // Le navigateur téléchargera le fichier si les headers Content-Disposition sont corrects
+          const link = document.createElement('a')
+          link.href = downloadUrl
+          link.download = filename || `attachment-${attachmentId}`
+          link.target = '_blank'
+          link.style.display = 'none'
+          document.body.appendChild(link)
+          link.click()
+          setTimeout(() => {
+            if (link.parentNode) {
+              document.body.removeChild(link)
+            }
+          }, 100)
+          return
+        }
+      }
+      
+      console.log('⚠️ URL non-S3 détectée, utilisation de fetch')
+      
+      // Pour les URLs privées, télécharger via fetch
+      const fetchOptions: RequestInit = {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+        }
+      }
+      
+      console.log('Appel fetch vers:', downloadUrl)
+      const response = await fetch(downloadUrl, fetchOptions)
+      
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`)
+      }
+      
+      const blob = await response.blob()
+      console.log('Blob téléchargé, type:', blob.type, 'taille:', blob.size)
+      
+      // Vérifier que ce n'est pas du JSON
+      if (blob.type === 'application/json' || blob.size < 100) {
+        const text = await blob.text()
+        console.warn('⚠️ Réponse JSON détectée au lieu du fichier:', text)
+        // Essayer de parser le JSON et extraire l'URL
+        try {
+          const jsonData = JSON.parse(text)
+          if (jsonData.download_url) {
+            // Récursion: télécharger depuis la vraie URL
+            return await this.downloadAttachment(attachmentId, filename, jsonData.download_url)
+          }
+        } catch (e) {
+          // Ignorer l'erreur de parsing
+        }
+        throw new Error('Le serveur a retourné du JSON au lieu du fichier')
+      }
+      
+      // Créer un lien de téléchargement
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename || `attachment-${attachmentId}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      console.log('✅ Téléchargement terminé:', filename)
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error)
+      throw error
+    }
   }
 
   /**

@@ -24,7 +24,7 @@
           <VCol cols="12" md="4">
             <VTextField v-model="filters.search" prepend-inner-icon="ri-search-line"
               label="Rechercher une candidature..." variant="outlined" density="compact" clearable
-              @input="debouncedSearch" />
+              @update:model-value="debouncedSearch" />
           </VCol>
 
           <VCol cols="12" md="3">
@@ -58,7 +58,7 @@
       <VAlert type="info" variant="tonal" class="d-flex align-center">
         <div class="d-flex align-center flex-grow-1">
           <VIcon icon="ri-filter-line" class="me-2" />
-          <span>{{ applications.length }} candidature(s) correspond(ent) aux filtres</span>
+          <span>{{ filteredApplications.length }} candidature(s) correspond(ent) aux filtres</span>
         </div>
         <VBtn variant="text" size="small" prepend-icon="ri-close-line" @click="resetFilters">
           Effacer
@@ -73,7 +73,7 @@
     </div>
 
     <!-- Liste des candidatures -->
-    <div v-else-if="applications.length > 0">
+    <div v-else-if="filteredApplications.length > 0">
       <VRow>
         <VCol v-for="application in applications" :key="application.id" cols="12" md="6" lg="4">
           <VCard class="mx-auto application-card pa-2" elevation="2" hover>
@@ -125,7 +125,7 @@
 
                 <VCol cols="12" md="6" class="d-flex align-center mb-2">
                   <VIcon icon="ri-file-pdf-line" size="small" class="me-2" />
-                  <span class="text-body-2">{{ application.attachments?.length || 0 }} document(s)</span>
+                  <span class="text-body-2">{{ getDocumentsCount(application) }} document(s)</span>
                 </VCol>
 
                 <VCol cols="12" class="d-flex align-center mb-2 mt-2">
@@ -137,13 +137,13 @@
                 </VCol>
 
                 <VCol cols="12" class="d-flex align-center mb-2">
-                  <VIcon :icon="application.payment_id ? 'ri-check-circle-line' : 'ri-close-circle-line'" 
-                         :color="application.payment_id ? 'success' : 'error'" 
+                  <VIcon :icon="isPaymentPaid(application) ? 'ri-check-circle-line' : 'ri-close-circle-line'" 
+                         :color="isPaymentPaid(application) ? 'success' : 'error'" 
                          size="small" class="me-2" />
                   <span class="text-body-2 font-weight-medium">Paiement :</span>
-                  <VChip :color="application.payment_id ? 'success' : 'error'" 
+                  <VChip :color="isPaymentPaid(application) ? 'success' : 'error'" 
                          size="x-small" class="mx-1">
-                    {{ application.payment_id ? 'Payé' : 'Non payé' }}
+                    {{ isPaymentPaid(application) ? 'Payé' : 'Non payé' }}
                   </VChip>
                 </VCol>
 
@@ -166,10 +166,6 @@
                 <VList>
                   <VListItem prepend-icon="ri-eye-line" title="Voir les détails"
                     @click="viewApplication(application)" />
-                  <!-- v-if="!canUpdateStatus(application)" -->
-                  <VListItem v-if="application.attachments && application.attachments.length > 0"
-                    prepend-icon="ri-download-line" title="Télécharger documents"
-                    @click="downloadDocuments(application)" :loading="downloading[application.id]" />
                   <VDivider />
                   <VListItem prepend-icon="ri-delete-bin-line" title="Supprimer" class="text-error"
                     @click="confirmDelete(application)" />
@@ -228,7 +224,7 @@
       <VIcon icon="ri-file-user-line" size="80" class="text-medium-emphasis mb-6" />
       <h3 class="text-h5 mb-4">Aucune candidature trouvée</h3>
       <p class="text-body-1 text-medium-emphasis mb-6">
-        {{ hasActiveFilters ? "Aucune candidature ne correspond à vos critères de recherche." : "Aucune candidature reçue." }}
+        {{ hasActiveFilters ? `Aucune candidature ne correspond à vos critères de recherche (${filteredApplications.length} résultat(s)).` : "Aucune candidature reçue." }}
       </p>
 
       <div class="d-flex justify-center gap-3">
@@ -321,7 +317,6 @@ const deleteDialog = ref(false)
 const selectedApplication = ref<JobApplication | null>(null)
 const updatingStatus = ref(false)
 const deleting = ref(false)
-const downloading = ref<Record<string, boolean>>({})
 const newStatus = ref<LocalJobApplicationStatus | ''>('')
 const statusComment = ref('')
 const expandedApplications = ref<number[]>([])
@@ -367,14 +362,99 @@ const filters = reactive({
   payment_status: ''
 })
 
-// Computed
+// Stocker toutes les candidatures chargées (sans filtre)
+const allApplications = ref<JobApplication[]>([])
+
+// Vérifier si le paiement est effectué
+// Si payment_method === "TRANSFER", considérer comme payé
+const isPaymentPaid = (application: JobApplication) => {
+  // Si payment_method est TRANSFER, considérer comme payé
+  if ((application as any).payment_method === 'TRANSFER') {
+    return true
+  }
+  // Sinon, utiliser la logique basée sur payment_id
+  return !!application.payment_id
+}
+
+// Computed pour filtrer et trier les candidatures côté frontend
+const filteredApplications = computed(() => {
+  let result = [...allApplications.value]
+
+  // Filtre par recherche (nom, email, numéro de candidature)
+  if (filters.search && filters.search.trim() !== '') {
+    const searchTerm = filters.search.trim().toLowerCase()
+    result = result.filter(app => {
+      const fullName = `${app.first_name} ${app.last_name}`.toLowerCase()
+      const email = app.email?.toLowerCase() || ''
+      const applicationNumber = app.application_number?.toLowerCase() || ''
+      return fullName.includes(searchTerm) || 
+             email.includes(searchTerm) || 
+             applicationNumber.includes(searchTerm)
+    })
+  }
+
+  // Filtre par statut
+  if (filters.status && filters.status !== '') {
+    result = result.filter(app => app.status === filters.status)
+  }
+
+  // Filtre par offre d'emploi
+  if (filters.job_offer_id && filters.job_offer_id !== '') {
+    result = result.filter(app => app.job_offer_id === filters.job_offer_id)
+  }
+
+  // Filtre par statut de paiement
+  if (filters.payment_status && filters.payment_status !== '') {
+    if (filters.payment_status === 'paid') {
+      result = result.filter(app => isPaymentPaid(app))
+    } else if (filters.payment_status === 'unpaid') {
+      result = result.filter(app => !isPaymentPaid(app))
+    }
+  }
+
+  // Tri
+  const sortField = sortBy.value === 'created_at_asc' ? 'created_at' : sortBy.value
+  const sortAsc = sortBy.value === 'created_at_asc' || sortBy.value === 'application_number' || sortBy.value === 'status'
+  
+  result.sort((a, b) => {
+    let aValue: any
+    let bValue: any
+
+    switch (sortField) {
+      case 'created_at':
+        aValue = new Date(a.created_at).getTime()
+        bValue = new Date(b.created_at).getTime()
+        break
+      case 'application_number':
+        aValue = a.application_number || ''
+        bValue = b.application_number || ''
+        break
+      case 'status':
+        aValue = a.status || ''
+        bValue = b.status || ''
+        break
+      default:
+        aValue = new Date(a.created_at).getTime()
+        bValue = new Date(b.created_at).getTime()
+    }
+
+    if (aValue < bValue) return sortAsc ? -1 : 1
+    if (aValue > bValue) return sortAsc ? 1 : -1
+    return 0
+  })
+
+  return result
+})
+
+// Computed pour la pagination côté frontend
 const applications = computed(() => {
-  // Retourner toutes les candidatures retournées par l'API (déjà filtrées côté serveur)
-  return jobOffersStore.jobApplications
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredApplications.value.slice(start, end)
 })
 
 const totalPages = computed(() => {
-  return Math.ceil(jobOffersStore.applicationsPagination.total / jobOffersStore.applicationsPagination.pageSize)
+  return Math.ceil(filteredApplications.value.length / pageSize.value)
 })
 
 const hasActiveFilters = computed(() => {
@@ -414,55 +494,79 @@ const refreshData = async () => {
 
 const loadApplications = async () => {
   try {
-    // Déterminer l'ordre de tri
-    let orderBy = sortBy.value
-    let asc: 'asc' | 'desc' = 'desc'
-
-    if (sortBy.value === 'created_at_asc') {
-      orderBy = 'created_at'
-      asc = 'asc'
-    } else if (sortBy.value !== 'created_at') {
-      asc = 'asc'
-    }
-
+    // Charger TOUTES les candidatures sans pagination ni filtres côté backend
+    // On utilisera une grande page size pour récupérer toutes les données
     const requestParams: any = {
-      search: filters.search || undefined,
-      status: filters.status || undefined as any,
-      job_offer_id: filters.job_offer_id || undefined,
-      page: currentPage.value,
-      page_size: pageSize.value,
-      order_by: orderBy as 'created_at' | 'application_number' | 'status',
-      asc: asc
+      page: 1,
+      page_size: 10000, // Grande taille pour récupérer toutes les candidatures
+      order_by: 'created_at' as 'created_at' | 'application_number' | 'status',
+      asc: 'desc'
     }
-
-    // Ajouter le filtre de paiement si sélectionné.
-    if (filters.payment_status === 'paid') {
-      requestParams.is_paid = true
-    } else if (filters.payment_status === 'unpaid') {
-      requestParams.is_paid = false
-    }
-    // Si filters.payment_status est vide, on ne filtre pas (toutes les candidatures)
 
     await jobOffersStore.getJobApplications(requestParams)
+    
+    // Stocker toutes les candidatures dans allApplications
+    allApplications.value = [...jobOffersStore.jobApplications]
+    
+    // Charger le nombre d'attachments pour chaque candidature si non inclus
+    if (allApplications.value.length > 0) {
+      await loadAttachmentsCounts()
+    }
   } catch (error) {
     console.error('Erreur lors du chargement des candidatures:', error)
   }
 }
 
+// Charger le nombre d'attachments pour chaque candidature
+const loadAttachmentsCounts = async () => {
+  try {
+    // Charger les attachments pour chaque candidature en parallèle
+    const promises = allApplications.value.map(async (application) => {
+      // Si les attachments ne sont pas déjà chargés, les charger
+      if (!application.attachments || application.attachments.length === 0) {
+        try {
+          const response = await jobOffersStore.fetchApplicationAttachments(application.id)
+          // Mettre à jour l'application avec les attachments
+          const index = allApplications.value.findIndex(app => app.id === application.id)
+          if (index !== -1 && response && response.data) {
+            // La réponse a une propriété data qui contient le tableau d'attachments
+            const attachments = response.data
+            if (Array.isArray(attachments)) {
+              allApplications.value[index].attachments = attachments
+              console.log(`✅ ${attachments.length} document(s) chargé(s) pour la candidature ${application.id}`)
+            }
+          }
+        } catch (err) {
+          console.warn(`⚠️ Impossible de charger les attachments pour la candidature ${application.id}:`, err)
+        }
+      } else {
+        console.log(`ℹ️ Attachments déjà chargés pour la candidature ${application.id}: ${application.attachments.length}`)
+      }
+    })
+    
+    await Promise.all(promises)
+    console.log('✅ Tous les compteurs d\'attachments ont été chargés')
+  } catch (error) {
+    console.error('❌ Erreur lors du chargement des compteurs d\'attachments:', error)
+  }
+}
 
-const debouncedSearch = (() => {
-  let timeout: ReturnType<typeof setTimeout>
-  return () => {
-    clearTimeout(timeout)
-    timeout = setTimeout(() => {
+
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+const debouncedSearch = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  searchTimeout = setTimeout(() => {
       applyFilters()
     }, 500)
   }
-})()
 
 const applyFilters = () => {
+  // Réinitialiser à la première page lors du changement de filtre
+  // Le filtrage se fait automatiquement via la computed property filteredApplications
   currentPage.value = 1
-  loadApplications()
 }
 
 const resetFilters = () => {
@@ -475,8 +579,8 @@ const resetFilters = () => {
 }
 
 const changePage = (page: number) => {
+  // La pagination se fait côté frontend via la computed property applications
   currentPage.value = page
-  loadApplications()
 }
 
 const toggleExpanded = (applicationId: number) => {
@@ -491,6 +595,35 @@ const toggleExpanded = (applicationId: number) => {
 const truncateText = (text: string, maxLength: number = 50): string => {
   if (!text) return ""
   return text.length > maxLength ? text.substring(0, maxLength) + "..." : text
+}
+
+// Compter le nombre de documents joints
+const getDocumentsCount = (application: JobApplication): number => {
+  // Log pour déboguer
+  console.log('📄 Application:', application.id, 'Attachments:', application.attachments)
+  
+  // Vérifier si attachments existe et est un tableau
+  if (application.attachments && Array.isArray(application.attachments)) {
+    const count = application.attachments.length
+    console.log('✅ Nombre de documents trouvés:', count)
+    return count
+  }
+  
+  // Vérifier si l'API retourne un compteur dans un autre champ
+  const anyApp = application as any
+  if (anyApp.attachments_count !== undefined) {
+    console.log('✅ Nombre de documents depuis attachments_count:', anyApp.attachments_count)
+    return anyApp.attachments_count
+  }
+  
+  if (anyApp.documents_count !== undefined) {
+    console.log('✅ Nombre de documents depuis documents_count:', anyApp.documents_count)
+    return anyApp.documents_count
+  }
+  
+  // Si attachments n'existe pas ou n'est pas un tableau, retourner 0
+  console.log('⚠️ Aucun document trouvé pour application:', application.id)
+  return 0
 }
 
 // Méthodes pour fermer les dialogs proprement
@@ -606,7 +739,14 @@ const updateApplicationStatus = async () => {
 
     await jobOffersStore.updateJobApplication(updateData)
 
+    // Mettre à jour la candidature dans allApplications
+    const index = allApplications.value.findIndex(app => app.id === selectedApplication.value.id)
+    if (index !== -1) {
+      allApplications.value[index] = { ...allApplications.value[index], ...updateData, status: newStatus.value as any }
+    }
+
     statusDialog.value = false
+    // Recharger pour avoir les données à jour
     await loadApplications()
 
   } catch (error) {
@@ -625,27 +765,17 @@ const handleStatusUpdate = async (applicationId: string, status: string, comment
     }
 
     await jobOffersStore.updateJobApplication(updateData)
+    
+    // Mettre à jour la candidature dans allApplications
+    const index = allApplications.value.findIndex(app => app.id.toString() === applicationId)
+    if (index !== -1) {
+      allApplications.value[index] = { ...allApplications.value[index], ...updateData, status: status as any }
+    }
+    
     await loadApplications()
 
   } catch (error) {
     console.error('Erreur lors de la mise à jour du statut:', error)
-  }
-}
-
-const downloadDocuments = async (application: JobApplication) => {
-  if (!application.attachments || application.attachments.length === 0) return
-
-  try {
-    downloading.value[application.id] = true
-
-    for (const attachment of application.attachments) {
-      await jobOffersStore.downloadJobAttachment(attachment.id.toString(), attachment.name)
-    }
-
-  } catch (error) {
-    console.error('Erreur lors du téléchargement des documents:', error)
-  } finally {
-    downloading.value[application.id] = false
   }
 }
 
@@ -685,12 +815,26 @@ const deleteApplication = async () => {
 
   try {
     deleting.value = true
+    
+    // Utiliser l'API pour supprimer la candidature
+    // L'API doit être appelée en premier, et seulement en cas de succès on supprime localement
     await jobOffersStore.deleteJobApplication(selectedApplication.value.id.toString())
+    
+    // Supprimer la candidature de allApplications seulement après succès de l'API
+    const index = allApplications.value.findIndex(app => app.id === selectedApplication.value.id)
+    if (index !== -1) {
+      allApplications.value.splice(index, 1)
+    }
+    
     deleteDialog.value = false
-    await loadApplications()
+    selectedApplication.value = null
+    
+    console.log('✅ Candidature supprimée avec succès via l\'API')
 
   } catch (error) {
-    console.error('Erreur lors de la suppression de la candidature:', error)
+    console.error('❌ Erreur lors de la suppression de la candidature:', error)
+    // Ne pas supprimer localement si l'API échoue
+    throw error
   } finally {
     deleting.value = false
   }
@@ -709,13 +853,32 @@ onMounted(async () => {
   loadApplications()
 })
 
-// Watch filters for real-time updates
+// Watch filters for real-time updates (skip initial trigger)
 watch(
-  () => filters.search,
+  () => filters.status,
   () => {
-    if (filters.search === '') {
       applyFilters()
     }
+)
+
+watch(
+  () => filters.job_offer_id,
+  () => {
+    applyFilters()
+  }
+)
+
+watch(
+  () => filters.payment_status,
+  () => {
+    applyFilters()
+  }
+)
+
+watch(
+  () => sortBy.value,
+  () => {
+    applyFilters()
   }
 )
 </script>

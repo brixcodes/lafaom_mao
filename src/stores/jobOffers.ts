@@ -1,25 +1,24 @@
 // Store Pinia pour les offres d'emploi
+import { jobOffersService } from '@/services/api/job-offers'
+import type { BaseOutSuccess } from '@/types'
+import type {
+    JobApplicationCreateInput,
+    JobApplicationOTPRequestInput,
+    JobApplicationOut,
+    JobApplicationOutSuccess,
+    JobApplicationsPageOutSuccess,
+    JobApplicationUpdateByCandidateInput,
+    JobAttachmentListOutSuccess,
+    JobAttachmentOut,
+    JobOfferCreateInput,
+    JobOfferOut,
+    JobOfferOutSuccess,
+    JobOffersPageOutSuccess,
+    PaymentJobApplicationOutSuccess,
+    UpdateJobOfferStatusInput
+} from '@/types/job-offers'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { jobOffersService } from '@/services/api/job-offers'
-import type {
-  JobOfferOut,
-  JobOfferCreateInput,
-  JobOfferUpdateInput,
-  JobOfferOutSuccess,
-  JobOffersPageOutSuccess,
-  JobApplicationOut,
-  JobApplicationCreateInput,
-  JobApplicationUpdateByCandidateInput,
-  JobApplicationOTPRequestInput,
-  JobApplicationOutSuccess,
-  JobApplicationsPageOutSuccess,
-  UpdateJobOfferStatusInput,
-  JobAttachmentOut,
-  JobAttachmentListOutSuccess,
-  PaymentJobApplicationOutSuccess,
-} from '@/types/job-offers'
-import type { BaseOutSuccess } from '@/types'
 
 export const useJobOffersStore = defineStore('jobOffers', () => {
   // === STATE ===
@@ -511,6 +510,13 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
       isLoading.value = true
       error.value = null
       
+      const numericId = parseInt(id, 10)
+      
+      // Appeler l'API pour supprimer la candidature
+      // Si l'API réussit, on supprime localement
+      await jobOffersService.deleteJobApplication(numericId)
+      
+      // Supprimer localement seulement après succès de l'API
       jobApplications.value = jobApplications.value.filter(app => app.id.toString() !== id)
       
       if (currentJobApplication.value && currentJobApplication.value.id.toString() === id) {
@@ -519,6 +525,7 @@ export const useJobOffersStore = defineStore('jobOffers', () => {
       
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Erreur lors de la suppression de la candidature'
+      // Ne pas supprimer localement si l'API échoue
       throw err
     } finally {
       isLoading.value = false
