@@ -101,6 +101,7 @@ export interface StudentApplicationOut {
   user_email?: string
   user_first_name?: string
   user_last_name?: string
+  phone_number?: string
   created_at: string
   updated_at: string
 }
@@ -120,6 +121,13 @@ export interface StudentApplicationFullOut {
   updated_at: string
   payment_id?: string
   payment_method?: string
+  first_name?: string
+  last_name?: string
+  email?: string
+  phone_number?: string
+  user_email?: string
+  user_first_name?: string
+  user_last_name?: string
   training?: TrainingOut
   training_session?: TrainingSessionOut
   attachments?: StudentAttachmentOut[]

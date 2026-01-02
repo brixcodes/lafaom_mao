@@ -38,12 +38,12 @@
                 <div class="application-header-content">
                   <div class="d-flex align-center mb-4 animate-user">
                     <VAvatar size="48" class="mr-3 border-white">
-                      <VIcon color="white" size="24">ri-file-list-line</VIcon>
+                      <VIcon color="white" size="24">ri-user-line</VIcon>
                     </VAvatar>
                     <div>
-                      <div class="text-white font-weight-medium">Candidature</div>
+                      <div class="text-white font-weight-medium">{{ studentFullName }}</div>
                       <div class="text-caption text-white">
-                        ID: {{ application.id }}
+                        ID Candidature: {{ application.id }}
                       </div>
                     </div>
                   </div>
@@ -55,11 +55,11 @@
                   <div class="d-flex flex-wrap gap-3 mb-4">
                     <div class="d-flex align-center text-white">
                       <VIcon size="small" class="mr-2">ri-mail-line</VIcon>
-                      <span>{{ application.user_email || application.email }}</span>
+                      <span>{{ studentEmail }}</span>
                     </div>
-                    <div v-if="application.phone_number" class="d-flex align-center text-white">
+                    <div class="d-flex align-center text-white">
                       <VIcon size="small" class="mr-2">ri-phone-line</VIcon>
-                      <span>{{ application.phone_number }}</span>
+                      <span>{{ studentPhone }}</span>
                     </div>
                     <div class="d-flex align-center text-white">
                       <VIcon size="small" class="mr-2">ri-calendar-line</VIcon>
@@ -102,13 +102,28 @@
                   <VCardText class="py-4">
                     <v-timeline align="start" density="compact" class="pa-3">
                       <v-timeline-item size="x-small">
-                        <div class="font-weight-medium mb-2"><strong>Informations de base</strong> :</div>
+                        <div class="font-weight-medium mb-2"><strong>Informations de l'étudiant</strong> :</div>
+                        <div style="margin-left: 10px; line-height: 1.8;">
+                          <div class="d-flex align-center mb-1">
+                            <VIcon size="small" class="mr-2" color="primary">ri-user-line</VIcon>
+                            <span class="text-body-2 font-weight-medium">{{ studentFullName }}</span>
+                          </div>
+                          <div class="d-flex align-center mb-1">
+                            <VIcon size="small" class="mr-2" color="primary">ri-mail-line</VIcon>
+                            <span class="text-body-2">{{ studentEmail }}</span>
+                          </div>
+                          <div class="d-flex align-center">
+                            <VIcon size="small" class="mr-2" color="primary">ri-phone-line</VIcon>
+                            <span class="text-body-2">{{ studentPhone }}</span>
+                          </div>
+                        </div>
+                      </v-timeline-item>
+                      <v-timeline-item size="x-small">
+                        <div class="font-weight-medium mb-2"><strong>Informations de la formation</strong> :</div>
                         <div style="margin-left: 10px; line-height: 1.8;">
                           <div>Numéro: {{ application.application_number }}</div>
-                          <div>Email: {{ application.user_email || application.email }}</div>
-                          <div>Téléphone: {{ application.phone_number || 'Non renseigné' }}</div>
                           <div>Formation: {{ trainingTitle }}</div>
-                          <div>Session: {{ formatDate( application.training_session.start_date) + " à " + formatDate( application.training_session.end_date)}}</div>
+                          <div>Session: {{ formatDate( application.training_session?.start_date) + " à " + formatDate( application.training_session?.end_date)}}</div>
                         </div>
                       </v-timeline-item>
                       <v-timeline-item size="x-small">
@@ -177,9 +192,11 @@
                   <VDivider />
                   <VCardText class="pa-4">
                     <div class="d-flex flex-column gap-3">
-                      <VBtn v-if="application && !application.payment_id" color="primary" @click="handlePay(application.id)"
-                        :loading="isProcessingPayment" block>
-                        <!-- <VIcon class="mr-2">ri-money-dollar-circle-line</VIcon> -->
+                      <VBtn v-if="application && application.payment_method === 'TRANSFER' && !application.payment_id" 
+                        color="primary" 
+                        @click="handlePay(application.id)"
+                        :disabled="!application.attachments || application.attachments.length === 0"
+                        block>
                         Consulter la pièce jointe
                       </VBtn>
 
@@ -267,16 +284,16 @@ const {
   isDeleting,
   error,
   loadApplication,
+  loadUserDetails,
   deleteApplication,
   submitApplication,
-  payTrainingFee,
   getStatusChip,
   canDeleteApplication,
-  canSubmitApplication
+  canSubmitApplication,
+  currentUserDetails
 } = useStudentApplication()
 
 // Local state
-const isProcessingPayment = ref(false)
 
 // Computed
 const application = computed(() => currentApplication.value)
@@ -295,6 +312,36 @@ const trainingTitle = computed(() => {
   return 'Non définie'
 })
 
+// Computed pour obtenir le nom complet de l'étudiant
+const studentFullName = computed(() => {
+  // Utiliser les détails de l'utilisateur si disponibles (second appel API)
+  if (currentUserDetails.value) {
+    const firstName = currentUserDetails.value.first_name || ''
+    const lastName = currentUserDetails.value.last_name || ''
+    return `${firstName} ${lastName}`.trim() || 'Étudiant inconnu'
+  }
+  
+  if (!application.value) return 'Chargement...'
+  const firstName = application.value.user_first_name || application.value.first_name || ''
+  const lastName = application.value.user_last_name || application.value.last_name || ''
+  const fullName = `${firstName} ${lastName}`.trim()
+  return fullName || 'Étudiant inconnu'
+})
+
+// Computed pour obtenir l'email
+const studentEmail = computed(() => {
+  if (currentUserDetails.value?.email) return currentUserDetails.value.email
+  if (!application.value) return ''
+  return application.value.user_email || application.value.email || 'Non renseigné'
+})
+
+// Computed pour obtenir le numéro de téléphone
+const studentPhone = computed(() => {
+  if (currentUserDetails.value?.mobile_number) return currentUserDetails.value.mobile_number
+  if (!application.value) return ''
+  return application.value.phone_number || 'Non renseigné'
+})
+
 // Methods
 const goBack = () => {
   window.history.back()
@@ -306,6 +353,11 @@ const refreshApplication = async () => {
     // Détecter si on vient de la page admin ou utilisateur
     const isAdminRoute = route.path.includes('/student-applications/') && !route.path.includes('/my-student-applications/')
     await loadApplication(applicationId, isAdminRoute)
+    
+    // Charger les détails de l'utilisateur après avoir chargé la candidature
+    if (application.value?.user_id) {
+      await loadUserDetails(application.value.user_id)
+    }
   }
 }
 
@@ -355,23 +407,19 @@ const handleSubmit = async (id: number) => {
   }
 }
 
-const handlePay = async (id: number) => {
-  try {
-    isProcessingPayment.value = true
-    
-    // Récupérer les données de la candidature pour le paiement
-    if (application.value) {
-      const paymentData = {
-        training_session_id: application.value.training_session_id,
-        amount: application.value.training_fee || 0
-      }
-      await payTrainingFee(paymentData)
-      showToast({ message: 'Redirection vers le paiement...', type: 'info' })
+const handlePay = (id: number) => {
+  if (application.value?.attachments && application.value.attachments.length > 0) {
+    // Si plusieurs fichiers, on pourrait faire une liste, mais ici on ouvre le premier comme demandé
+    const filePath = application.value.attachments[0].file_path
+    if (filePath) {
+      // S'assurer que le chemin est correct (ajouter le domaine si nécessaire)
+      const fullUrl = filePath.startsWith('http') ? filePath : `${import.meta.env.VITE_API_URL || ''}${filePath}`
+      window.open(fullUrl, '_blank')
+    } else {
+      showToast({ message: 'Lien du document non trouvé', type: 'warning' })
     }
-  } catch (error) {
-    console.error('Erreur lors du paiement:', error)
-  } finally {
-    isProcessingPayment.value = false
+  } else {
+    showToast({ message: 'Aucun document attaché', type: 'info' })
   }
 }
 
@@ -383,6 +431,11 @@ onMounted(async () => {
     // En vérifiant le chemin de la route actuelle
     const isAdminRoute = route.path.includes('/student-applications/') && !route.path.includes('/my-student-applications/')
     await loadApplication(applicationId, isAdminRoute)
+    
+    // Charger les détails de l'utilisateur après avoir chargé la candidature
+    if (application.value?.user_id) {
+      await loadUserDetails(application.value.user_id)
+    }
   }
 })
 </script>

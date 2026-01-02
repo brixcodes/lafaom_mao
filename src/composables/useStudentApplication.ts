@@ -3,14 +3,15 @@
 import { showToast } from '@/components/toast/toastManager'
 import { useAuth } from '@/composables/useAuth'
 import { studentApplicationsService } from '@/services/api/student-applications'
+import { usersService, type UserSimpleOut } from '@/services/api/users'
 import type {
-  StudentApplicationCreateInput,
-  StudentApplicationFilter,
-  StudentApplicationFormData,
-  StudentApplicationFullOut,
-  StudentApplicationOut,
-  StudentApplicationSearchFilters,
-  StudentApplicationStatusChip
+    StudentApplicationCreateInput,
+    StudentApplicationFilter,
+    StudentApplicationFormData,
+    StudentApplicationFullOut,
+    StudentApplicationOut,
+    StudentApplicationSearchFilters,
+    StudentApplicationStatusChip
 } from '@/types/student-application'
 import { ApplicationStatusEnum } from '@/types/student-application'
 import { computed, ref } from 'vue'
@@ -19,6 +20,7 @@ export function useStudentApplication() {
   // ===== STATE =====
   const applications = ref<StudentApplicationOut[]>([])
   const currentApplication = ref<StudentApplicationFullOut | null>(null)
+  const currentUserDetails = ref<UserSimpleOut | null>(null)
   const isLoading = ref(false)
   const isSubmitting = ref(false)
   const error = ref('')
@@ -313,6 +315,24 @@ export function useStudentApplication() {
   }
 
   /**
+   * Charger les détails de l'utilisateur
+   */
+  const loadUserDetails = async (userId: string) => {
+    try {
+      isLoading.value = true
+      error.value = ''
+      console.log('🔍 Chargement des détails de l\'utilisateur:', userId)
+      const response = await usersService.getUserById(userId)
+      currentUserDetails.value = response.data
+    } catch (err: any) {
+      console.error('Erreur lors du chargement des détails de l\'utilisateur:', err)
+      error.value = 'Erreur lors du chargement des détails de l\'utilisateur'
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
    * Créer une nouvelle candidature
    */
   const createApplication = async (data: StudentApplicationCreateInput) => {
@@ -533,6 +553,7 @@ export function useStudentApplication() {
   const reset = () => {
     applications.value = []
     currentApplication.value = null
+    currentUserDetails.value = null
     error.value = ''
     currentPage.value = 1
     searchQuery.value = ''
@@ -622,6 +643,7 @@ export function useStudentApplication() {
     // State
     applications,
     currentApplication,
+    currentUserDetails,
     isLoading,
     isSubmitting,
     error,
@@ -649,6 +671,7 @@ export function useStudentApplication() {
     applyFilters,
     resetFilters,
     loadApplication,
+    loadUserDetails,
     createApplication,
     updateApplication,
     deleteApplication,
