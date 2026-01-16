@@ -402,12 +402,16 @@ export function useStudentApplication() {
   /**
    * Supprimer une candidature
    */
-  const deleteApplication = async (id: number) => {
+  const deleteApplication = async (id: number, useAdminEndpoint = false) => {
     try {
       isSubmitting.value = true
       error.value = ''
 
-      await studentApplicationsService.deleteMyStudentApplication(id)
+      if (useAdminEndpoint) {
+        await studentApplicationsService.deleteStudentApplication(id)
+      } else {
+        await studentApplicationsService.deleteMyStudentApplication(id)
+      }
 
       // Retirer la candidature de la liste
       applications.value = applications.value.filter(app => app.id !== id)

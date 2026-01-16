@@ -19,8 +19,7 @@
         <VRow>
           <VCol cols="12" md="4">
             <VTextField v-model="searchQuery" label="Rechercher" variant="outlined" density="comfortable"
-              prepend-inner-icon="ri-search-line" placeholder="Numéro, formation, email..." clearable
-              @input="handleSearch" />
+              prepend-inner-icon="ri-search-line" placeholder="Numéro, formation, email..." clearable />
           </VCol>
           <VCol cols="12" md="3">
             <VSelect v-model="filters.status" :items="statusOptions" label="Statut" variant="outlined"
@@ -365,7 +364,7 @@ const handleDelete = async (id: number) => {
   if (!confirmed) return;
 
   try {
-    await deleteApplication(id);
+    await deleteApplication(id, true); // true = utiliser l'endpoint admin
   } catch (error) {
     console.error('Erreur lors de la suppression:', error);
   }
@@ -445,7 +444,7 @@ const handleQuickPayment = async () => {
       amount: totalPaymentAmount.value,
     };
 
-    console.log('💳 Paiement rapide:', paymentData);
+    console.log('Paiement rapide:', paymentData);
     const response = await payTrainingFee(paymentData);
 
     if (response.data.payment_link) {

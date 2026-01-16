@@ -179,6 +179,14 @@ class StudentApplicationsService {
     return response as StudentAttachmentListOutSuccess
   }
 
+  /**
+   * Supprimer une candidature étudiante (admin)
+   */
+  async deleteStudentApplication(applicationId: number): Promise<StudentApplicationOutSuccess> {
+    const response = await apiService.delete(`/student-applications/${applicationId}`)
+    return response as StudentApplicationOutSuccess
+  }
+
   // === MY STUDENT APPLICATIONS ===
 
   /**
